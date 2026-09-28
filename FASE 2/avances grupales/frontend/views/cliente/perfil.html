@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Mi perfil | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/cliente.css">
+</head>
+
+<body class="cliente-body">
+
+    <div class="cliente-layout">
+
+        <aside class="cliente-sidebar">
+
+            <div class="cliente-logo">
+                <span>MAREXPRESS</span>
+                <small>Portal Cliente</small>
+            </div>
+
+            <nav class="cliente-menu" aria-label="Menú cliente">
+
+                <a class="cliente-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="cliente-menu-item" href="./ordenes.html">
+                    Mis órdenes
+                </a>
+
+                <a class="cliente-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a class="cliente-menu-item" href="./documentos.html">
+                    Documentos
+                </a>
+
+                <a class="cliente-menu-item" href="./pagos.html">
+                    Pagos
+                </a>
+
+                <a class="cliente-menu-item" href="./evidencias.html">
+                    Evidencias
+                </a>
+
+                <a
+                    class="cliente-menu-item activo"
+                    href="./perfil.html"
+                    aria-current="page"
+                >
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="cliente-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-cliente"
+                    type="button"
+                    class="cliente-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="cliente-main">
+
+            <header class="cliente-header">
+
+                <div>
+
+                    <p class="cliente-header-label">
+                        MI CUENTA
+                    </p>
+
+                    <h1>Mi perfil</h1>
+
+                </div>
+
+                <div class="cliente-usuario">
+
+                    <div class="cliente-usuario-texto">
+
+                        <strong id="cliente-nombre">
+                            Cliente
+                        </strong>
+
+                        <span id="cliente-rol">
+                            CLIENTE
+                        </span>
+
+                    </div>
+
+                    <div class="cliente-avatar">
+                        C
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>DATOS DE CUENTA</span>
+                            <h2>Información del usuario</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="cliente-perfil-datos">
+
+                        <p>
+                            Nombre:
+                            <strong id="perfil-cliente-nombre">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Usuario:
+                            <strong id="perfil-cliente-usuario">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Correo:
+                            <strong id="perfil-cliente-correo">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Rol:
+                            <strong id="perfil-cliente-rol">
+                                CLIENTE
+                            </strong>
+                        </p>
+
+                        <p>
+                            Estado:
+                            <strong id="perfil-cliente-estado">
+                                --
+                            </strong>
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>CLIENTE</span>
+                            <h2>Información comercial</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="cliente-perfil-datos">
+
+                        <p>
+                            RUT:
+                            <strong id="perfil-cliente-rut">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Razón social / nombre:
+                            <strong id="perfil-cliente-razon-social">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Tipo de cliente:
+                            <strong id="perfil-cliente-tipo">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Teléfono:
+                            <strong id="perfil-cliente-telefono">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Cuenta corriente:
+                            <strong id="perfil-cliente-cuenta">
+                                --
+                            </strong>
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>DIRECCIONES</span>
+                        <h2>Ubicaciones asociadas</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-table-wrapper">
+
+                    <table class="cliente-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Dirección</th>
+                                <th>Comuna</th>
+                                <th>Región</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-direcciones-cliente">
+
+                            <tr>
+                                <td colspan="6">
+                                    Cargando ubicaciones...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>RESUMEN</span>
+                            <h2>Actividad de la cuenta</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="cliente-perfil-datos">
+
+                        <p>
+                            Órdenes registradas:
+                            <strong id="perfil-total-ordenes">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Órdenes activas:
+                            <strong id="perfil-ordenes-activas">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Entregas completadas:
+                            <strong id="perfil-entregas-completadas">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Saldo pendiente:
+                            <strong id="perfil-saldo-pendiente">
+                                $ --
+                            </strong>
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>SEGURIDAD</span>
+                            <h2>Acceso a mi cuenta</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="cliente-acciones">
+
+                        <button
+                            id="btn-cambiar-password-cliente"
+                            type="button"
+                        >
+                            Cambiar contraseña
+                        </button>
+
+                        <button
+                            id="btn-actualizar-datos-cliente"
+                            type="button"
+                        >
+                            Actualizar mis datos
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>ACCESOS RÁPIDOS</span>
+                        <h2>Mi información</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-acciones">
+
+                    <a href="./ordenes.html">
+                        Mis órdenes
+                    </a>
+
+                    <a href="./seguimiento.html">
+                        Seguimiento
+                    </a>
+
+                    <a href="./documentos.html">
+                        Documentos
+                    </a>
+
+                    <a href="./pagos.html">
+                        Pagos
+                    </a>
+
+                    <a href="./evidencias.html">
+                        Evidencias
+                    </a>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/cliente.js"
+    ></script>
+
+</body>
+</html>

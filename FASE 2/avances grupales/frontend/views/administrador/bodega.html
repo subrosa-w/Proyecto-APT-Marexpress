@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Bodega | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <a class="admin-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="admin-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="admin-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="admin-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a
+                    class="admin-menu-item activo"
+                    href="./bodega.html"
+                    aria-current="page"
+                >
+                    Bodega
+                </a>
+
+                <a class="admin-menu-item" href="./cuentas-corrientes.html">
+                    Cuenta corriente
+                </a>
+
+                <a class="admin-menu-item" href="./facturacion.html">
+                    Facturación
+                </a>
+
+                <a class="admin-menu-item" href="./usuarios.html">
+                    Usuarios
+                </a>
+
+                <a class="admin-menu-item" href="./reportes.html">
+                    Reportes
+                </a>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        CONTROL FÍSICO DE CARGA
+                    </p>
+
+                    <h1>Bodega</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-kpis">
+
+                <article class="admin-kpi">
+                    <span>En bodega</span>
+                    <strong id="kpi-en-bodega">--</strong>
+                    <small>Bultos disponibles en sucursal</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Asignados a manifiesto</span>
+                    <strong id="kpi-asignados">--</strong>
+                    <small>Bultos comprometidos para despacho</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>En traslado</span>
+                    <strong id="kpi-traslado">--</strong>
+                    <small>Bultos moviéndose entre sucursales</small>
+                </article>
+
+                <article class="admin-kpi admin-kpi-verde">
+                    <span>En tránsito</span>
+                    <strong id="kpi-bultos-transito">--</strong>
+                    <small>Bultos despachados hacia destino</small>
+                </article>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>INVENTARIO FÍSICO</span>
+                        <h2>Bultos por sucursal</h2>
+                    </div>
+
+                </header>
+
+                <div class="admin-acciones">
+
+                    <button type="button">
+                        Sucursal Puerto Montt
+                    </button>
+
+                    <button type="button">
+                        Sucursal Santiago
+                    </button>
+
+                </div>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>TRAZABILIDAD</span>
+                        <h2>Inventario de bultos</h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="button-primary"
+                    >
+                        Recibir bulto
+                    </button>
+
+                </header>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Código bulto</th>
+                                <th>OT</th>
+                                <th>Detalle de carga</th>
+                                <th>Sucursal actual</th>
+                                <th>Estado</th>
+                                <th>Peso</th>
+                                <th>Dimensiones</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-bultos">
+
+                            <tr>
+                                <td colspan="8">
+                                    Cargando inventario de bodega...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="admin-grid-principal">
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>MOVIMIENTOS</span>
+                            <h2>Últimos movimientos de bultos</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Bulto</th>
+                                    <th>Movimiento</th>
+                                    <th>Origen</th>
+                                    <th>Destino</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-movimientos-bultos">
+
+                                <tr>
+                                    <td colspan="6">
+                                        Cargando movimientos...
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>GESTIÓN</span>
+                            <h2>Acciones rápidas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            Generar bultos desde carga
+                        </button>
+
+                        <button type="button">
+                            Recibir en sucursal
+                        </button>
+
+                        <button type="button">
+                            Trasladar entre sucursales
+                        </button>
+
+                        <button type="button">
+                            Asignar a manifiesto
+                        </button>
+
+                        <button type="button">
+                            Registrar devolución
+                        </button>
+
+                        <button type="button">
+                            Ver historial completo
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/administrador.js"
+    ></script>
+
+</body>
+</html>

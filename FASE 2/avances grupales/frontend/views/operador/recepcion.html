@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Recepción | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/operador.css">
+</head>
+
+<body class="operador-body">
+
+    <div class="operador-layout">
+
+        <aside class="operador-sidebar">
+
+            <div class="operador-logo">
+                <span>MAREXPRESS</span>
+                <small>Operaciones</small>
+            </div>
+
+            <nav
+                class="operador-menu"
+                aria-label="Menú operador"
+            >
+
+                <a
+                    class="operador-menu-item"
+                    href="./index.html"
+                >
+                    Inicio
+                </a>
+
+                <a
+                    class="operador-menu-item activo"
+                    href="./recepcion.html"
+                    aria-current="page"
+                >
+                    Recepción
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./ordenes.html"
+                >
+                    Órdenes de transporte
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./clientes.html"
+                >
+                    Clientes
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./bodega.html"
+                >
+                    Bodega
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./manifiestos.html"
+                >
+                    Manifiestos
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./despacho.html"
+                >
+                    Pronto despacho
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./seguimiento.html"
+                >
+                    Seguimiento
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./comprobantes.html"
+                >
+                    Comprobantes
+                </a>
+
+            </nav>
+
+            <div class="operador-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-operador"
+                    type="button"
+                    class="operador-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <main class="operador-main">
+
+            <header class="operador-header">
+
+                <div>
+
+                    <p class="operador-header-label">
+                        INGRESO DE CARGA
+                    </p>
+
+                    <h1>Recepción</h1>
+
+                </div>
+
+                <div class="operador-usuario">
+
+                    <div class="operador-usuario-texto">
+
+                        <strong id="operador-nombre">
+                            Operador
+                        </strong>
+
+                        <span id="operador-rol">
+                            OPERADOR
+                        </span>
+
+                    </div>
+
+                    <div class="operador-avatar">
+                        O
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+
+                            <span>IDENTIFICACIÓN</span>
+
+                            <h2>
+                                Orden de transporte
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="operador-form-grid">
+
+                        <div class="field">
+
+                            <label for="recepcion-ot">
+                                Número de OT
+                            </label>
+
+                            <input
+                                id="recepcion-ot"
+                                type="text"
+                                placeholder="Ej: OT-000123"
+                            >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label for="recepcion-cliente">
+                                Cliente
+                            </label>
+
+                            <input
+                                id="recepcion-cliente"
+                                type="text"
+                                placeholder="Buscar cliente"
+                            >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label for="recepcion-origen">
+                                Origen
+                            </label>
+
+                            <input
+                                id="recepcion-origen"
+                                type="text"
+                                disabled
+                            >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label for="recepcion-destino">
+                                Destino
+                            </label>
+
+                            <input
+                                id="recepcion-destino"
+                                type="text"
+                                disabled
+                            >
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+
+                            <span>DOCUMENTO</span>
+
+                            <h2>
+                                Información asociada
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="operador-form-grid">
+
+                        <div class="field">
+
+                            <label for="recepcion-documento">
+                                Tipo de documento
+                            </label>
+
+                            <select id="recepcion-documento">
+                                <option value="">
+                                    Seleccionar
+                                </option>
+                                <option value="FACTURA">
+                                    Factura
+                                </option>
+                                <option value="BOLETA">
+                                    Boleta
+                                </option>
+                                <option value="OT_MANUAL">
+                                    OT manual
+                                </option>
+                                <option value="SIN_DOCUMENTO">
+                                    Sin documento
+                                </option>
+                            </select>
+
+                        </div>
+
+                        <div class="field">
+
+                            <label for="recepcion-numero-documento">
+                                Número de documento
+                            </label>
+
+                            <input
+                                id="recepcion-numero-documento"
+                                type="text"
+                                placeholder="Número"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+
+                        <span>CARGA</span>
+
+                        <h2>
+                            Detalle físico recibido
+                        </h2>
+
+                    </div>
+
+                </header>
+
+
+                <div class="operador-form-grid operador-form-grid-carga">
+
+                    <div class="field">
+
+                        <label for="recepcion-tipo-bulto">
+                            Tipo de bulto
+                        </label>
+
+                        <select id="recepcion-tipo-bulto">
+                            <option value="">
+                                Seleccionar
+                            </option>
+                        </select>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="recepcion-cantidad">
+                            Cantidad
+                        </label>
+
+                        <input
+                            id="recepcion-cantidad"
+                            type="number"
+                            min="1"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="recepcion-peso">
+                            Peso total (kg)
+                        </label>
+
+                        <input
+                            id="recepcion-peso"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="recepcion-largo">
+                            Largo (cm)
+                        </label>
+
+                        <input
+                            id="recepcion-largo"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="recepcion-ancho">
+                            Ancho (cm)
+                        </label>
+
+                        <input
+                            id="recepcion-ancho"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="recepcion-alto">
+                            Alto (cm)
+                        </label>
+
+                        <input
+                            id="recepcion-alto"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="recepcion-volumen">
+                            Volumen
+                        </label>
+
+                        <input
+                            id="recepcion-volumen"
+                            type="text"
+                            placeholder="Calculado automáticamente"
+                            disabled
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="recepcion-valor-declarado">
+                            Valor declarado
+                        </label>
+
+                        <input
+                            id="recepcion-valor-declarado"
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="$"
+                        >
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+
+                            <span>RESULTADO</span>
+
+                            <h2>
+                                Resumen de recepción
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="operador-resumen">
+
+                        <p>
+                            Peso:
+                            <strong id="resumen-peso">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Volumen:
+                            <strong id="resumen-volumen">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Tipo de cobro:
+                            <strong id="resumen-tipo-cobro">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Total:
+                            <strong id="resumen-total">
+                                --
+                            </strong>
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+
+                            <span>ACCIONES</span>
+
+                            <h2>
+                                Finalizar recepción
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="operador-acciones">
+
+                        <button type="button">
+                            Guardar recepción
+                        </button>
+
+                        <button type="button">
+                            Generar bultos
+                        </button>
+
+                        <button type="button">
+                            Imprimir comprobante 80 mm
+                        </button>
+
+                        <button type="button">
+                            Limpiar formulario
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+
+                        <span>ÚLTIMOS INGRESOS</span>
+
+                        <h2>
+                            Recepciones recientes
+                        </h2>
+
+                    </div>
+
+                </header>
+
+                <div class="operador-table-wrapper">
+
+                    <table class="operador-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Fecha</th>
+                                <th>OT</th>
+                                <th>Cliente</th>
+                                <th>Bultos</th>
+                                <th>Peso</th>
+                                <th>Sucursal</th>
+                                <th>Estado</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-recepciones">
+
+                            <tr>
+                                <td colspan="7">
+                                    Cargando recepciones...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/operador.js"
+    ></script>
+
+</body>
+</html>

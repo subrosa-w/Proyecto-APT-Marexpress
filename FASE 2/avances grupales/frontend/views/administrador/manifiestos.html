@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Manifiestos | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <a class="admin-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="admin-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="admin-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a
+                    class="admin-menu-item activo"
+                    href="./manifiestos.html"
+                    aria-current="page"
+                >
+                    Manifiestos
+                </a>
+
+                <a class="admin-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="admin-menu-item" href="./cuentas-corrientes.html">
+                    Cuenta corriente
+                </a>
+
+                <a class="admin-menu-item" href="./facturacion.html">
+                    Facturación
+                </a>
+
+                <a class="admin-menu-item" href="./usuarios.html">
+                    Usuarios
+                </a>
+
+                <a class="admin-menu-item" href="./reportes.html">
+                    Reportes
+                </a>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        DESPACHO Y DISTRIBUCIÓN
+                    </p>
+
+                    <h1>Manifiestos</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-kpis">
+
+                <article class="admin-kpi">
+                    <span>Programados</span>
+                    <strong id="kpi-manifiestos-programados">--</strong>
+                    <small>Manifiestos pendientes de salida</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>En tránsito</span>
+                    <strong id="kpi-manifiestos-transito">--</strong>
+                    <small>Viajes actualmente en ruta</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Finalizados</span>
+                    <strong id="kpi-manifiestos-finalizados">--</strong>
+                    <small>Viajes completados</small>
+                </article>
+
+                <article class="admin-kpi admin-kpi-verde">
+                    <span>Bultos asignados</span>
+                    <strong id="kpi-bultos-asignados">--</strong>
+                    <small>Carga física asociada a manifiestos</small>
+                </article>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>OPERACIÓN</span>
+                        <h2>Listado de manifiestos</h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="button-primary"
+                    >
+                        Nuevo manifiesto
+                    </button>
+
+                </header>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Manifiesto</th>
+                                <th>Fecha</th>
+                                <th>Sucursal origen</th>
+                                <th>Ciudades / destinos</th>
+                                <th>Vehículo</th>
+                                <th>Conductor</th>
+                                <th>Peoneta</th>
+                                <th>OT</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-manifiestos">
+
+                            <tr>
+                                <td colspan="10">
+                                    Cargando manifiestos...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="admin-grid-principal">
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>PREPARACIÓN DE SALIDA</span>
+                            <h2>Manifiestos pendientes</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="manifiestos-pendientes">
+
+                        <p>
+                            Aquí se mostrarán los manifiestos que aún
+                            requieren completar carga, bultos o asignaciones.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>GESTIÓN</span>
+                            <h2>Acciones rápidas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            Crear manifiesto
+                        </button>
+
+                        <button type="button">
+                            Agregar órdenes al manifiesto
+                        </button>
+
+                        <button type="button">
+                            Asignar bultos
+                        </button>
+
+                        <button type="button">
+                            Asignar vehículo y conductor
+                        </button>
+
+                        <button type="button">
+                            Asignar peoneta
+                        </button>
+
+                        <button type="button">
+                            Autorizar salida
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/administrador.js"
+    ></script>
+
+</body>
+</html>

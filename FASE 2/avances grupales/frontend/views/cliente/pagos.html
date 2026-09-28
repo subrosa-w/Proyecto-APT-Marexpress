@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Pagos | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/cliente.css">
+</head>
+
+<body class="cliente-body">
+
+    <div class="cliente-layout">
+
+        <aside class="cliente-sidebar">
+
+            <div class="cliente-logo">
+                <span>MAREXPRESS</span>
+                <small>Portal Cliente</small>
+            </div>
+
+            <nav class="cliente-menu" aria-label="Menú cliente">
+
+                <a class="cliente-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="cliente-menu-item" href="./ordenes.html">
+                    Mis órdenes
+                </a>
+
+                <a class="cliente-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a class="cliente-menu-item" href="./documentos.html">
+                    Documentos
+                </a>
+
+                <a
+                    class="cliente-menu-item activo"
+                    href="./pagos.html"
+                    aria-current="page"
+                >
+                    Pagos
+                </a>
+
+                <a class="cliente-menu-item" href="./evidencias.html">
+                    Evidencias
+                </a>
+
+                <a class="cliente-menu-item" href="./perfil.html">
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="cliente-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-cliente"
+                    type="button"
+                    class="cliente-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="cliente-main">
+
+            <header class="cliente-header">
+
+                <div>
+
+                    <p class="cliente-header-label">
+                        PAGOS Y CUENTA
+                    </p>
+
+                    <h1>Mis pagos</h1>
+
+                </div>
+
+                <div class="cliente-usuario">
+
+                    <div class="cliente-usuario-texto">
+
+                        <strong id="cliente-nombre">
+                            Cliente
+                        </strong>
+
+                        <span id="cliente-rol">
+                            CLIENTE
+                        </span>
+
+                    </div>
+
+                    <div class="cliente-avatar">
+                        C
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="cliente-kpis">
+
+                <article class="cliente-kpi">
+
+                    <span>Saldo pendiente</span>
+
+                    <strong id="kpi-pagos-pendiente">
+                        $ --
+                    </strong>
+
+                    <small>
+                        Total pendiente de pago
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi">
+
+                    <span>Pagado</span>
+
+                    <strong id="kpi-pagos-pagado">
+                        $ --
+                    </strong>
+
+                    <small>
+                        Pagos confirmados
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi">
+
+                    <span>Documentos pendientes</span>
+
+                    <strong id="kpi-pagos-documentos">
+                        --
+                    </strong>
+
+                    <small>
+                        Cobros aún no pagados
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi cliente-kpi-verde">
+
+                    <span>Estado de cuenta</span>
+
+                    <strong id="kpi-estado-cuenta">
+                        --
+                    </strong>
+
+                    <small>
+                        Situación comercial actual
+                    </small>
+
+                </article>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>CUENTA CORRIENTE</span>
+                            <h2>Resumen de cuenta</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="cliente-cuenta-corriente">
+
+                        <p>
+                            Límite de crédito:
+                            <strong id="cuenta-limite">
+                                $ --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Crédito utilizado:
+                            <strong id="cuenta-utilizado">
+                                $ --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Crédito disponible:
+                            <strong id="cuenta-disponible">
+                                $ --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Estado:
+                            <strong id="cuenta-estado">
+                                --
+                            </strong>
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>PAGO EN LÍNEA</span>
+                            <h2>Pagar con Webpay</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="cliente-form-grid">
+
+                        <div class="field">
+
+                            <label for="pago-documento">
+                                Documento a pagar
+                            </label>
+
+                            <select id="pago-documento">
+
+                                <option value="">
+                                    Seleccionar documento
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="field">
+
+                            <label for="pago-monto">
+                                Monto
+                            </label>
+
+                            <input
+                                id="pago-monto"
+                                type="text"
+                                value="$ 0"
+                                readonly
+                            >
+
+                        </div>
+
+                    </div>
+
+                    <div class="cliente-acciones">
+
+                        <button
+                            id="btn-pagar-webpay"
+                            type="button"
+                        >
+                            Pagar con Webpay
+                        </button>
+
+                    </div>
+
+                    <p class="form-note">
+                        El pago se realizará mediante la integración
+                        segura con Webpay. MAREXPRESS no almacenará
+                        los datos de la tarjeta.
+                    </p>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>PENDIENTES</span>
+                        <h2>Documentos por pagar</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-table-wrapper">
+
+                    <table class="cliente-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Documento</th>
+                                <th>Número</th>
+                                <th>OT</th>
+                                <th>Vencimiento</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-pagos-pendientes">
+
+                            <tr>
+                                <td colspan="8">
+                                    Cargando documentos pendientes...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>HISTORIAL</span>
+                        <h2>Pagos realizados</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-table-wrapper">
+
+                    <table class="cliente-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Documento</th>
+                                <th>OT</th>
+                                <th>Medio de pago</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Comprobante</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-historial-pagos">
+
+                            <tr>
+                                <td colspan="7">
+                                    Cargando historial de pagos...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>ÚLTIMO PAGO</span>
+                            <h2>Detalle de transacción</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="cliente-detalle-pago">
+
+                        <p>
+                            Selecciona un pago para revisar
+                            el detalle de la transacción.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>COMPROBANTE</span>
+                            <h2>Respaldo de pago</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="cliente-comprobante-pago">
+
+                        <p>
+                            Aquí aparecerá el comprobante
+                            cuando el pago esté confirmado.
+                        </p>
+
+                    </div>
+
+                    <div class="cliente-acciones">
+
+                        <button
+                            id="btn-imprimir-pago"
+                            type="button"
+                        >
+                            Imprimir comprobante
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/cliente.js"
+    ></script>
+
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Evidencias | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/cliente.css">
+</head>
+
+<body class="cliente-body">
+
+    <div class="cliente-layout">
+
+        <aside class="cliente-sidebar">
+
+            <div class="cliente-logo">
+                <span>MAREXPRESS</span>
+                <small>Portal Cliente</small>
+            </div>
+
+            <nav class="cliente-menu" aria-label="Menú cliente">
+
+                <a class="cliente-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="cliente-menu-item" href="./ordenes.html">
+                    Mis órdenes
+                </a>
+
+                <a class="cliente-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a class="cliente-menu-item" href="./documentos.html">
+                    Documentos
+                </a>
+
+                <a class="cliente-menu-item" href="./pagos.html">
+                    Pagos
+                </a>
+
+                <a
+                    class="cliente-menu-item activo"
+                    href="./evidencias.html"
+                    aria-current="page"
+                >
+                    Evidencias
+                </a>
+
+                <a class="cliente-menu-item" href="./perfil.html">
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="cliente-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-cliente"
+                    type="button"
+                    class="cliente-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="cliente-main">
+
+            <header class="cliente-header">
+
+                <div>
+
+                    <p class="cliente-header-label">
+                        RESPALDOS DE ENTREGA
+                    </p>
+
+                    <h1>Mis evidencias</h1>
+
+                </div>
+
+                <div class="cliente-usuario">
+
+                    <div class="cliente-usuario-texto">
+
+                        <strong id="cliente-nombre">
+                            Cliente
+                        </strong>
+
+                        <span id="cliente-rol">
+                            CLIENTE
+                        </span>
+
+                    </div>
+
+                    <div class="cliente-avatar">
+                        C
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="cliente-kpis">
+
+                <article class="cliente-kpi">
+
+                    <span>Entregas respaldadas</span>
+
+                    <strong id="kpi-evidencias-entregas">
+                        --
+                    </strong>
+
+                    <small>
+                        Entregas con evidencia disponible
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi">
+
+                    <span>Fotografías</span>
+
+                    <strong id="kpi-evidencias-fotos">
+                        --
+                    </strong>
+
+                    <small>
+                        Fotografías registradas
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi">
+
+                    <span>Firmas</span>
+
+                    <strong id="kpi-evidencias-firmas">
+                        --
+                    </strong>
+
+                    <small>
+                        Firmas asociadas a entregas
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi cliente-kpi-verde">
+
+                    <span>Última entrega</span>
+
+                    <strong id="kpi-evidencias-ultima">
+                        --
+                    </strong>
+
+                    <small>
+                        Último respaldo disponible
+                    </small>
+
+                </article>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>BÚSQUEDA</span>
+                        <h2>Buscar evidencias</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-form-grid">
+
+                    <div class="field">
+
+                        <label for="evidencias-busqueda">
+                            Buscar
+                        </label>
+
+                        <input
+                            id="evidencias-busqueda"
+                            type="search"
+                            placeholder="Número OT o destinatario"
+                        >
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="evidencias-tipo">
+                            Tipo de evidencia
+                        </label>
+
+                        <select id="evidencias-tipo">
+
+                            <option value="">
+                                Todas
+                            </option>
+
+                            <option value="FOTO">
+                                Fotografía
+                            </option>
+
+                            <option value="FIRMA">
+                                Firma
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>ENTREGAS</span>
+                        <h2>Respaldos disponibles</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-table-wrapper">
+
+                    <table class="cliente-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Fecha</th>
+                                <th>OT</th>
+                                <th>Destinatario</th>
+                                <th>Comuna</th>
+                                <th>Resultado</th>
+                                <th>Receptor</th>
+                                <th>Fotografía</th>
+                                <th>Firma</th>
+                                <th>Acción</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-evidencias-cliente">
+
+                            <tr>
+                                <td colspan="9">
+                                    Cargando evidencias...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>DETALLE</span>
+                            <h2>Resultado de entrega</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="detalle-evidencia-entrega">
+
+                        <p>
+                            Selecciona una entrega para revisar
+                            su resultado, receptor y observaciones.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>FOTOGRAFÍA</span>
+                            <h2>Evidencia fotográfica</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="vista-fotografia-entrega">
+
+                        <p>
+                            La fotografía autorizada aparecerá aquí.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>FIRMA / RECEPCIÓN</span>
+                        <h2>Comprobante de recepción</h2>
+                    </div>
+
+                </header>
+
+                <div id="vista-firma-entrega">
+
+                    <p>
+                        La firma o respaldo de recepción
+                        aparecerá aquí cuando esté disponible.
+                    </p>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/cliente.js"
+    ></script>
+
+</body>
+</html>

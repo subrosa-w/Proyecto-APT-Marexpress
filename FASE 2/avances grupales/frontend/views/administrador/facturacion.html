@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Facturación | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <a class="admin-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="admin-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="admin-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="admin-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="admin-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="admin-menu-item" href="./cuentas-corrientes.html">
+                    Cuenta corriente
+                </a>
+
+                <a
+                    class="admin-menu-item activo"
+                    href="./facturacion.html"
+                    aria-current="page"
+                >
+                    Facturación
+                </a>
+
+                <a class="admin-menu-item" href="./usuarios.html">
+                    Usuarios
+                </a>
+
+                <a class="admin-menu-item" href="./reportes.html">
+                    Reportes
+                </a>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        DOCUMENTOS Y COBRANZA
+                    </p>
+
+                    <h1>Facturación</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-kpis">
+
+                <article class="admin-kpi">
+                    <span>Pendientes de facturar</span>
+                    <strong id="kpi-pendientes-facturar">--</strong>
+                    <small>Órdenes listas para documento tributario</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Facturas emitidas</span>
+                    <strong id="kpi-facturas-emitidas">--</strong>
+                    <small>Documentos emitidos en el período</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Boletas emitidas</span>
+                    <strong id="kpi-boletas-emitidas">--</strong>
+                    <small>Boletas asociadas a servicios</small>
+                </article>
+
+                <article class="admin-kpi admin-kpi-verde">
+                    <span>Total facturado</span>
+                    <strong id="kpi-total-facturado">--</strong>
+                    <small>Monto bruto documentado</small>
+                </article>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>DOCUMENTOS</span>
+                        <h2>Facturación de órdenes</h2>
+                    </div>
+
+                </header>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>OT</th>
+                                <th>Cliente</th>
+                                <th>Tipo documento</th>
+                                <th>N° documento</th>
+                                <th>Fecha</th>
+                                <th>Neto</th>
+                                <th>IVA</th>
+                                <th>Total</th>
+                                <th>Estado pago</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-facturacion">
+
+                            <tr>
+                                <td colspan="10">
+                                    Cargando información de facturación...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="admin-grid-principal">
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>PENDIENTES</span>
+                            <h2>Órdenes por documentar</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="facturacion-pendiente">
+                        <p>
+                            Aquí aparecerán las órdenes pendientes
+                            de boleta, factura u otro documento.
+                        </p>
+                    </div>
+
+                </section>
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>GESTIÓN</span>
+                            <h2>Acciones rápidas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            Emitir factura
+                        </button>
+
+                        <button type="button">
+                            Emitir boleta
+                        </button>
+
+                        <button type="button">
+                            Registrar número de documento
+                        </button>
+
+                        <button type="button">
+                            Registrar pago
+                        </button>
+
+                        <button type="button">
+                            Imprimir comprobante 80 mm
+                        </button>
+
+                        <button type="button">
+                            Ver documentos emitidos
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/administrador.js"
+    ></script>
+
+</body>
+</html>

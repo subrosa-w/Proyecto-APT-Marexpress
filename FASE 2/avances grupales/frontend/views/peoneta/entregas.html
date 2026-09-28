@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Entregas | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/peoneta.css">
+</head>
+
+<body class="peoneta-body">
+
+    <div class="peoneta-layout">
+
+        <aside class="peoneta-sidebar">
+
+            <div class="peoneta-logo">
+                <span>MAREXPRESS</span>
+                <small>Reparto</small>
+            </div>
+
+            <nav class="peoneta-menu" aria-label="Menú peoneta">
+
+                <a class="peoneta-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="peoneta-menu-item" href="./manifiestos.html">
+                    Mis manifiestos
+                </a>
+
+                <a
+                    class="peoneta-menu-item activo"
+                    href="./entregas.html"
+                    aria-current="page"
+                >
+                    Entregas
+                </a>
+
+                <a class="peoneta-menu-item" href="./historial.html">
+                    Historial
+                </a>
+
+                <a class="peoneta-menu-item" href="./perfil.html">
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="peoneta-sidebar-footer">
+                <button
+                    id="cerrar-sesion-peoneta"
+                    type="button"
+                    class="peoneta-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="peoneta-main">
+
+            <header class="peoneta-header">
+
+                <div>
+                    <p class="peoneta-header-label">
+                        GESTIÓN DE ENTREGA
+                    </p>
+
+                    <h1>Registrar entrega</h1>
+                </div>
+
+                <div class="peoneta-usuario">
+
+                    <div class="peoneta-usuario-texto">
+                        <strong id="peoneta-nombre">
+                            Peoneta
+                        </strong>
+
+                        <span id="peoneta-rol">
+                            PEONETA
+                        </span>
+                    </div>
+
+                    <div class="peoneta-avatar">
+                        P
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+                        <span>ORDEN</span>
+                        <h2>Seleccionar entrega</h2>
+                    </div>
+
+                </header>
+
+                <div class="peoneta-form-grid">
+
+                    <div class="field">
+
+                        <label for="entrega-manifiesto">
+                            Manifiesto
+                        </label>
+
+                        <select id="entrega-manifiesto">
+                            <option value="">
+                                Seleccionar manifiesto
+                            </option>
+                        </select>
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="entrega-ot">
+                            Orden de transporte
+                        </label>
+
+                        <select id="entrega-ot">
+                            <option value="">
+                                Seleccionar OT
+                            </option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="peoneta-grid-principal">
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+                            <span>DESTINATARIO</span>
+                            <h2>Datos de entrega</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="detalle-destinatario-entrega">
+
+                        <p>
+                            Selecciona una OT para cargar destinatario,
+                            dirección, comuna y datos autorizados.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+                            <span>CARGA</span>
+                            <h2>Bultos asociados</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-table-wrapper">
+
+                        <table class="peoneta-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Bulto</th>
+                                    <th>Peso</th>
+                                    <th>Dimensiones</th>
+                                    <th>Estado</th>
+                                    <th>Resultado</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-bultos-entrega">
+
+                                <tr>
+                                    <td colspan="5">
+                                        Selecciona una OT.
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+                        <span>RESULTADO</span>
+                        <h2>Resultado de entrega</h2>
+                    </div>
+
+                </header>
+
+                <div class="peoneta-form-grid">
+
+                    <div class="field">
+
+                        <label for="resultado-entrega">
+                            Estado de entrega
+                        </label>
+
+                        <select id="resultado-entrega">
+
+                            <option value="">
+                                Seleccionar
+                            </option>
+
+                            <option value="ENTREGADA">
+                                Entregada
+                            </option>
+
+                            <option value="ENTREGA_PARCIAL">
+                                Entrega parcial
+                            </option>
+
+                            <option value="RECHAZADA">
+                                Rechazada
+                            </option>
+
+                            <option value="NO_RECIBIDO">
+                                No recibido
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="receptor-entrega">
+                            Nombre de quien recibe
+                        </label>
+
+                        <input
+                            id="receptor-entrega"
+                            type="text"
+                            placeholder="Nombre del receptor"
+                        >
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="documento-receptor">
+                            Documento / identificación
+                        </label>
+
+                        <input
+                            id="documento-receptor"
+                            type="text"
+                            placeholder="Opcional"
+                        >
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="motivo-entrega">
+                            Motivo / incidencia
+                        </label>
+
+                        <select id="motivo-entrega">
+
+                            <option value="">
+                                Seleccionar si corresponde
+                            </option>
+
+                            <option value="DESTINATARIO_AUSENTE">
+                                Destinatario ausente
+                            </option>
+
+                            <option value="RECHAZO_DESTINATARIO">
+                                Rechazo del destinatario
+                            </option>
+
+                            <option value="DIRECCION_INCORRECTA">
+                                Dirección incorrecta
+                            </option>
+
+                            <option value="CARGA_PARCIAL">
+                                Entrega parcial de carga
+                            </option>
+
+                            <option value="OTRO">
+                                Otro
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="field">
+
+                    <label for="observacion-entrega">
+                        Observaciones
+                    </label>
+
+                    <textarea
+                        id="observacion-entrega"
+                        rows="5"
+                        placeholder="Describe cualquier observación relevante de la entrega"
+                    ></textarea>
+
+                </div>
+
+            </section>
+
+            <section class="peoneta-grid-principal">
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+                            <span>EVIDENCIA</span>
+                            <h2>Registro de respaldo</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-form-grid">
+
+                        <div class="field">
+
+                            <label for="evidencia-foto">
+                                Fotografía
+                            </label>
+
+                            <input
+                                id="evidencia-foto"
+                                type="file"
+                                accept="image/*"
+                            >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label for="evidencia-firma">
+                                Firma / respaldo
+                            </label>
+
+                            <input
+                                id="evidencia-firma"
+                                type="file"
+                                accept="image/*"
+                            >
+
+                        </div>
+
+                    </div>
+
+                    <p class="form-note">
+                        La evidencia se validará y almacenará
+                        mediante el backend antes de asociarla
+                        definitivamente a la entrega.
+                    </p>
+
+                </section>
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+                            <span>COBRO</span>
+                            <h2>Información de pago</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="detalle-cobro-entrega">
+
+                        <p>
+                            Si esta OT permite cobro en entrega,
+                            la información autorizada aparecerá aquí.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+                        <span>CONFIRMACIÓN</span>
+                        <h2>Finalizar gestión</h2>
+                    </div>
+
+                </header>
+
+                <div class="peoneta-acciones">
+
+                    <button type="button">
+                        Guardar borrador
+                    </button>
+
+                    <button type="button">
+                        Validar información
+                    </button>
+
+                    <button type="button">
+                        Confirmar resultado de entrega
+                    </button>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/peoneta.js"
+    ></script>
+
+</body>
+</html>

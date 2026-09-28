@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Bodega | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/operador.css">
+</head>
+
+<body class="operador-body">
+
+    <div class="operador-layout">
+
+        <aside class="operador-sidebar">
+
+            <div class="operador-logo">
+                <span>MAREXPRESS</span>
+                <small>Operaciones</small>
+            </div>
+
+            <nav class="operador-menu" aria-label="Menú operador">
+
+                <a class="operador-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="operador-menu-item" href="./recepcion.html">
+                    Recepción
+                </a>
+
+                <a class="operador-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="operador-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a
+                    class="operador-menu-item activo"
+                    href="./bodega.html"
+                    aria-current="page"
+                >
+                    Bodega
+                </a>
+
+                <a class="operador-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="operador-menu-item" href="./despacho.html">
+                    Pronto despacho
+                </a>
+
+                <a class="operador-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a class="operador-menu-item" href="./comprobantes.html">
+                    Comprobantes
+                </a>
+
+            </nav>
+
+            <div class="operador-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-operador"
+                    type="button"
+                    class="operador-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="operador-main">
+
+            <header class="operador-header">
+
+                <div>
+                    <p class="operador-header-label">
+                        CONTROL DE CARGA
+                    </p>
+
+                    <h1>Bodega</h1>
+                </div>
+
+                <div class="operador-usuario">
+
+                    <div class="operador-usuario-texto">
+                        <strong id="operador-nombre">
+                            Operador
+                        </strong>
+
+                        <span id="operador-rol">
+                            OPERADOR
+                        </span>
+                    </div>
+
+                    <div class="operador-avatar">
+                        O
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="operador-kpis">
+
+                <article class="operador-kpi">
+                    <span>En bodega</span>
+                    <strong id="kpi-operador-bodega">--</strong>
+                    <small>Bultos disponibles en la sucursal</small>
+                </article>
+
+                <article class="operador-kpi">
+                    <span>Asignados</span>
+                    <strong id="kpi-operador-asignados">--</strong>
+                    <small>Bultos asociados a manifiestos</small>
+                </article>
+
+                <article class="operador-kpi">
+                    <span>En traslado</span>
+                    <strong id="kpi-operador-traslado">--</strong>
+                    <small>Carga trasladándose entre sucursales</small>
+                </article>
+
+                <article class="operador-kpi operador-kpi-verde">
+                    <span>En tránsito</span>
+                    <strong id="kpi-operador-transito">--</strong>
+                    <small>Carga despachada hacia destino</small>
+                </article>
+
+            </section>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>SUCURSAL</span>
+                        <h2>Inventario físico</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-form-grid">
+
+                    <div class="field">
+
+                        <label for="bodega-sucursal">
+                            Sucursal
+                        </label>
+
+                        <select id="bodega-sucursal">
+
+                            <option value="">
+                                Seleccionar sucursal
+                            </option>
+
+                            <option value="1">
+                                Puerto Montt
+                            </option>
+
+                            <option value="2">
+                                Santiago
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="buscar-bulto">
+                            Buscar bulto
+                        </label>
+
+                        <input
+                            id="buscar-bulto"
+                            type="search"
+                            placeholder="Código de bulto u OT"
+                        >
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>INVENTARIO</span>
+                        <h2>Bultos registrados</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-table-wrapper">
+
+                    <table class="operador-table">
+
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>OT</th>
+                                <th>Tipo</th>
+                                <th>Peso</th>
+                                <th>Dimensiones</th>
+                                <th>Sucursal</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-bodega-operador">
+
+                            <tr>
+                                <td colspan="8">
+                                    Cargando inventario...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>MOVIMIENTOS</span>
+                            <h2>Últimos movimientos</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="operador-table-wrapper">
+
+                        <table class="operador-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Bulto</th>
+                                    <th>Movimiento</th>
+                                    <th>Origen</th>
+                                    <th>Destino</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-movimientos-operador">
+
+                                <tr>
+                                    <td colspan="5">
+                                        Cargando movimientos...
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>GESTIÓN</span>
+                            <h2>Acciones rápidas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="operador-acciones">
+
+                        <button type="button">
+                            Recibir bulto
+                        </button>
+
+                        <button type="button">
+                            Trasladar a otra sucursal
+                        </button>
+
+                        <button type="button">
+                            Asignar a manifiesto
+                        </button>
+
+                        <button type="button">
+                            Registrar devolución
+                        </button>
+
+                        <button type="button">
+                            Ver historial del bulto
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/operador.js"
+    ></script>
+
+</body>
+</html>

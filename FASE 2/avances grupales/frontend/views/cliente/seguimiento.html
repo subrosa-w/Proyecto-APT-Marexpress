@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Seguimiento | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/cliente.css">
+</head>
+
+<body class="cliente-body">
+
+    <div class="cliente-layout">
+
+        <aside class="cliente-sidebar">
+
+            <div class="cliente-logo">
+                <span>MAREXPRESS</span>
+                <small>Portal Cliente</small>
+            </div>
+
+            <nav class="cliente-menu" aria-label="Menú cliente">
+
+                <a class="cliente-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="cliente-menu-item" href="./ordenes.html">
+                    Mis órdenes
+                </a>
+
+                <a
+                    class="cliente-menu-item activo"
+                    href="./seguimiento.html"
+                    aria-current="page"
+                >
+                    Seguimiento
+                </a>
+
+                <a class="cliente-menu-item" href="./documentos.html">
+                    Documentos
+                </a>
+
+                <a class="cliente-menu-item" href="./pagos.html">
+                    Pagos
+                </a>
+
+                <a class="cliente-menu-item" href="./evidencias.html">
+                    Evidencias
+                </a>
+
+                <a class="cliente-menu-item" href="./perfil.html">
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="cliente-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-cliente"
+                    type="button"
+                    class="cliente-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="cliente-main">
+
+            <header class="cliente-header">
+
+                <div>
+
+                    <p class="cliente-header-label">
+                        TRAZABILIDAD
+                    </p>
+
+                    <h1>Seguimiento de envío</h1>
+
+                </div>
+
+                <div class="cliente-usuario">
+
+                    <div class="cliente-usuario-texto">
+
+                        <strong id="cliente-nombre">
+                            Cliente
+                        </strong>
+
+                        <span id="cliente-rol">
+                            CLIENTE
+                        </span>
+
+                    </div>
+
+                    <div class="cliente-avatar">
+                        C
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>BUSCAR ENVÍO</span>
+                        <h2>Consultar orden de transporte</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-form-grid">
+
+                    <div class="field">
+
+                        <label for="seguimiento-ot">
+                            Número de OT
+                        </label>
+
+                        <input
+                            id="seguimiento-ot"
+                            type="search"
+                            placeholder="Ej: OT-000123"
+                        >
+
+                    </div>
+
+                    <div class="field cliente-field-accion">
+
+                        <button
+                            id="btn-buscar-seguimiento"
+                            type="button"
+                            class="cliente-link-button"
+                        >
+                            Buscar envío
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>ORDEN</span>
+                            <h2>Información del envío</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="seguimiento-detalle-ot">
+
+                        <p>
+                            Ingresa una OT asociada a tu cuenta
+                            para consultar su estado.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>ESTADO ACTUAL</span>
+                            <h2>Situación de la carga</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="seguimiento-estado-actual">
+
+                        <p>
+                            El estado actual aparecerá aquí.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>RECORRIDO</span>
+                        <h2>Historial de seguimiento</h2>
+                    </div>
+
+                </header>
+
+                <div
+                    id="seguimiento-linea-tiempo"
+                    class="cliente-timeline"
+                >
+
+                    <div class="cliente-timeline-item">
+
+                        <div class="cliente-timeline-marca"></div>
+
+                        <div>
+                            <strong>Orden creada</strong>
+                            <p>
+                                La información del recorrido
+                                aparecerá cuando selecciones una OT.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>CARGA</span>
+                            <h2>Bultos del envío</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="cliente-table-wrapper">
+
+                        <table class="cliente-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Bulto</th>
+                                    <th>Tipo</th>
+                                    <th>Peso</th>
+                                    <th>Dimensiones</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-seguimiento-bultos">
+
+                                <tr>
+                                    <td colspan="5">
+                                        Selecciona una orden.
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>RUTA</span>
+                            <h2>Origen y destino</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="seguimiento-ruta">
+
+                        <p>
+                            Aquí aparecerán el origen,
+                            destino y comunas asociadas.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>ENTREGA</span>
+                            <h2>Resultado de entrega</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="seguimiento-entrega">
+
+                        <p>
+                            Cuando exista un intento de entrega,
+                            su resultado aparecerá aquí.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>RESPALDO</span>
+                            <h2>Evidencia disponible</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="seguimiento-evidencia">
+
+                        <p>
+                            Las evidencias autorizadas de la entrega
+                            estarán disponibles aquí.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/cliente.js"
+    ></script>
+
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Mi perfil | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/peoneta.css">
+</head>
+
+<body class="peoneta-body">
+
+    <div class="peoneta-layout">
+
+        <aside class="peoneta-sidebar">
+
+            <div class="peoneta-logo">
+                <span>MAREXPRESS</span>
+                <small>Reparto</small>
+            </div>
+
+            <nav class="peoneta-menu" aria-label="Menú peoneta">
+
+                <a class="peoneta-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="peoneta-menu-item" href="./manifiestos.html">
+                    Mis manifiestos
+                </a>
+
+                <a class="peoneta-menu-item" href="./entregas.html">
+                    Entregas
+                </a>
+
+                <a class="peoneta-menu-item" href="./historial.html">
+                    Historial
+                </a>
+
+                <a
+                    class="peoneta-menu-item activo"
+                    href="./perfil.html"
+                    aria-current="page"
+                >
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="peoneta-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-peoneta"
+                    type="button"
+                    class="peoneta-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="peoneta-main">
+
+            <header class="peoneta-header">
+
+                <div>
+
+                    <p class="peoneta-header-label">
+                        MI CUENTA
+                    </p>
+
+                    <h1>Mi perfil</h1>
+
+                </div>
+
+                <div class="peoneta-usuario">
+
+                    <div class="peoneta-usuario-texto">
+
+                        <strong id="peoneta-nombre">
+                            Peoneta
+                        </strong>
+
+                        <span id="peoneta-rol">
+                            PEONETA
+                        </span>
+
+                    </div>
+
+                    <div class="peoneta-avatar">
+                        P
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="peoneta-grid-principal">
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>DATOS PERSONALES</span>
+
+                            <h2>
+                                Información de usuario
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-perfil-datos">
+
+                        <p>
+                            Nombre:
+                            <strong id="perfil-nombre">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Usuario:
+                            <strong id="perfil-usuario">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Correo:
+                            <strong id="perfil-correo">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Rol:
+                            <strong id="perfil-rol">
+                                PEONETA
+                            </strong>
+                        </p>
+
+                        <p>
+                            Estado:
+                            <strong id="perfil-estado">
+                                --
+                            </strong>
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>JORNADA</span>
+
+                            <h2>
+                                Resumen actual
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-perfil-datos">
+
+                        <p>
+                            Manifiesto actual:
+                            <strong id="perfil-manifiesto">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            OT asignadas:
+                            <strong id="perfil-ot-asignadas">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Entregas completadas:
+                            <strong id="perfil-entregas">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Entregas pendientes:
+                            <strong id="perfil-pendientes">
+                                --
+                            </strong>
+                        </p>
+
+                        <p>
+                            Incidencias:
+                            <strong id="perfil-incidencias">
+                                --
+                            </strong>
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+
+                        <span>ASIGNACIONES</span>
+
+                        <h2>
+                            Últimos manifiestos
+                        </h2>
+
+                    </div>
+
+                </header>
+
+                <div class="peoneta-table-wrapper">
+
+                    <table class="peoneta-table">
+
+                        <thead>
+                            <tr>
+                                <th>Manifiesto</th>
+                                <th>Fecha</th>
+                                <th>Origen</th>
+                                <th>Destinos</th>
+                                <th>OT</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-perfil-manifiestos">
+
+                            <tr>
+                                <td colspan="6">
+                                    Cargando asignaciones...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="peoneta-grid-principal">
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>SEGURIDAD</span>
+
+                            <h2>
+                                Acceso a la cuenta
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-acciones">
+
+                        <button type="button">
+                            Cambiar contraseña
+                        </button>
+
+                        <button type="button">
+                            Revisar datos de cuenta
+                        </button>
+
+                    </div>
+
+                </section>
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>ATAJOS</span>
+
+                            <h2>
+                                Ir rápidamente
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-acciones">
+
+                        <a href="./manifiestos.html">
+                            Mis manifiestos
+                        </a>
+
+                        <a href="./entregas.html">
+                            Registrar entrega
+                        </a>
+
+                        <a href="./historial.html">
+                            Historial de entregas
+                        </a>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/peoneta.js"
+    ></script>
+
+</body>
+</html>

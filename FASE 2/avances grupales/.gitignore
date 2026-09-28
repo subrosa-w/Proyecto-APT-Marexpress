@@ -1,0 +1,81 @@
+﻿# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.envrc
+.npmrc
+secrets/
+credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+credentials.json
+service-account*.json
+service_account*.json
+
+# Dependencias Node.js
+node_modules/
+
+# Entornos virtuales Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Archivos generados
+backend/generated/prisma/
+dist/
+build/
+coverage/
+.cache/
+.vite/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+
+# Archivos subidos y respaldos privados
+uploads/
+backups/
+backup/
+*.sql.gz
+*.sql.zip
+*.dump
+*.bak
+
+# Archivos temporales y del sistema
+tmp/
+temp/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# Scripts locales de administración y pruebas
+/backend/configurar-password-admin.js
+/backend/cambiar-correo-admin.js
+/backend/configurar-nombre-usuario.js
+/backend/consultar-usuarios.js
+/backend/revisar-usuarios.js
+/backend/probar-correo.js
+/backend/temp-*.js
+
+# Copias antiguas del proyecto
+*.backup
+*.backup.js
+*.backup-*.js
+*.backup-*.prisma
+*.antes-*.js
+*_backup.html
+
+# Documentación local de herramientas de IA
+/backend/.agents/
+/backend/.claude/
+/backend/.windsurf/

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Reportes | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <a class="admin-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="admin-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="admin-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="admin-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="admin-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="admin-menu-item" href="./cuentas-corrientes.html">
+                    Cuenta corriente
+                </a>
+
+                <a class="admin-menu-item" href="./facturacion.html">
+                    Facturación
+                </a>
+
+                <a class="admin-menu-item" href="./usuarios.html">
+                    Usuarios
+                </a>
+
+                <a
+                    class="admin-menu-item activo"
+                    href="./reportes.html"
+                    aria-current="page"
+                >
+                    Reportes
+                </a>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        ANÁLISIS OPERACIONAL
+                    </p>
+
+                    <h1>Reportes</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-kpis">
+
+                <article class="admin-kpi">
+                    <span>OT del período</span>
+                    <strong id="kpi-reporte-ot">--</strong>
+                    <small>Órdenes registradas en el período</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Entregas completadas</span>
+                    <strong id="kpi-reporte-entregadas">--</strong>
+                    <small>Órdenes entregadas correctamente</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Incidencias</span>
+                    <strong id="kpi-reporte-incidencias">--</strong>
+                    <small>Rechazos, parciales y no recibidos</small>
+                </article>
+
+                <article class="admin-kpi admin-kpi-verde">
+                    <span>Facturación</span>
+                    <strong id="kpi-reporte-facturacion">--</strong>
+                    <small>Total facturado en el período</small>
+                </article>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>FILTROS</span>
+                        <h2>Generar reporte</h2>
+                    </div>
+
+                </header>
+
+                <div class="admin-acciones">
+
+                    <button type="button">
+                        Reporte de órdenes de transporte
+                    </button>
+
+                    <button type="button">
+                        Reporte de entregas
+                    </button>
+
+                    <button type="button">
+                        Reporte de manifiestos
+                    </button>
+
+                    <button type="button">
+                        Reporte de bodega
+                    </button>
+
+                    <button type="button">
+                        Reporte de clientes
+                    </button>
+
+                    <button type="button">
+                        Reporte de facturación
+                    </button>
+
+                    <button type="button">
+                        Reporte de cuenta corriente
+                    </button>
+
+                    <button type="button">
+                        Reporte de incidencias
+                    </button>
+
+                </div>
+
+            </section>
+
+            <section class="admin-grid-principal">
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>OPERACIÓN</span>
+                            <h2>Resumen de entregas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Estado</th>
+                                    <th>Cantidad</th>
+                                    <th>Porcentaje</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-reporte-entregas">
+
+                                <tr>
+                                    <td colspan="3">
+                                        Cargando información...
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>EXPORTACIÓN</span>
+                            <h2>Descargar información</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            Exportar PDF
+                        </button>
+
+                        <button type="button">
+                            Exportar Excel
+                        </button>
+
+                        <button type="button">
+                            Imprimir reporte
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>INDICADORES</span>
+                        <h2>Rendimiento operacional</h2>
+                    </div>
+
+                </header>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Indicador</th>
+                                <th>Resultado</th>
+                                <th>Período</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-indicadores">
+
+                            <tr>
+                                <td colspan="3">
+                                    Los indicadores se cargarán desde la API.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/administrador.js"
+    ></script>
+
+</body>
+</html>

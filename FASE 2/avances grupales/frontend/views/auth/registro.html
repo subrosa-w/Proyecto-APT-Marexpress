@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Crear cuenta | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/registro.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="navbar" aria-label="Navegación principal">
+            <a class="navbar-brand" href="../../index.html">
+                MAREXPRESS
+            </a>
+
+            <div class="navbar-links">
+                <a class="nav-access" href="./index.html">
+                    Iniciar sesión
+                </a>
+
+                <a
+                    class="nav-register"
+                    href="./registro.html"
+                    aria-current="page"
+                >
+                    Crear usuario
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="registro-layout">
+        <section class="registro-presentacion">
+            <p class="eyebrow">PORTAL DE CLIENTES</p>
+            <h1>Tus envíos, más cerca.</h1>
+
+            <p>
+                Crea tu cuenta para consultar tus órdenes de transporte,
+                seguir tus envíos y acceder a la información autorizada.
+            </p>
+
+            <ol class="registro-pasos">
+                <li>
+                    <strong>Crea tu cuenta</strong>
+                    <span>Completa tus datos personales.</span>
+                </li>
+
+                <li>
+                    <strong>Verifica tu correo</strong>
+                    <span>Confirma tu acceso con un código de verificación.</span>
+                </li>
+
+                <li>
+                    <strong>Solicita acceso a tu empresa</strong>
+                    <span>
+                        Si corresponde, revisaremos tu solicitud
+                        antes de habilitar sus datos.
+                    </span>
+                </li>
+            </ol>
+
+            <p class="form-note">
+                La vinculación a una empresa y la habilitación de cuenta
+                corriente requieren validación independiente.
+            </p>
+        </section>
+
+        <section
+            class="registro-card"
+            aria-labelledby="titulo-registro"
+        >
+            <header>
+                <p class="eyebrow">BIENVENIDO A MAREXPRESS</p>
+                <h2 id="titulo-registro">Crear cuenta</h2>
+                <p>Los campos marcados con * son obligatorios.</p>
+            </header>
+
+            <p
+                id="registro-mensaje"
+                class="message"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                hidden
+            ></p>
+
+            <form id="registro-form" method="post">
+                <fieldset class="registro-seccion">
+                    <legend>Datos personales</legend>
+
+                    <div class="registro-grid">
+                        <div class="field">
+                            <label for="nombre">Nombre *</label>
+                            <input
+                                id="nombre"
+                                name="nombre"
+                                type="text"
+                                autocomplete="given-name"
+                                maxlength="100"
+                                required
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label for="apellido">Apellido *</label>
+                            <input
+                                id="apellido"
+                                name="apellido"
+                                type="text"
+                                autocomplete="family-name"
+                                maxlength="100"
+                                required
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label for="rut">RUT personal *</label>
+                            <input
+                                id="rut"
+                                name="rut"
+                                type="text"
+                                placeholder="12345678-9"
+                                maxlength="12"
+                                spellcheck="false"
+                                aria-describedby="rut-ayuda"
+                                required
+                            >
+                            <p id="rut-ayuda" class="form-note">
+                                Ingresa tu RUT con dígito verificador.
+                            </p>
+                        </div>
+
+                        <div class="field">
+                            <label for="telefono">Teléfono</label>
+                            <input
+                                id="telefono"
+                                name="telefono"
+                                type="tel"
+                                autocomplete="tel"
+                                placeholder="+56 9 1234 5678"
+                                maxlength="20"
+                            >
+                        </div>
+
+                        <div class="field registro-ancho-completo">
+                            <label for="correo">Correo electrónico *</label>
+                            <input
+                                id="correo"
+                                name="correo"
+                                type="email"
+                                autocomplete="email"
+                                autocapitalize="none"
+                                spellcheck="false"
+                                maxlength="150"
+                                aria-describedby="correo-ayuda"
+                                required
+                            >
+                            <p id="correo-ayuda" class="form-note">
+                                Enviaremos aquí el código para verificar
+                                tu cuenta. Si solicitas acceso a una empresa,
+                                utiliza tu correo corporativo cuando lo tengas.
+                            </p>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="registro-seccion">
+                    <legend>Datos de acceso</legend>
+
+                    <div class="field">
+                        <label for="nombreUsuario">Nombre de usuario *</label>
+                        <input
+                            id="nombreUsuario"
+                            name="nombreUsuario"
+                            type="text"
+                            autocomplete="username"
+                            autocapitalize="none"
+                            spellcheck="false"
+                            maxlength="50"
+                            required
+                        >
+                    </div>
+
+                    <div class="registro-grid">
+                        <div class="field">
+                            <label for="password">Contraseña *</label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                autocomplete="new-password"
+                                minlength="10"
+                                aria-describedby="password-ayuda"
+                                required
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label for="confirmarPassword">
+                                Confirmar contraseña *
+                            </label>
+                            <input
+                                id="confirmarPassword"
+                                name="confirmarPassword"
+                                type="password"
+                                autocomplete="new-password"
+                                minlength="10"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <p id="password-ayuda" class="form-note">
+                        Usa al menos 10 caracteres, incluyendo mayúscula,
+                        minúscula, número y carácter especial.
+                    </p>
+                </fieldset>
+
+                <fieldset class="registro-seccion">
+                    <legend>Acceso a empresa — opcional</legend>
+
+                    <p class="form-note">
+                        Completa esta sección si necesitas consultar los
+                        envíos de una empresa. Conocer su RUT no otorga acceso:
+                        revisaremos la vinculación.
+                    </p>
+
+                    <div class="registro-grid">
+                        <div class="field">
+                            <label for="rutEmpresa">RUT de la empresa</label>
+                            <input
+                                id="rutEmpresa"
+                                name="rutEmpresa"
+                                type="text"
+                                placeholder="76123456-7"
+                                maxlength="12"
+                                spellcheck="false"
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label for="razonSocial">Razón social</label>
+                            <input
+                                id="razonSocial"
+                                name="razonSocial"
+                                type="text"
+                                autocomplete="organization"
+                                maxlength="150"
+                            >
+                        </div>
+                    </div>
+                </fieldset>
+
+                <button
+                    id="registro-submit"
+                    class="button-primary"
+                    type="submit"
+                    disabled
+                >
+                    Crear cuenta y verificar correo
+                </button>
+
+                <p class="registro-login">
+                    ¿Ya tienes una cuenta?
+                    <a href="./index.html">Inicia sesión</a>
+                </p>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

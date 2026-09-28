@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Pronto despacho | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/operador.css">
+</head>
+
+<body class="operador-body">
+
+    <div class="operador-layout">
+
+        <aside class="operador-sidebar">
+
+            <div class="operador-logo">
+                <span>MAREXPRESS</span>
+                <small>Operaciones</small>
+            </div>
+
+            <nav class="operador-menu" aria-label="Menú operador">
+
+                <a class="operador-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="operador-menu-item" href="./recepcion.html">
+                    Recepción
+                </a>
+
+                <a class="operador-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="operador-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="operador-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="operador-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a
+                    class="operador-menu-item activo"
+                    href="./despacho.html"
+                    aria-current="page"
+                >
+                    Pronto despacho
+                </a>
+
+                <a class="operador-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a class="operador-menu-item" href="./comprobantes.html">
+                    Comprobantes
+                </a>
+
+            </nav>
+
+            <div class="operador-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-operador"
+                    type="button"
+                    class="operador-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="operador-main">
+
+            <header class="operador-header">
+
+                <div>
+                    <p class="operador-header-label">
+                        PREPARACIÓN DE SALIDA
+                    </p>
+
+                    <h1>Pronto despacho</h1>
+                </div>
+
+                <div class="operador-usuario">
+
+                    <div class="operador-usuario-texto">
+                        <strong id="operador-nombre">
+                            Operador
+                        </strong>
+
+                        <span id="operador-rol">
+                            OPERADOR
+                        </span>
+                    </div>
+
+                    <div class="operador-avatar">
+                        O
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="operador-kpis">
+
+                <article class="operador-kpi">
+                    <span>Manifiestos pendientes</span>
+                    <strong id="kpi-despacho-pendientes">--</strong>
+                    <small>Viajes aún no autorizados para salir</small>
+                </article>
+
+                <article class="operador-kpi">
+                    <span>OT preparadas</span>
+                    <strong id="kpi-despacho-ot">--</strong>
+                    <small>Órdenes listas para despacho</small>
+                </article>
+
+                <article class="operador-kpi">
+                    <span>Bultos asignados</span>
+                    <strong id="kpi-despacho-bultos">--</strong>
+                    <small>Carga física preparada</small>
+                </article>
+
+                <article class="operador-kpi operador-kpi-verde">
+                    <span>Salidas listas</span>
+                    <strong id="kpi-despacho-listas">--</strong>
+                    <small>Manifiestos con carga completa</small>
+                </article>
+
+            </section>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>PREPARACIÓN</span>
+                        <h2>Manifiestos por despachar</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-table-wrapper">
+
+                    <table class="operador-table">
+
+                        <thead>
+                            <tr>
+                                <th>Manifiesto</th>
+                                <th>Sucursal</th>
+                                <th>Destinos</th>
+                                <th>OT</th>
+                                <th>Bultos esperados</th>
+                                <th>Bultos asignados</th>
+                                <th>Vehículo</th>
+                                <th>Conductor</th>
+                                <th>Peoneta</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-pronto-despacho">
+
+                            <tr>
+                                <td colspan="11">
+                                    Cargando manifiestos pendientes...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>VALIDACIÓN DE CARGA</span>
+                            <h2>Detalle del manifiesto</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="detalle-pronto-despacho">
+
+                        <p>
+                            Selecciona un manifiesto para comprobar
+                            sus órdenes y bultos antes de la salida.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>CONTROL</span>
+                            <h2>Lista de verificación</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="operador-checklist">
+
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="check-ot-completas"
+                                disabled
+                            >
+                            Órdenes correctamente asociadas
+                        </label>
+
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="check-bultos-completos"
+                                disabled
+                            >
+                            Todos los bultos están asignados
+                        </label>
+
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="check-vehiculo"
+                                disabled
+                            >
+                            Vehículo asignado
+                        </label>
+
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="check-conductor"
+                                disabled
+                            >
+                            Conductor asignado
+                        </label>
+
+                        <label>
+                            <input
+                                type="checkbox"
+                                id="check-peoneta"
+                                disabled
+                            >
+                            Peoneta asignado
+                        </label>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>ACCIONES</span>
+                        <h2>Gestión del despacho</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-acciones">
+
+                    <button type="button">
+                        Revisar órdenes
+                    </button>
+
+                    <button type="button">
+                        Revisar bultos
+                    </button>
+
+                    <button type="button">
+                        Asignar carga faltante
+                    </button>
+
+                    <button type="button">
+                        Imprimir manifiesto
+                    </button>
+
+                    <button type="button">
+                        Confirmar pronto despacho
+                    </button>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/operador.js"
+    ></script>
+
+</body>
+</html>

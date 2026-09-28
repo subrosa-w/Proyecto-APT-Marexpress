@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Administrador | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <button class="admin-menu-item activo" type="button">
+                    Inicio
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Órdenes de transporte
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Clientes
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Manifiestos
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Bodega
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Cuenta corriente
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Facturación
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Usuarios
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Reportes
+                </button>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        PANEL ADMINISTRATIVO
+                    </p>
+
+                    <h1>Resumen operacional</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-kpis">
+
+                <article class="admin-kpi">
+                    <span>OT activas</span>
+                    <strong>--</strong>
+                    <small>Órdenes en operación</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>En tránsito</span>
+                    <strong>--</strong>
+                    <small>Órdenes actualmente viajando</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Entregadas</span>
+                    <strong>--</strong>
+                    <small>Entregas completadas</small>
+                </article>
+
+                <article class="admin-kpi admin-kpi-verde">
+                    <span>Bultos en bodega</span>
+                    <strong>--</strong>
+                    <small>Inventario físico disponible</small>
+                </article>
+
+            </section>
+
+            <section class="admin-grid-principal">
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>OPERACIONES</span>
+                            <h2>Órdenes recientes</h2>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="admin-link-button"
+                        >
+                            Ver todas
+                        </button>
+
+                    </header>
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-table">
+
+                            <thead>
+                                <tr>
+                                    <th>OT</th>
+                                    <th>Cliente</th>
+                                    <th>Destino</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr>
+                                    <td colspan="4">
+                                        Cargando información...
+                                    </td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>GESTIÓN</span>
+                            <h2>Acciones rápidas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            Crear orden de transporte
+                        </button>
+
+                        <button type="button">
+                            Crear manifiesto
+                        </button>
+
+                        <button type="button">
+                            Revisar bodega
+                        </button>
+
+                        <button type="button">
+                            Validar cliente empresa
+                        </button>
+
+                        <button type="button">
+                            Revisar cuentas corrientes
+                        </button>
+
+                        <button type="button">
+                            Registrar pago
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="admin-card admin-alertas">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>CONTROL OPERACIONAL</span>
+                        <h2>Alertas y pendientes</h2>
+                    </div>
+
+                </header>
+
+                <div class="admin-alertas-lista">
+                    <p>No hay alertas cargadas todavía.</p>
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+    
+    <script type="module" src="../../js/administrador.js"></script>
+</body>
+</html>

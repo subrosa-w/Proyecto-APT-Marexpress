@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Usuarios | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <a class="admin-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="admin-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="admin-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="admin-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="admin-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="admin-menu-item" href="./cuentas-corrientes.html">
+                    Cuenta corriente
+                </a>
+
+                <a class="admin-menu-item" href="./facturacion.html">
+                    Facturación
+                </a>
+
+                <a
+                    class="admin-menu-item activo"
+                    href="./usuarios.html"
+                    aria-current="page"
+                >
+                    Usuarios
+                </a>
+
+                <a class="admin-menu-item" href="./reportes.html">
+                    Reportes
+                </a>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        SEGURIDAD Y ACCESOS
+                    </p>
+
+                    <h1>Usuarios</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-kpis">
+
+                <article class="admin-kpi">
+                    <span>Usuarios activos</span>
+                    <strong id="kpi-usuarios-activos">--</strong>
+                    <small>Cuentas habilitadas</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Administradores</span>
+                    <strong id="kpi-admins">--</strong>
+                    <small>Usuarios con rol administrador</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Operadores</span>
+                    <strong id="kpi-operadores">--</strong>
+                    <small>Usuarios operacionales</small>
+                </article>
+
+                <article class="admin-kpi admin-kpi-verde">
+                    <span>Peonetas</span>
+                    <strong id="kpi-peonetas">--</strong>
+                    <small>Usuarios asignables a manifiestos</small>
+                </article>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>CUENTAS DEL SISTEMA</span>
+                        <h2>Listado de usuarios</h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="button-primary"
+                    >
+                        Nuevo usuario
+                    </button>
+
+                </header>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Nombre</th>
+                                <th>Correo</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Último acceso</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-usuarios">
+
+                            <tr>
+                                <td colspan="7">
+                                    Cargando usuarios...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="admin-grid-principal">
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>CONTROL DE ACCESO</span>
+                            <h2>Roles del sistema</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            ADMINISTRADOR
+                        </button>
+
+                        <button type="button">
+                            OPERADOR
+                        </button>
+
+                        <button type="button">
+                            PEONETA
+                        </button>
+
+                        <button type="button">
+                            CLIENTE
+                        </button>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>GESTIÓN</span>
+                            <h2>Acciones rápidas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            Crear usuario interno
+                        </button>
+
+                        <button type="button">
+                            Cambiar rol
+                        </button>
+
+                        <button type="button">
+                            Activar o desactivar cuenta
+                        </button>
+
+                        <button type="button">
+                            Revisar acceso empresarial
+                        </button>
+
+                        <button type="button">
+                            Ver actividad de usuario
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/administrador.js"
+    ></script>
+
+</body>
+</html>

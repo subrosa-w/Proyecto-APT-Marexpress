@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Clientes | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/operador.css">
+</head>
+
+<body class="operador-body">
+
+    <div class="operador-layout">
+
+        <aside class="operador-sidebar">
+
+            <div class="operador-logo">
+                <span>MAREXPRESS</span>
+                <small>Operaciones</small>
+            </div>
+
+            <nav class="operador-menu" aria-label="Menú operador">
+
+                <a class="operador-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="operador-menu-item" href="./recepcion.html">
+                    Recepción
+                </a>
+
+                <a class="operador-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a
+                    class="operador-menu-item activo"
+                    href="./clientes.html"
+                    aria-current="page"
+                >
+                    Clientes
+                </a>
+
+                <a class="operador-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="operador-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="operador-menu-item" href="./despacho.html">
+                    Pronto despacho
+                </a>
+
+                <a class="operador-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a class="operador-menu-item" href="./comprobantes.html">
+                    Comprobantes
+                </a>
+
+            </nav>
+
+            <div class="operador-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-operador"
+                    type="button"
+                    class="operador-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="operador-main">
+
+            <header class="operador-header">
+
+                <div>
+                    <p class="operador-header-label">
+                        CONSULTA COMERCIAL
+                    </p>
+
+                    <h1>Clientes</h1>
+                </div>
+
+                <div class="operador-usuario">
+
+                    <div class="operador-usuario-texto">
+                        <strong id="operador-nombre">
+                            Operador
+                        </strong>
+
+                        <span id="operador-rol">
+                            OPERADOR
+                        </span>
+                    </div>
+
+                    <div class="operador-avatar">
+                        O
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>BÚSQUEDA</span>
+                        <h2>Directorio de clientes</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-form-grid">
+
+                    <div class="field">
+
+                        <label for="buscar-cliente">
+                            Buscar cliente
+                        </label>
+
+                        <input
+                            id="buscar-cliente"
+                            type="search"
+                            placeholder="RUT, nombre o razón social"
+                        >
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="filtro-cliente-comuna">
+                            Comuna
+                        </label>
+
+                        <select id="filtro-cliente-comuna">
+                            <option value="">
+                                Todas
+                            </option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="operador-table-wrapper">
+
+                    <table class="operador-table">
+
+                        <thead>
+                            <tr>
+                                <th>RUT</th>
+                                <th>Cliente / Razón social</th>
+                                <th>Comuna</th>
+                                <th>Dirección principal</th>
+                                <th>Teléfono</th>
+                                <th>Correo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-clientes-operador">
+
+                            <tr>
+                                <td colspan="8">
+                                    Cargando clientes...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>DETALLE</span>
+                            <h2>Información del cliente</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="detalle-cliente-operador">
+
+                        <p>
+                            Selecciona un cliente para consultar sus
+                            datos generales y ubicaciones registradas.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>UBICACIONES</span>
+                            <h2>Sedes y direcciones</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="ubicaciones-cliente-operador">
+
+                        <p>
+                            Las ubicaciones autorizadas del cliente
+                            aparecerán aquí.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>GESTIÓN OPERACIONAL</span>
+                        <h2>Acciones permitidas</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-acciones">
+
+                    <button type="button">
+                        Seleccionar cliente para OT
+                    </button>
+
+                    <button type="button">
+                        Ver ubicaciones
+                    </button>
+
+                    <button type="button">
+                        Crear orden de transporte
+                    </button>
+
+                    <button type="button">
+                        Consultar órdenes del cliente
+                    </button>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/operador.js"
+    ></script>
+
+</body>
+</html>

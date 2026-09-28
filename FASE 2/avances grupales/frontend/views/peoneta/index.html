@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Peoneta | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/peoneta.css">
+</head>
+
+<body class="peoneta-body">
+
+    <div class="peoneta-layout">
+
+        <aside class="peoneta-sidebar">
+
+            <div class="peoneta-logo">
+                <span>MAREXPRESS</span>
+                <small>Reparto</small>
+            </div>
+
+            <nav
+                class="peoneta-menu"
+                aria-label="Menú peoneta"
+            >
+
+                <a
+                    class="peoneta-menu-item activo"
+                    href="./index.html"
+                    aria-current="page"
+                >
+                    Inicio
+                </a>
+
+                <a
+                    class="peoneta-menu-item"
+                    href="./manifiestos.html"
+                >
+                    Mis manifiestos
+                </a>
+
+                <a
+                    class="peoneta-menu-item"
+                    href="./entregas.html"
+                >
+                    Entregas
+                </a>
+
+                <a
+                    class="peoneta-menu-item"
+                    href="./historial.html"
+                >
+                    Historial
+                </a>
+
+                <a
+                    class="peoneta-menu-item"
+                    href="./perfil.html"
+                >
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="peoneta-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-peoneta"
+                    type="button"
+                    class="peoneta-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <main class="peoneta-main">
+
+            <header class="peoneta-header">
+
+                <div>
+
+                    <p class="peoneta-header-label">
+                        PANEL DE REPARTO
+                    </p>
+
+                    <h1>Mi jornada</h1>
+
+                </div>
+
+                <div class="peoneta-usuario">
+
+                    <div class="peoneta-usuario-texto">
+
+                        <strong id="peoneta-nombre">
+                            Peoneta
+                        </strong>
+
+                        <span id="peoneta-rol">
+                            PEONETA
+                        </span>
+
+                    </div>
+
+                    <div class="peoneta-avatar">
+                        P
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <section class="peoneta-kpis">
+
+                <article class="peoneta-kpi">
+
+                    <span>Manifiestos asignados</span>
+
+                    <strong id="kpi-peoneta-manifiestos">
+                        --
+                    </strong>
+
+                    <small>
+                        Viajes asignados a tu usuario
+                    </small>
+
+                </article>
+
+                <article class="peoneta-kpi">
+
+                    <span>OT pendientes</span>
+
+                    <strong id="kpi-peoneta-pendientes">
+                        --
+                    </strong>
+
+                    <small>
+                        Entregas que aún debes gestionar
+                    </small>
+
+                </article>
+
+                <article class="peoneta-kpi">
+
+                    <span>Entregadas</span>
+
+                    <strong id="kpi-peoneta-entregadas">
+                        --
+                    </strong>
+
+                    <small>
+                        Entregas completadas en la jornada
+                    </small>
+
+                </article>
+
+                <article class="peoneta-kpi peoneta-kpi-verde">
+
+                    <span>Incidencias</span>
+
+                    <strong id="kpi-peoneta-incidencias">
+                        --
+                    </strong>
+
+                    <small>
+                        Parciales, rechazadas o no recibidas
+                    </small>
+
+                </article>
+
+            </section>
+
+
+            <section class="peoneta-grid-principal">
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>VIAJE ACTUAL</span>
+
+                            <h2>
+                                Manifiesto asignado
+                            </h2>
+
+                        </div>
+
+                        <a
+                            href="./manifiestos.html"
+                            class="peoneta-link-button"
+                        >
+                            Ver manifiestos
+                        </a>
+
+                    </header>
+
+                    <div id="peoneta-manifiesto-actual">
+
+                        <p>
+                            Aquí aparecerá el manifiesto asignado
+                            a tu usuario.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>GESTIÓN</span>
+
+                            <h2>
+                                Acciones rápidas
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-acciones">
+
+                        <a href="./manifiestos.html">
+                            Ver carga asignada
+                        </a>
+
+                        <a href="./entregas.html">
+                            Registrar entrega
+                        </a>
+
+                        <a href="./historial.html">
+                            Revisar historial
+                        </a>
+
+                        <a href="./perfil.html">
+                            Ver mi perfil
+                        </a>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+
+                        <span>ENTREGAS PENDIENTES</span>
+
+                        <h2>
+                            Próximas órdenes
+                        </h2>
+
+                    </div>
+
+                </header>
+
+                <div class="peoneta-table-wrapper">
+
+                    <table class="peoneta-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>OT</th>
+                                <th>Destinatario</th>
+                                <th>Comuna</th>
+                                <th>Dirección</th>
+                                <th>Bultos</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-entregas-pendientes">
+
+                            <tr>
+                                <td colspan="7">
+                                    Cargando entregas...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <section class="peoneta-grid-principal">
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>CARGA</span>
+
+                            <h2>
+                                Bultos del viaje
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div id="peoneta-bultos-resumen">
+
+                        <p>
+                            Aquí aparecerán los bultos físicos
+                            asociados al manifiesto asignado.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>CONTROL</span>
+
+                            <h2>
+                                Estado de jornada
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div id="peoneta-estado-jornada">
+
+                        <p>
+                            Sin información cargada todavía.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/peoneta.js"
+    ></script>
+
+</body>
+</html>

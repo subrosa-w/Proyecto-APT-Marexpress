@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Clientes | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <a class="admin-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="admin-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a
+                    class="admin-menu-item activo"
+                    href="./clientes.html"
+                    aria-current="page"
+                >
+                    Clientes
+                </a>
+
+                <a class="admin-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="admin-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="admin-menu-item" href="./cuentas-corrientes.html">
+                    Cuenta corriente
+                </a>
+
+                <a class="admin-menu-item" href="./facturacion.html">
+                    Facturación
+                </a>
+
+                <a class="admin-menu-item" href="./usuarios.html">
+                    Usuarios
+                </a>
+
+                <a class="admin-menu-item" href="./reportes.html">
+                    Reportes
+                </a>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        GESTIÓN COMERCIAL
+                    </p>
+
+                    <h1>Clientes</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-kpis">
+
+                <article class="admin-kpi">
+                    <span>Clientes activos</span>
+                    <strong id="kpi-clientes-activos">--</strong>
+                    <small>Clientes habilitados en el sistema</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Empresas</span>
+                    <strong id="kpi-clientes-empresa">--</strong>
+                    <small>Clientes registrados como empresa</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Solicitudes pendientes</span>
+                    <strong id="kpi-solicitudes">--</strong>
+                    <small>Accesos empresariales por revisar</small>
+                </article>
+
+                <article class="admin-kpi admin-kpi-verde">
+                    <span>Cuenta corriente</span>
+                    <strong id="kpi-cuenta-corriente">--</strong>
+                    <small>Clientes con crédito habilitado</small>
+                </article>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>DIRECTORIO</span>
+                        <h2>Listado de clientes</h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="button-primary"
+                    >
+                        Nuevo cliente
+                    </button>
+
+                </header>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>RUT</th>
+                                <th>Cliente / Razón social</th>
+                                <th>Comuna</th>
+                                <th>Teléfono</th>
+                                <th>Correo</th>
+                                <th>Cuenta corriente</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-clientes">
+
+                            <tr>
+                                <td colspan="8">
+                                    Cargando clientes...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="admin-grid-principal">
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>VALIDACIÓN</span>
+                            <h2>Solicitudes de acceso empresarial</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="solicitudes-empresa">
+                        <p>
+                            Las solicitudes pendientes aparecerán aquí.
+                        </p>
+                    </div>
+
+                </section>
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>GESTIÓN</span>
+                            <h2>Acciones rápidas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            Crear cliente
+                        </button>
+
+                        <button type="button">
+                            Agregar ubicación
+                        </button>
+
+                        <button type="button">
+                            Validar acceso empresarial
+                        </button>
+
+                        <button type="button">
+                            Revisar cuenta corriente
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/administrador.js"
+    ></script>
+
+</body>
+</html>

@@ -1,0 +1,654 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model cliente {
+  idCliente         Int                 @id @default(autoincrement())
+  rut               String              @unique(map: "rut") @db.VarChar(12)
+  razonSocial       String              @db.VarChar(150)
+  nombreFantasia    String?             @db.VarChar(150)
+  giro              String?             @db.VarChar(150)
+  direccion         String              @db.VarChar(200)
+  telefono          String?             @db.VarChar(20)
+  correo            String?             @db.VarChar(150)
+  estado            Boolean             @default(true)
+  idComuna          Int
+  comuna            comuna              @relation(fields: [idComuna], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente_comuna")
+  cliente_ubicacion cliente_ubicacion[]
+  cliente_usuario   cliente_usuario[]
+  cuenta_corriente  cuenta_corriente?
+  orden_transporte  orden_transporte[]
+
+  @@index([idComuna], map: "fk_cliente_comuna")
+}
+
+model cliente_usuario {
+  idClienteUsuario Int      @id @default(autoincrement())
+  idCliente        Int
+  idUsuario        Int
+  fechaAsignacion  DateTime @default(now()) @db.DateTime(0)
+  estado           Boolean  @default(true)
+  cliente          cliente  @relation(fields: [idCliente], references: [idCliente], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente_usuario_cliente")
+  usuario          usuario  @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente_usuario_usuario")
+
+  @@unique([idCliente, idUsuario], map: "uq_cliente_usuario")
+  @@index([idUsuario], map: "fk_cliente_usuario_usuario")
+}
+
+model comuna {
+  idComuna                                                  Int                 @id @default(autoincrement())
+  nombreComuna                                              String              @db.VarChar(100)
+  idRegion                                                  Int
+  estado                                                    Boolean             @default(true)
+  cliente                                                   cliente[]
+  cliente_ubicacion                                         cliente_ubicacion[]
+  region                                                    region              @relation(fields: [idRegion], references: [idRegion], onDelete: NoAction, onUpdate: NoAction, map: "fk_comuna_region")
+  orden_transporte_orden_transporte_idComunaDestinoTocomuna orden_transporte[]  @relation("orden_transporte_idComunaDestinoTocomuna")
+  orden_transporte_orden_transporte_idComunaOrigenTocomuna  orden_transporte[]  @relation("orden_transporte_idComunaOrigenTocomuna")
+  sucursal                                                  sucursal[]
+  tarifa_trayecto_tarifa_trayecto_idComunaDestinoTocomuna   tarifa_trayecto[]   @relation("tarifa_trayecto_idComunaDestinoTocomuna")
+  tarifa_trayecto_tarifa_trayecto_idComunaOrigenTocomuna    tarifa_trayecto[]   @relation("tarifa_trayecto_idComunaOrigenTocomuna")
+
+  @@unique([nombreComuna, idRegion], map: "uq_comuna_region")
+  @@index([idRegion], map: "fk_comuna_region")
+}
+
+model conductor {
+  idConductor         Int          @id @default(autoincrement())
+  rut                 String       @unique(map: "rut") @db.VarChar(12)
+  nombre              String       @db.VarChar(100)
+  apellido            String       @db.VarChar(100)
+  telefono            String?      @db.VarChar(20)
+  licencia            String       @db.VarChar(20)
+  vencimientoLicencia DateTime?    @db.Date
+  estado              Boolean      @default(true)
+  manifiesto          manifiesto[]
+}
+
+model cuenta_corriente {
+  idCuenta          Int                 @id @default(autoincrement())
+  fechaApertura     DateTime            @db.Date
+  limiteCredito     Decimal?            @default(0.00) @db.Decimal(12, 2)
+  saldoActual       Decimal?            @default(0.00) @db.Decimal(12, 2)
+  estado            Boolean             @default(true)
+  idCliente         Int                 @unique(map: "uq_cuenta_corriente_cliente")
+  cliente           cliente             @relation(fields: [idCliente], references: [idCliente], onDelete: NoAction, onUpdate: NoAction, map: "fk_cuenta_cliente")
+  movimiento_cuenta movimiento_cuenta[]
+  pago              pago[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model detalle_carga {
+  idDetalleCarga   Int                @id @default(autoincrement())
+  descripcion      String             @db.VarChar(200)
+  cantidad         Int
+  pesoUnitario     Decimal?           @db.Decimal(10, 2)
+  pesoTotal        Decimal?           @db.Decimal(10, 2)
+  largoCm          Decimal?           @db.Decimal(10, 2)
+  anchoCm          Decimal?           @db.Decimal(10, 2)
+  altoCm           Decimal?           @db.Decimal(10, 2)
+  volumenM3        Decimal?           @db.Decimal(12, 4)
+  valorDeclarado   Decimal?           @db.Decimal(12, 2)
+  observacion      String?            @db.VarChar(200)
+  idOrden          Int
+  idTipoBulto      Int
+  bulto            bulto[]
+  orden_transporte orden_transporte   @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_detalle_carga_orden")
+  tipo_bulto       tipo_bulto         @relation(fields: [idTipoBulto], references: [idTipoBulto], onDelete: NoAction, onUpdate: NoAction, map: "fk_detalle_carga_tipo_bulto")
+  entrega_carga    entrega_carga[]
+  manifiesto_carga manifiesto_carga[]
+
+  @@index([idOrden], map: "fk_detalle_carga_orden")
+  @@index([idTipoBulto], map: "fk_detalle_carga_tipo_bulto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model entrega_carga {
+  idEntregaCarga    Int           @id @default(autoincrement())
+  idEntrega         Int
+  idDetalleCarga    Int
+  cantidadEntregada Int
+  pesoEntregado     Decimal?      @db.Decimal(10, 2)
+  observacion       String?       @db.VarChar(200)
+  detalle_carga     detalle_carga @relation(fields: [idDetalleCarga], references: [idDetalleCarga], onDelete: NoAction, onUpdate: NoAction, map: "fk_entrega_carga_detalle")
+  entrega_ot        entrega_ot    @relation(fields: [idEntrega], references: [idEntrega], onDelete: NoAction, onUpdate: NoAction, map: "fk_entrega_carga_entrega")
+
+  @@unique([idEntrega, idDetalleCarga], map: "uq_entrega_carga")
+  @@index([idDetalleCarga], map: "fk_entrega_carga_detalle")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model entrega_ot {
+  idEntrega        Int              @id @default(autoincrement())
+  fechaEntrega     DateTime         @default(now()) @db.DateTime(0)
+  resultadoEntrega String           @db.VarChar(30)
+  motivoResultado  String?          @db.VarChar(250)
+  nombreReceptor   String?          @db.VarChar(150)
+  rutReceptor      String?          @db.VarChar(12)
+  observacion      String?          @db.VarChar(250)
+  evidencia        String?          @db.VarChar(255)
+  idOrden          Int
+  idManifiestoOT   Int              @unique(map: "uq_entrega_manifiesto_ot")
+  idUsuario        Int
+  entrega_bulto    entrega_bulto[]
+  entrega_carga    entrega_carga[]
+  manifiesto_ot    manifiesto_ot    @relation(fields: [idManifiestoOT], references: [idManifiestoOT], onDelete: NoAction, onUpdate: NoAction, map: "fk_entrega_manifiesto_ot")
+  orden_transporte orden_transporte @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_entrega_orden")
+  usuario          usuario          @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_entrega_usuario")
+
+  @@index([idOrden], map: "fk_entrega_orden")
+  @@index([idUsuario], map: "fk_entrega_usuario")
+}
+
+model estado_ot {
+  idEstado         Int                @id @default(autoincrement())
+  nombreEstado     String             @unique(map: "nombreEstado") @db.VarChar(50)
+  descripcion      String?            @db.VarChar(150)
+  historial_ot     historial_ot[]
+  orden_transporte orden_transporte[]
+  seguimiento_ot   seguimiento_ot[]
+}
+
+model historial_ot {
+  idHistorial      Int              @id @default(autoincrement())
+  fechaHora        DateTime         @default(now()) @db.DateTime(0)
+  descripcion      String           @db.VarChar(250)
+  idOrden          Int
+  idEstado         Int
+  idUsuario        Int
+  estado_ot        estado_ot        @relation(fields: [idEstado], references: [idEstado], onDelete: NoAction, onUpdate: NoAction, map: "fk_historial_estado")
+  orden_transporte orden_transporte @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_historial_orden")
+  usuario          usuario          @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_historial_usuario")
+
+  @@index([idEstado], map: "fk_historial_estado")
+  @@index([idOrden], map: "fk_historial_orden")
+  @@index([idUsuario], map: "fk_historial_usuario")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model manifiesto {
+  idManifiesto       Int                  @id @default(autoincrement())
+  numeroManifiesto   String               @unique(map: "numeroManifiesto") @db.VarChar(30)
+  fechaCreacion      DateTime             @default(now()) @db.DateTime(0)
+  fechaSalida        DateTime?            @db.DateTime(0)
+  observacion        String?              @db.VarChar(250)
+  estado             String               @default("PREPARACION") @db.VarChar(50)
+  idVehiculo         Int?
+  idConductor        Int?
+  conductor          conductor?           @relation(fields: [idConductor], references: [idConductor], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_conductor")
+  vehiculo           vehiculo?            @relation(fields: [idVehiculo], references: [idVehiculo], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_vehiculo")
+  manifiesto_ot      manifiesto_ot[]
+  manifiesto_usuario manifiesto_usuario[]
+  movimiento_bulto   movimiento_bulto[]
+
+  @@index([idConductor], map: "fk_manifiesto_conductor")
+  @@index([idVehiculo], map: "fk_manifiesto_vehiculo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model manifiesto_carga {
+  idManifiestoCarga Int                @id @default(autoincrement())
+  idManifiestoOT    Int
+  idDetalleCarga    Int
+  cantidadEnviada   Int
+  pesoEnviado       Decimal?           @db.Decimal(10, 2)
+  observacion       String?            @db.VarChar(200)
+  manifiesto_bulto  manifiesto_bulto[]
+  detalle_carga     detalle_carga      @relation(fields: [idDetalleCarga], references: [idDetalleCarga], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_carga_detalle")
+  manifiesto_ot     manifiesto_ot      @relation(fields: [idManifiestoOT], references: [idManifiestoOT], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_carga_manifiesto_ot")
+
+  @@index([idDetalleCarga], map: "fk_manifiesto_carga_detalle")
+  @@index([idManifiestoOT], map: "fk_manifiesto_carga_manifiesto_ot")
+}
+
+model manifiesto_ot {
+  idManifiestoOT   Int                @id @default(autoincrement())
+  idManifiesto     Int
+  idOrden          Int
+  fechaAsignacion  DateTime           @default(now()) @db.DateTime(0)
+  observacion      String?            @db.VarChar(200)
+  entrega_ot       entrega_ot?
+  manifiesto_carga manifiesto_carga[]
+  manifiesto       manifiesto         @relation(fields: [idManifiesto], references: [idManifiesto], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_ot_manifiesto")
+  orden_transporte orden_transporte   @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_ot_orden")
+
+  @@unique([idManifiesto, idOrden], map: "uq_manifiesto_ot")
+  @@index([idOrden], map: "fk_manifiesto_ot_orden")
+}
+
+model manifiesto_usuario {
+  idManifiestoUsuario Int        @id @default(autoincrement())
+  idManifiesto        Int
+  idUsuario           Int
+  fechaAsignacion     DateTime   @default(now()) @db.DateTime(0)
+  manifiesto          manifiesto @relation(fields: [idManifiesto], references: [idManifiesto], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_usuario_manifiesto")
+  usuario             usuario    @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_usuario_usuario")
+
+  @@unique([idManifiesto, idUsuario], map: "uq_manifiesto_usuario")
+  @@index([idUsuario], map: "fk_manifiesto_usuario_usuario")
+}
+
+model movimiento_cuenta {
+  idMovimiento     Int               @id @default(autoincrement())
+  fechaMovimiento  DateTime          @default(now()) @db.DateTime(0)
+  tipoMovimiento   String            @db.VarChar(20)
+  monto            Decimal           @db.Decimal(12, 2)
+  descripcion      String?           @db.VarChar(200)
+  idCuenta         Int
+  idOrden          Int?
+  idUsuario        Int
+  cuenta_corriente cuenta_corriente  @relation(fields: [idCuenta], references: [idCuenta], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_cuenta")
+  orden_transporte orden_transporte? @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_orden")
+  usuario          usuario           @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_usuario")
+
+  @@index([idCuenta], map: "fk_movimiento_cuenta")
+  @@index([idOrden], map: "fk_movimiento_orden")
+  @@index([idUsuario], map: "fk_movimiento_usuario")
+}
+
+model observacion_ot {
+  idObservacion    Int              @id @default(autoincrement())
+  fechaHora        DateTime         @default(now()) @db.DateTime(0)
+  observacion      String           @db.VarChar(500)
+  idOrden          Int
+  idUsuario        Int
+  orden_transporte orden_transporte @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_observacion_orden")
+  usuario          usuario          @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_observacion_usuario")
+
+  @@index([idOrden], map: "fk_observacion_orden")
+  @@index([idUsuario], map: "fk_observacion_usuario")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orden_transporte {
+  idOrden                                         Int                 @id @default(autoincrement())
+  numeroOT                                        String              @unique(map: "numeroOT") @db.VarChar(30)
+  fechaCreacion                                   DateTime            @default(now()) @db.DateTime(0)
+  fechaRetiro                                     DateTime?           @db.Date
+  fechaEntregaEstimada                            DateTime?           @db.Date
+  direccionOrigen                                 String              @db.VarChar(200)
+  contactoOrigen                                  String?             @db.VarChar(150)
+  telefonoOrigen                                  String?             @db.VarChar(20)
+  direccionDestino                                String              @db.VarChar(200)
+  contactoDestino                                 String?             @db.VarChar(150)
+  telefonoDestino                                 String?             @db.VarChar(20)
+  referenciaEntrega                               String?             @db.VarChar(255)
+  pesoTotal                                       Decimal?            @db.Decimal(10, 2)
+  valorTotal                                      Decimal?            @db.Decimal(12, 2)
+  idCliente                                       Int
+  idComunaOrigen                                  Int
+  idComunaDestino                                 Int
+  idEstado                                        Int
+  idTarifa                                        Int
+  tipoDocumento                                   String              @default("SIN_DOCUMENTO") @db.VarChar(30)
+  numeroDocumento                                 String?             @db.VarChar(50)
+  tipoServicio                                    String              @default("NORMAL") @db.VarChar(30)
+  requiereRetiro                                  Boolean             @default(false)
+  tipoZona                                        String?             @db.VarChar(20)
+  valorBaseAplicado                               Decimal?            @db.Decimal(12, 2)
+  valorKgAplicado                                 Decimal?            @db.Decimal(12, 2)
+  valorRetiroAplicado                             Decimal?            @db.Decimal(12, 2)
+  valorZonaAplicado                               Decimal?            @db.Decimal(12, 2)
+  valorIva                                        Decimal?            @db.Decimal(12, 2)
+  valorNeto                                       Decimal?            @db.Decimal(12, 2)
+  pesoReal                                        Decimal?            @db.Decimal(12, 2)
+  precioPesoAplicado                              Decimal?            @db.Decimal(12, 2)
+  precioVolumenAplicado                           Decimal?            @db.Decimal(12, 2)
+  tipoCobro                                       String?             @db.VarChar(20)
+  valorCargaAplicado                              Decimal?            @db.Decimal(12, 2)
+  volumenTotalM3                                  Decimal?            @db.Decimal(12, 4)
+  idTarifaTrayecto                                Int?
+  valorM3Aplicado                                 Decimal?            @db.Decimal(12, 2)
+  idDestinatario                                  Int?
+  detalle_carga                                   detalle_carga[]
+  entrega_ot                                      entrega_ot[]
+  historial_ot                                    historial_ot[]
+  manifiesto_ot                                   manifiesto_ot[]
+  movimiento_cuenta                               movimiento_cuenta[]
+  observacion_ot                                  observacion_ot[]
+  cliente                                         cliente             @relation(fields: [idCliente], references: [idCliente], onDelete: NoAction, onUpdate: NoAction, map: "fk_orden_cliente")
+  comuna_orden_transporte_idComunaDestinoTocomuna comuna              @relation("orden_transporte_idComunaDestinoTocomuna", fields: [idComunaDestino], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_orden_comuna_destino")
+  comuna_orden_transporte_idComunaOrigenTocomuna  comuna              @relation("orden_transporte_idComunaOrigenTocomuna", fields: [idComunaOrigen], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_orden_comuna_origen")
+  estado_ot                                       estado_ot           @relation(fields: [idEstado], references: [idEstado], onDelete: NoAction, onUpdate: NoAction, map: "fk_orden_estado")
+  tarifa                                          tarifa              @relation(fields: [idTarifa], references: [idTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_orden_tarifa")
+  tarifa_trayecto                                 tarifa_trayecto?    @relation(fields: [idTarifaTrayecto], references: [idTarifaTrayecto], onDelete: NoAction, onUpdate: NoAction, map: "fk_orden_tarifa_trayecto")
+  destinatario                                    destinatario?       @relation(fields: [idDestinatario], references: [idDestinatario], onDelete: NoAction, onUpdate: NoAction, map: "fk_orden_transporte_destinatario")
+  pago                                            pago[]
+  recargo                                         recargo[]
+  retiro                                          retiro[]
+  seguimiento_ot                                  seguimiento_ot[]
+
+  @@index([idCliente], map: "fk_orden_cliente")
+  @@index([idComunaDestino], map: "fk_orden_comuna_destino")
+  @@index([idComunaOrigen], map: "fk_orden_comuna_origen")
+  @@index([idEstado], map: "fk_orden_estado")
+  @@index([idTarifa], map: "fk_orden_tarifa")
+  @@index([idTarifaTrayecto], map: "fk_orden_tarifa_trayecto")
+  @@index([idDestinatario], map: "fk_orden_transporte_destinatario")
+}
+
+model pago {
+  idPago           Int               @id @default(autoincrement())
+  fechaPago        DateTime          @default(now()) @db.DateTime(0)
+  monto            Decimal           @db.Decimal(12, 2)
+  pagadoPor        String?           @db.VarChar(20)
+  tipoPago         String?           @db.VarChar(30)
+  metodoPago       String?           @db.VarChar(50)
+  estadoPago       String?           @db.VarChar(50)
+  idCuenta         Int?
+  referencia       String?           @db.VarChar(100)
+  observacion      String?           @db.VarChar(200)
+  idOrden          Int
+  idUsuario        Int
+  cuenta_corriente cuenta_corriente? @relation(fields: [idCuenta], references: [idCuenta], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_cuenta_corriente")
+  orden_transporte orden_transporte  @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_orden")
+  usuario          usuario           @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_usuario")
+
+  @@index([idOrden], map: "fk_pago_orden")
+  @@index([idUsuario], map: "fk_pago_usuario")
+  @@index([idCuenta], map: "fk_pago_cuenta_corriente")
+}
+
+model recargo {
+  idRecargo        Int              @id @default(autoincrement())
+  descripcion      String           @db.VarChar(200)
+  monto            Decimal          @db.Decimal(10, 2)
+  fechaRecargo     DateTime         @default(now()) @db.DateTime(0)
+  estado           Boolean          @default(true)
+  idOrden          Int
+  orden_transporte orden_transporte @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_recargo_orden")
+
+  @@index([idOrden], map: "fk_recargo_orden")
+}
+
+model region {
+  idRegion     Int      @id @default(autoincrement())
+  nombreRegion String   @unique(map: "nombreRegion") @db.VarChar(100)
+  codigoRegion String?  @db.VarChar(10)
+  estado       Boolean  @default(true)
+  comuna       comuna[]
+}
+
+model retiro {
+  idRetiro         Int              @id @default(autoincrement())
+  fechaSolicitud   DateTime         @default(now()) @db.DateTime(0)
+  fechaProgramada  DateTime?        @db.Date
+  direccionRetiro  String           @db.VarChar(200)
+  contacto         String?          @db.VarChar(100)
+  telefono         String?          @db.VarChar(20)
+  observacion      String?          @db.VarChar(200)
+  valorRetiro      Decimal?         @default(0.00) @db.Decimal(10, 2)
+  estado           String?          @db.VarChar(50)
+  idOrden          Int
+  orden_transporte orden_transporte @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_retiro_orden")
+
+  @@index([idOrden], map: "fk_retiro_orden")
+}
+
+model rol {
+  idRol       Int       @id @default(autoincrement())
+  nombreRol   String    @unique(map: "nombreRol") @db.VarChar(50)
+  descripcion String?   @db.VarChar(150)
+  usuario     usuario[]
+}
+
+model seguimiento_ot {
+  idSeguimiento    Int              @id @default(autoincrement())
+  fechaHora        DateTime         @default(now()) @db.DateTime(0)
+  ubicacion        String?          @db.VarChar(150)
+  descripcion      String?          @db.VarChar(250)
+  idOrden          Int
+  idEstado         Int
+  idUsuario        Int
+  estado_ot        estado_ot        @relation(fields: [idEstado], references: [idEstado], onDelete: NoAction, onUpdate: NoAction, map: "fk_seguimiento_estado")
+  orden_transporte orden_transporte @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_seguimiento_orden")
+  usuario          usuario          @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_seguimiento_usuario")
+
+  @@index([idEstado], map: "fk_seguimiento_estado")
+  @@index([idOrden], map: "fk_seguimiento_orden")
+  @@index([idUsuario], map: "fk_seguimiento_usuario")
+}
+
+model sucursal {
+  idSucursal                                                    Int                @id @default(autoincrement())
+  nombreSucursal                                                String             @db.VarChar(100)
+  direccion                                                     String             @db.VarChar(200)
+  telefono                                                      String?            @db.VarChar(20)
+  estado                                                        Boolean            @default(true)
+  idComuna                                                      Int
+  bulto                                                         bulto[]
+  movimiento_bulto_movimiento_bulto_idSucursalTosucursal        movimiento_bulto[] @relation("movimiento_bulto_idSucursalTosucursal")
+  movimiento_bulto_movimiento_bulto_idSucursalDestinoTosucursal movimiento_bulto[] @relation("movimiento_bulto_idSucursalDestinoTosucursal")
+  movimiento_bulto_movimiento_bulto_idSucursalOrigenTosucursal  movimiento_bulto[] @relation("movimiento_bulto_idSucursalOrigenTosucursal")
+  comuna                                                        comuna             @relation(fields: [idComuna], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_sucursal_comuna")
+
+  @@index([idComuna], map: "fk_sucursal_comuna")
+}
+
+model tarifa {
+  idTarifa          Int                @id @default(autoincrement())
+  nombreTarifa      String             @db.VarChar(100)
+  valorBase         Decimal            @db.Decimal(10, 2)
+  valorKg           Decimal?           @db.Decimal(10, 2)
+  estado            Boolean            @default(true)
+  idTipoTarifa      Int
+  valorRetiro       Decimal            @default(0.00) @db.Decimal(10, 2)
+  valorZonaLejana   Decimal            @default(0.00) @db.Decimal(10, 2)
+  valorZonaUrbana   Decimal            @default(0.00) @db.Decimal(10, 2)
+  factorVolumetrico Int                @default(4000)
+  valorM3           Decimal?           @db.Decimal(10, 2)
+  orden_transporte  orden_transporte[]
+  tipo_tarifa       tipo_tarifa        @relation(fields: [idTipoTarifa], references: [idTipoTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_tarifa_tipo_tarifa")
+  tarifa_trayecto   tarifa_trayecto[]
+
+  @@index([idTipoTarifa], map: "fk_tarifa_tipo_tarifa")
+}
+
+model tipo_bulto {
+  idTipoBulto   Int             @id @default(autoincrement())
+  nombreTipo    String          @unique(map: "nombreTipo") @db.VarChar(50)
+  descripcion   String?         @db.VarChar(150)
+  detalle_carga detalle_carga[]
+}
+
+model tipo_tarifa {
+  idTipoTarifa     Int      @id @default(autoincrement())
+  nombreTipoTarifa String   @unique(map: "nombreTipoTarifa") @db.VarChar(100)
+  descripcion      String?  @db.VarChar(150)
+  tarifa           tarifa[]
+}
+
+model usuario {
+  idUsuario           Int                   @id @default(autoincrement())
+  nombre              String                @db.VarChar(100)
+  apellido            String                @db.VarChar(100)
+  rut                 String                @unique(map: "rut") @db.VarChar(12)
+  correo              String                @unique(map: "correo") @db.VarChar(150)
+  telefono            String?               @db.VarChar(20)
+  password            String                @db.VarChar(255)
+  estado              Boolean               @default(true)
+  idRol               Int
+  nombreUsuario       String?               @unique(map: "uq_usuario_nombreUsuario") @db.VarChar(50)
+  correoVerificadoEn  DateTime?             @db.DateTime(0)
+  registroPendiente   Boolean               @default(false)
+  cliente_usuario     cliente_usuario[]
+  entrega_ot          entrega_ot[]
+  historial_ot        historial_ot[]
+  manifiesto_usuario  manifiesto_usuario[]
+  movimiento_bulto    movimiento_bulto[]
+  movimiento_cuenta   movimiento_cuenta[]
+  observacion_ot      observacion_ot[]
+  pago                pago[]
+  seguimiento_ot      seguimiento_ot[]
+  rol                 rol                   @relation(fields: [idRol], references: [idRol], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario_rol")
+  verificacion_acceso verificacion_acceso[]
+
+  @@index([idRol], map: "fk_usuario_rol")
+}
+
+model vehiculo {
+  idVehiculo  Int          @id @default(autoincrement())
+  patente     String       @unique(map: "patente") @db.VarChar(10)
+  marca       String       @db.VarChar(50)
+  modelo      String       @db.VarChar(50)
+  anio        Int?
+  capacidadKg Decimal?     @db.Decimal(10, 2)
+  estado      Boolean      @default(true)
+  manifiesto  manifiesto[]
+}
+
+model tarifa_trayecto {
+  idTarifaTrayecto                               Int                @id @default(autoincrement())
+  idTarifa                                       Int
+  idComunaOrigen                                 Int
+  idComunaDestino                                Int
+  valorFijo                                      Decimal            @db.Decimal(10, 2)
+  valorKg                                        Decimal?           @db.Decimal(10, 2)
+  valorM3                                        Decimal?           @db.Decimal(10, 2)
+  estado                                         Boolean            @default(true)
+  orden_transporte                               orden_transporte[]
+  comuna_tarifa_trayecto_idComunaDestinoTocomuna comuna             @relation("tarifa_trayecto_idComunaDestinoTocomuna", fields: [idComunaDestino], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_tarifa_trayecto_destino")
+  comuna_tarifa_trayecto_idComunaOrigenTocomuna  comuna             @relation("tarifa_trayecto_idComunaOrigenTocomuna", fields: [idComunaOrigen], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_tarifa_trayecto_origen")
+  tarifa                                         tarifa             @relation(fields: [idTarifa], references: [idTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_tarifa_trayecto_tarifa")
+
+  @@unique([idTarifa, idComunaOrigen, idComunaDestino], map: "uq_tarifa_trayecto")
+  @@index([idComunaDestino], map: "fk_tarifa_trayecto_destino")
+  @@index([idComunaOrigen], map: "fk_tarifa_trayecto_origen")
+}
+
+model verificacion_acceso {
+  idVerificacion Int      @id @default(autoincrement())
+  idUsuario      Int
+  proposito      String   @default("LOGIN") @db.VarChar(30)
+  challengeId    String?  @unique(map: "uq_verificacion_acceso_challenge") @db.VarChar(64)
+  codigoHash     String   @db.VarChar(255)
+  expiraEn       DateTime @db.DateTime(0)
+  intentos       Int      @default(0)
+  usado          Boolean  @default(false)
+  fechaCreacion  DateTime @default(now()) @db.DateTime(0)
+  usuario        usuario  @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "verificacion_acceso_ibfk_1")
+
+  @@index([idUsuario], map: "idUsuario")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cliente_ubicacion {
+  idClienteUbicacion Int      @id @default(autoincrement())
+  idCliente          Int
+  idComuna           Int
+  nombre             String   @db.VarChar(120)
+  tipoUbicacion      String   @db.VarChar(30)
+  direccion          String   @db.VarChar(200)
+  referencia         String?  @db.VarChar(250)
+  nombreContacto     String?  @db.VarChar(120)
+  telefonoContacto   String?  @db.VarChar(20)
+  correoContacto     String?  @db.VarChar(150)
+  esPrincipal        Boolean  @default(false)
+  permiteRetiro      Boolean  @default(true)
+  permiteEntrega     Boolean  @default(true)
+  estado             Boolean  @default(true)
+  fechaCreacion      DateTime @default(now()) @db.DateTime(0)
+  cliente            cliente  @relation(fields: [idCliente], references: [idCliente], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente_ubicacion_cliente")
+  comuna             comuna   @relation(fields: [idComuna], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente_ubicacion_comuna")
+
+  @@index([idCliente], map: "idx_cliente_ubicacion_cliente")
+  @@index([idComuna], map: "idx_cliente_ubicacion_comuna")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bulto {
+  idBulto          Int                @id @default(autoincrement())
+  codigoBulto      String             @unique(map: "codigoBulto") @db.VarChar(50)
+  numeroBulto      Int
+  idDetalleCarga   Int
+  idSucursalActual Int?
+  peso             Decimal?           @db.Decimal(10, 2)
+  largoCm          Decimal?           @db.Decimal(10, 2)
+  anchoCm          Decimal?           @db.Decimal(10, 2)
+  altoCm           Decimal?           @db.Decimal(10, 2)
+  estado           String             @default("EN_BODEGA") @db.VarChar(30)
+  observacion      String?            @db.VarChar(200)
+  fechaCreacion    DateTime           @default(now()) @db.DateTime(0)
+  detalle_carga    detalle_carga      @relation(fields: [idDetalleCarga], references: [idDetalleCarga], onDelete: NoAction, onUpdate: NoAction, map: "fk_bulto_detalle_carga")
+  sucursal         sucursal?          @relation(fields: [idSucursalActual], references: [idSucursal], onDelete: NoAction, onUpdate: NoAction, map: "fk_bulto_sucursal_actual")
+  entrega_bulto    entrega_bulto[]
+  manifiesto_bulto manifiesto_bulto[]
+  movimiento_bulto movimiento_bulto[]
+
+  @@unique([idDetalleCarga, numeroBulto], map: "uq_bulto_detalle_numero")
+  @@index([idSucursalActual], map: "fk_bulto_sucursal_actual")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model entrega_bulto {
+  idEntregaBulto Int        @id @default(autoincrement())
+  idEntrega      Int
+  idBulto        Int
+  estadoEntrega  String     @db.VarChar(30)
+  observacion    String?    @db.VarChar(200)
+  fechaRegistro  DateTime   @default(now()) @db.DateTime(0)
+  bulto          bulto      @relation(fields: [idBulto], references: [idBulto], onDelete: NoAction, onUpdate: NoAction, map: "fk_entrega_bulto_bulto")
+  entrega_ot     entrega_ot @relation(fields: [idEntrega], references: [idEntrega], onDelete: NoAction, onUpdate: NoAction, map: "fk_entrega_bulto_entrega")
+
+  @@unique([idEntrega, idBulto], map: "uq_entrega_bulto")
+  @@index([idBulto], map: "fk_entrega_bulto_bulto")
+}
+
+model manifiesto_bulto {
+  idManifiestoBulto Int              @id @default(autoincrement())
+  idManifiestoCarga Int
+  idBulto           Int
+  fechaAsignacion   DateTime         @default(now()) @db.DateTime(0)
+  observacion       String?          @db.VarChar(200)
+  bulto             bulto            @relation(fields: [idBulto], references: [idBulto], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_bulto_bulto")
+  manifiesto_carga  manifiesto_carga @relation(fields: [idManifiestoCarga], references: [idManifiestoCarga], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_bulto_manifiesto_carga")
+
+  @@unique([idManifiestoCarga, idBulto], map: "uq_manifiesto_bulto")
+  @@index([idBulto], map: "fk_manifiesto_bulto_bulto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model movimiento_bulto {
+  idMovimientoBulto                                     Int         @id @default(autoincrement())
+  idBulto                                               Int
+  idSucursal                                            Int?
+  idSucursalOrigen                                      Int?
+  idSucursalDestino                                     Int?
+  idManifiesto                                          Int?
+  tipoMovimiento                                        String      @db.VarChar(30)
+  fechaMovimiento                                       DateTime    @default(now()) @db.DateTime(0)
+  observacion                                           String?     @db.VarChar(200)
+  idUsuario                                             Int?
+  bulto                                                 bulto       @relation(fields: [idBulto], references: [idBulto], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_bulto_bulto")
+  manifiesto                                            manifiesto? @relation(fields: [idManifiesto], references: [idManifiesto], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_bulto_manifiesto")
+  sucursal_movimiento_bulto_idSucursalTosucursal        sucursal?   @relation("movimiento_bulto_idSucursalTosucursal", fields: [idSucursal], references: [idSucursal], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_bulto_sucursal")
+  sucursal_movimiento_bulto_idSucursalDestinoTosucursal sucursal?   @relation("movimiento_bulto_idSucursalDestinoTosucursal", fields: [idSucursalDestino], references: [idSucursal], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_bulto_sucursal_destino")
+  sucursal_movimiento_bulto_idSucursalOrigenTosucursal  sucursal?   @relation("movimiento_bulto_idSucursalOrigenTosucursal", fields: [idSucursalOrigen], references: [idSucursal], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_bulto_sucursal_origen")
+  usuario                                               usuario?    @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_bulto_usuario")
+
+  @@unique([idBulto, idManifiesto, tipoMovimiento], map: "uq_movimiento_bulto_salida_manifiesto")
+  @@index([idManifiesto], map: "fk_movimiento_bulto_manifiesto")
+  @@index([idSucursal], map: "fk_movimiento_bulto_sucursal")
+  @@index([idSucursalDestino], map: "fk_movimiento_bulto_sucursal_destino")
+  @@index([idSucursalOrigen], map: "fk_movimiento_bulto_sucursal_origen")
+  @@index([idUsuario], map: "fk_movimiento_bulto_usuario")
+}
+
+model destinatario {
+  idDestinatario    Int                @id @default(autoincrement())
+  rut               String?            @unique(map: "uq_destinatario_rut") @db.VarChar(12)
+  nombreRazonSocial String             @db.VarChar(150)
+  direccion         String             @db.VarChar(200)
+  telefono          String?            @db.VarChar(20)
+  correo            String?            @db.VarChar(150)
+  referencia        String?            @db.VarChar(200)
+  idComuna          Int
+  estado            Boolean            @default(true)
+  fechaCreacion     DateTime           @default(now()) @db.DateTime(0)
+  orden_transporte  orden_transporte[]
+}

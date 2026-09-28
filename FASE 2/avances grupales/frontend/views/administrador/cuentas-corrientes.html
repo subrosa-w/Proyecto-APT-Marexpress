@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Cuenta corriente | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <a class="admin-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="admin-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="admin-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="admin-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="admin-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a
+                    class="admin-menu-item activo"
+                    href="./cuentas-corrientes.html"
+                    aria-current="page"
+                >
+                    Cuenta corriente
+                </a>
+
+                <a class="admin-menu-item" href="./facturacion.html">
+                    Facturación
+                </a>
+
+                <a class="admin-menu-item" href="./usuarios.html">
+                    Usuarios
+                </a>
+
+                <a class="admin-menu-item" href="./reportes.html">
+                    Reportes
+                </a>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        GESTIÓN FINANCIERA
+                    </p>
+
+                    <h1>Cuenta corriente</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-kpis">
+
+                <article class="admin-kpi">
+                    <span>Cuentas activas</span>
+                    <strong id="kpi-cuentas-activas">--</strong>
+                    <small>Clientes con cuenta corriente habilitada</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Saldo utilizado</span>
+                    <strong id="kpi-saldo-utilizado">--</strong>
+                    <small>Monto total utilizado por clientes</small>
+                </article>
+
+                <article class="admin-kpi">
+                    <span>Saldo pendiente</span>
+                    <strong id="kpi-saldo-pendiente">--</strong>
+                    <small>Monto pendiente de pago</small>
+                </article>
+
+                <article class="admin-kpi admin-kpi-verde">
+                    <span>Pagos registrados</span>
+                    <strong id="kpi-pagos-registrados">--</strong>
+                    <small>Movimientos de pago confirmados</small>
+                </article>
+
+            </section>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>CUENTAS DE CLIENTES</span>
+                        <h2>Estado de cuentas corrientes</h2>
+                    </div>
+
+                </header>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>RUT</th>
+                                <th>Límite</th>
+                                <th>Utilizado</th>
+                                <th>Disponible</th>
+                                <th>Saldo pendiente</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-cuentas-corrientes">
+
+                            <tr>
+                                <td colspan="8">
+                                    Cargando cuentas corrientes...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="admin-grid-principal">
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>MOVIMIENTOS</span>
+                            <h2>Últimos movimientos</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-table-wrapper">
+
+                        <table class="admin-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Tipo</th>
+                                    <th>Documento / OT</th>
+                                    <th>Monto</th>
+                                    <th>Saldo</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-movimientos-cuenta">
+
+                                <tr>
+                                    <td colspan="6">
+                                        Cargando movimientos...
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-card">
+
+                    <header class="admin-card-header">
+
+                        <div>
+                            <span>GESTIÓN</span>
+                            <h2>Acciones rápidas</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-acciones">
+
+                        <button type="button">
+                            Habilitar cuenta corriente
+                        </button>
+
+                        <button type="button">
+                            Modificar límite de crédito
+                        </button>
+
+                        <button type="button">
+                            Registrar pago
+                        </button>
+
+                        <button type="button">
+                            Ver movimientos
+                        </button>
+
+                        <button type="button">
+                            Suspender cuenta
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/administrador.js"
+    ></script>
+
+</body>
+</html>

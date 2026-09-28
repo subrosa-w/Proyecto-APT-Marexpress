@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Nueva Orden de Transporte | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/operador.css">
+    <link rel="stylesheet" href="../../css/ordenes.css">
+</head>
+
+<body class="operador-body">
+
+    <div class="operador-layout">
+
+        <!-- =====================================================
+             SIDEBAR
+             ===================================================== -->
+
+        <aside class="operador-sidebar">
+
+            <div class="operador-logo">
+                <span>MAREXPRESS</span>
+                <small>Operaciones</small>
+            </div>
+
+            <nav class="operador-menu">
+
+                <a class="operador-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="operador-menu-item" href="./recepcion.html">
+                    Recepción
+                </a>
+
+                <a
+                    class="operador-menu-item activo"
+                    href="./ordenes.html"
+                >
+                    Órdenes de transporte
+                </a>
+
+                <a class="operador-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="operador-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="operador-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="operador-menu-item" href="./despacho.html">
+                    Pronto despacho
+                </a>
+
+                <a class="operador-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a class="operador-menu-item" href="./comprobantes.html">
+                    Comprobantes
+                </a>
+
+            </nav>
+
+            <div class="operador-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-operador"
+                    type="button"
+                    class="operador-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================================
+             CONTENIDO PRINCIPAL
+             ===================================================== -->
+
+        <main class="operador-main">
+
+            <!-- HEADER -->
+
+            <header class="operador-header">
+
+                <div>
+
+                    <p class="operador-header-label">
+                        NUEVA ORDEN
+                    </p>
+
+                    <h1>
+                        Nueva Orden de Transporte
+                    </h1>
+
+                    <p>
+                        Completa la información paso a paso para cotizar y crear la OT.
+                    </p>
+
+                </div>
+
+                <div class="operador-usuario">
+
+                    <div class="operador-usuario-texto">
+
+                        <strong id="operador-nombre">
+                            Operador
+                        </strong>
+
+                        <span id="operador-rol">
+                            OPERADOR
+                        </span>
+
+                    </div>
+
+                    <div class="operador-avatar">
+                        O
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =====================================================
+                 INDICADOR DE PASOS
+                 ===================================================== -->
+
+            <section class="ot-pasos">
+
+                <div class="ot-paso activo">
+                    <span>1</span>
+                    <strong>Información general</strong>
+                </div>
+
+                <div class="ot-paso">
+                    <span>2</span>
+                    <strong>Remitente y destinatario</strong>
+                </div>
+
+                <div class="ot-paso">
+                    <span>3</span>
+                    <strong>Carga y valores</strong>
+                </div>
+
+                <div class="ot-paso">
+                    <span>4</span>
+                    <strong>Documentos y pago</strong>
+                </div>
+
+                <div class="ot-paso">
+                    <span>5</span>
+                    <strong>Confirmación</strong>
+                </div>
+
+            </section>
+
+
+            <div class="ot-layout">
+
+                <div class="ot-contenido">
+
+
+                    <!-- =====================================================
+                         PASO 1
+                         INFORMACIÓN GENERAL
+                         ===================================================== -->
+
+                    <section class="ot-seccion abierta">
+
+                        <header class="ot-seccion-header">
+
+                            <div>
+
+                                <span class="ot-numero-paso">
+                                    1
+                                </span>
+
+                                <div>
+
+                                    <h2>
+                                        Información general
+                                    </h2>
+
+                                    <p>
+                                        Datos generales de la nueva orden de transporte.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </header>
+
+
+                        <div class="ot-seccion-body">
+
+                            <div class="operador-form-grid">
+
+
+                                <!-- NÚMERO OT -->
+
+                                <div class="field">
+
+                                    <label for="numero-ot">
+                                        N.º Orden de Transporte
+                                    </label>
+
+                                    <input
+                                        id="numero-ot"
+                                        type="text"
+                                        value="Se asignará al confirmar"
+                                        readonly
+                                    >
+
+                                </div>
+
+
+                                <!-- FECHA CREACIÓN -->
+
+                                <div class="field">
+
+                                    <label for="fecha-ot">
+                                        Fecha de creación
+                                    </label>
+
+                                    <input
+                                        id="fecha-ot"
+                                        type="date"
+                                        readonly
+                                    >
+
+                                </div>
+
+
+                                <!-- TIPO SERVICIO -->
+
+                                <div class="field">
+
+                                    <label for="tipo-servicio">
+                                        Tipo de servicio
+                                    </label>
+
+                                    <select id="tipo-servicio">
+
+                                        <option value="NORMAL">
+                                            Transporte terrestre
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- PRIORIDAD -->
+
+                                <div class="field">
+
+                                    <label for="prioridad">
+                                        Prioridad
+                                    </label>
+
+                                    <select id="prioridad">
+
+                                        <option value="NORMAL">
+                                            Normal
+                                        </option>
+
+                                        <option value="URGENTE">
+                                            Urgente
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- TIPO ZONA -->
+
+                                <div class="field">
+
+                                    <label for="tipo-zona">
+                                        Tipo de zona
+                                    </label>
+
+                                    <select id="tipo-zona">
+
+                                        <option value="URBANA">
+                                            Urbana
+                                        </option>
+
+                                        <option value="LEJANA">
+                                            Lejana
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =====================================================
+                         PASO 2
+                         REMITENTE Y DESTINATARIO
+                         ===================================================== -->
+
+                    <section class="ot-seccion">
+
+                        <header class="ot-seccion-header">
+
+                            <div>
+
+                                <span class="ot-numero-paso">
+                                    2
+                                </span>
+
+                                <div>
+
+                                    <h2>
+                                        Remitente y destinatario
+                                    </h2>
+
+                                    <p>
+                                        Selecciona el cliente, origen y destino del envío.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </header>
+
+
+                        <div class="ot-seccion-body">
+
+    <div class="ot-personas-grid">
+
+        <!-- =========================
+             REMITENTE
+             ========================= -->
+
+        <div class="ot-persona-card">
+
+            <h3>Remitente</h3>
+
+            <div class="field">
+
+                <label for="cliente">
+                    Cliente
+                </label>
+
+                <select id="cliente">
+
+                    <option value="">
+                        Seleccione cliente
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="field">
+
+                <label for="rut-origen">
+                    RUT
+                </label>
+
+                <input
+                    id="rut-origen"
+                    type="text"
+                    placeholder="RUT del cliente"
+                    readonly
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label for="direccion-origen">
+                    Dirección
+                </label>
+
+                <input
+                    id="direccion-origen"
+                    type="text"
+                    placeholder="Dirección de origen"
+                >
+
+            </div>
+
+            <div class="operador-form-grid">
+
+                <div class="field">
+
+                    <label for="comuna-origen">
+                        Comuna
+                    </label>
+
+                    <select id="comuna-origen">
+
+                        <option value="">
+                            Seleccione comuna
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="field">
+
+                    <label for="telefono-origen">
+                        Teléfono
+                    </label>
+
+                    <input
+                        id="telefono-origen"
+                        type="text"
+                        placeholder="+56 9..."
+                    >
+
+                </div>
+
+            </div>
+
+            <div class="field">
+
+                <label for="contacto-origen">
+                    Contacto
+                </label>
+
+                <input
+                    id="contacto-origen"
+                    type="text"
+                    placeholder="Nombre de contacto"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             DESTINATARIO
+             ========================= -->
+
+        <div class="ot-persona-card">
+
+            <h3>Destinatario</h3>
+
+            <div class="field">
+
+                <label for="destinatario">
+                    Destinatario guardado
+                </label>
+
+                <select id="destinatario">
+
+                    <option value="">
+                        Seleccione destinatario
+                    </option>
+
+                </select>
+
+            </div>
+
+            <button
+                id="btn-nuevo-destinatario"
+                type="button"
+                class="button-secondary"
+            >
+                + Nuevo destinatario
+            </button>
+
+            <div class="field">
+
+                <label for="rut-destino">
+                    RUT
+                </label>
+
+                <input
+                    id="rut-destino"
+                    type="text"
+                    placeholder="12.345.678-9"
+                    maxlength="12"
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label for="contacto-destino">
+                    Nombre / Razón social
+                </label>
+
+                <input
+                    id="contacto-destino"
+                    type="text"
+                    placeholder="Nombre o razón social"
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label for="direccion-destino">
+                    Dirección
+                </label>
+
+                <input
+                    id="direccion-destino"
+                    type="text"
+                    placeholder="Dirección de destino"
+                >
+
+            </div>
+
+            <div class="operador-form-grid">
+
+                <div class="field">
+
+                    <label for="comuna-destino">
+                        Comuna
+                    </label>
+
+                    <select id="comuna-destino">
+
+                        <option value="">
+                            Seleccione comuna
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="field">
+
+                    <label for="telefono-destino">
+                        Teléfono
+                    </label>
+
+                    <input
+                        id="telefono-destino"
+                        type="text"
+                        placeholder="+56 9..."
+                    >
+
+                </div>
+
+            </div>
+
+            <div class="field">
+
+                <label for="correo-destino">
+                    Correo
+                </label>
+
+                <input
+                    id="correo-destino"
+                    type="email"
+                    placeholder="correo@ejemplo.cl"
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label for="referencia-entrega">
+                    Referencia de entrega
+                </label>
+
+                <input
+                    id="referencia-entrega"
+                    type="text"
+                    placeholder="Casa azul, portón negro..."
+                >
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+        <!-- =========================
+            TARIFA DEL TRAYECTO
+            ========================= -->
+
+        <div class="ot-persona-card">
+
+                <h3>Tarifa del trayecto</h3>
+
+                <p>
+                    Selecciona la tarifa disponible para la ruta indicada.
+                </p>
+
+                <div class="field">
+
+                    <label for="tarifa">
+                        Tarifa
+                    </label>
+
+                    <select id="tarifa">
+
+                        <option value="">
+                            Seleccione origen y destino
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+</section>
+
+
+                    <!-- =====================================================
+                         PASO 3
+                         CARGA Y VALORES
+                         ===================================================== -->
+
+                    <section class="ot-seccion">
+
+                        <header class="ot-seccion-header">
+
+                            <div>
+
+                                <span class="ot-numero-paso">
+                                    3
+                                </span>
+
+                                <div>
+
+                                    <h2>
+                                        Carga y valores
+                                    </h2>
+
+                                    <p>
+                                        Agrega los bultos y servicios adicionales.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </header>
+
+
+                        <div class="ot-seccion-body">
+
+
+                            <!-- =========================
+                                 DETALLE DE CARGA
+                                 ========================= -->
+
+                            <div class="ot-persona-card">
+
+                                <h3>
+                                    Detalle de carga
+                                </h3>
+
+
+                                <button
+                                    type="button"
+                                    id="agregar-carga"
+                                    class="button-primary"
+                                >
+                                    Agregar carga
+                                </button>
+
+
+                                <div class="operador-table-wrapper">
+
+                                    <table class="operador-table">
+
+                                        <thead>
+
+                                            <tr>
+
+                                                <th>
+                                                    Tipo
+                                                </th>
+
+                                                <th>
+                                                    Descripción
+                                                </th>
+
+                                                <th>
+                                                    Cantidad
+                                                </th>
+
+                                                <th>
+                                                    Peso kg c/u
+                                                </th>
+
+                                                <th>
+                                                    Largo cm
+                                                </th>
+
+                                                <th>
+                                                    Ancho cm
+                                                </th>
+
+                                                <th>
+                                                    Alto cm
+                                                </th>
+
+                                                <th>
+                                                    Volumen
+                                                </th>
+
+                                                <th>
+                                                    Acciones
+                                                </th>
+
+                                            </tr>
+
+                                        </thead>
+
+
+                                        <tbody id="tabla-cargas">
+
+                                            <tr>
+
+                                                <td colspan="9">
+                                                    No hay cargas agregadas.
+                                                </td>
+
+                                            </tr>
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =========================
+                                 RETIRO OPCIONAL
+                                 ========================= -->
+
+                            <div class="ot-persona-card">
+
+                                <h3>
+                                    Retiro de carga
+                                </h3>
+
+                                <p>
+                                    Completa esta sección solo si MAREXPRESS retiró la carga en domicilio.
+                                </p>
+
+
+                                <div class="field">
+
+                                    <label for="requiere-retiro">
+                                        ¿Requiere retiro?
+                                    </label>
+
+                                    <select id="requiere-retiro">
+
+                                        <option value="NO">
+                                            No
+                                        </option>
+
+                                        <option value="SI">
+                                            Sí
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <div
+                                    id="datos-retiro"
+                                    hidden
+                                >
+
+                                    <div class="operador-form-grid">
+
+
+                                        <!-- FECHA RETIRO -->
+
+                                        <div class="field">
+
+                                            <label for="fecha-retiro">
+                                                Fecha de retiro
+                                            </label>
+
+                                            <input
+                                                id="fecha-retiro"
+                                                type="date"
+                                            >
+
+                                        </div>
+
+
+                                        <!-- DIRECCIÓN RETIRO -->
+
+                                        <div class="field">
+
+                                            <label for="direccion-retiro">
+                                                Dirección de retiro
+                                            </label>
+
+                                            <input
+                                                id="direccion-retiro"
+                                                type="text"
+                                                placeholder="Dirección donde se retira la carga"
+                                            >
+
+                                        </div>
+
+
+                                        <!-- VALOR RETIRO -->
+
+                                        <div class="field">
+
+                                            <label for="valor-retiro">
+                                                Valor del retiro
+                                            </label>
+
+                                            <input
+                                                id="valor-retiro"
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value="0"
+                                                placeholder="$0"
+                                            >
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =========================
+                                 RECARGO OPCIONAL
+                                 ========================= -->
+
+                            <div class="ot-persona-card">
+
+                                <h3>
+                                    Recargo
+                                </h3>
+
+                                <p>
+                                    Agrega un recargo solo cuando corresponda.
+                                </p>
+
+
+                                <div class="field">
+
+                                    <label for="aplica-recargo">
+                                        ¿Aplicar recargo?
+                                    </label>
+
+                                    <select id="aplica-recargo">
+
+                                        <option value="NO">
+                                            No
+                                        </option>
+
+                                        <option value="SI">
+                                            Sí
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <div
+                                    id="datos-recargo"
+                                    hidden
+                                >
+
+                                    <div class="operador-form-grid">
+
+
+                                        <!-- MOTIVO -->
+
+                                        <div class="field">
+
+                                            <label for="descripcion-recargo">
+                                                Motivo del recargo
+                                            </label>
+
+                                            <input
+                                                id="descripcion-recargo"
+                                                type="text"
+                                                placeholder="Ej: espera, descarga especial..."
+                                            >
+
+                                        </div>
+
+
+                                        <!-- VALOR -->
+
+                                        <div class="field">
+
+                                            <label for="valor-recargo">
+                                                Valor del recargo
+                                            </label>
+
+                                            <input
+                                                id="valor-recargo"
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value="0"
+                                                placeholder="$0"
+                                            >
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =====================================================
+                         PASO 4
+                         DOCUMENTOS Y PAGO
+                         ===================================================== -->
+
+                    <section class="ot-seccion">
+
+                        <header class="ot-seccion-header">
+
+                            <div>
+
+                                <span class="ot-numero-paso">
+                                    4
+                                </span>
+
+                                <div>
+
+                                    <h2>
+                                        Documentos y pago
+                                    </h2>
+
+                                    <p>
+                                        Registra el documento asociado a la carga.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </header>
+
+
+                        <div class="ot-seccion-body">
+
+                            <div class="operador-form-grid">
+
+
+                                <div class="field">
+
+                                    <label for="tipo-documento">
+                                        Tipo de documento
+                                    </label>
+
+                                    <select id="tipo-documento">
+
+                                        <option value="FACTURA">
+                                            Factura
+                                        </option>
+
+                                        <option value="BOLETA">
+                                            Boleta
+                                        </option>
+
+                                        <option value="OT_MANUAL">
+                                            OT Manual
+                                        </option>
+
+                                        <option value="SIN_DOCUMENTO">
+                                            Sin documento
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <div class="field">
+
+                                    <label for="numero-documento">
+                                        Número de documento
+                                    </label>
+
+                                    <input
+                                        id="numero-documento"
+                                        type="text"
+                                        placeholder="Número de factura, boleta u OT"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- =========================
+                            DATOS DE PAGO
+                            ========================= -->
+
+                        <div class="operador-form-grid">
+
+                            <!-- QUIÉN PAGA -->
+
+                            <div class="field">
+
+                                <label for="pagado-por">
+                                    Pagado por
+                                </label>
+
+                                <select id="pagado-por">
+
+                                    <option value="">
+                                        Seleccione quién paga
+                                    </option>
+
+                                    <option value="REMITENTE">
+                                        Remitente
+                                    </option>
+
+                                    <option value="DESTINATARIO">
+                                        Destinatario
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- TIPO DE PAGO -->
+
+                            <div class="field">
+
+                                <label for="tipo-pago">
+                                    Tipo de pago
+                                </label>
+
+                                <select id="tipo-pago">
+
+                                    <option value="">
+                                        Seleccione tipo de pago
+                                    </option>
+
+                                    <option value="CONTADO">
+                                        Contado
+                                    </option>
+
+                                    <option value="CUENTA_CORRIENTE">
+                                        Cuenta corriente
+                                    </option>
+
+                                    <option value="POR_PAGAR">
+                                        Por pagar
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- MÉTODO DE PAGO -->
+
+                            <div class="field">
+
+                                <label for="metodo-pago">
+                                    Método de pago
+                                </label>
+
+                                <select id="metodo-pago">
+
+                                    <option value="">
+                                        Seleccione método de pago
+                                    </option>
+
+                                    <option value="EFECTIVO">
+                                        Efectivo
+                                    </option>
+
+                                    <option value="CREDITO">
+                                        Tarjeta de crédito
+                                    </option>
+
+                                    <option value="DEBITO">
+                                        Tarjeta de débito
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- CUENTA CORRIENTE -->
+
+                            <div
+                                id="contenedor-cuenta-corriente"
+                                class="field"
+                                hidden
+                            >
+
+                                <label for="cuenta-corriente">
+                                    Cuenta corriente
+                                </label>
+
+                                <select id="cuenta-corriente">
+
+                                    <option value="">
+                                        Seleccione cuenta corriente
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =====================================================
+                         PASO 5
+                         CONFIRMACIÓN
+                         ===================================================== -->
+
+                    <section class="ot-seccion">
+
+                        <header class="ot-seccion-header">
+
+                            <div>
+
+                                <span class="ot-numero-paso">
+                                    5
+                                </span>
+
+                                <div>
+
+                                    <h2>
+                                        Confirmación
+                                    </h2>
+
+                                    <p>
+                                        Revisa los datos y calcula el valor final antes de crear la OT.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </header>
+
+
+                        <div class="ot-seccion-body">
+
+                            <div class="ot-confirmacion-acciones">
+
+                                <button
+                                    id="btn-calcular-ot"
+                                    type="button"
+                                    class="button-secondary"
+                                >
+                                    Calcular cotización
+                                </button>
+
+
+                                <button
+                                    id="btn-confirmar-ot"
+                                    type="button"
+                                    class="button-primary"
+                                    disabled
+                                >
+                                    Confirmar y crear OT
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+
+                <!-- =====================================================
+                     RESUMEN DE LA ORDEN
+                     ===================================================== -->
+
+                <aside class="ot-resumen">
+
+                    <h2>
+                        Resumen de la orden
+                    </h2>
+
+                    <p>
+                        Se irá completando mientras avanzas.
+                    </p>
+
+
+                    <!-- RUTA -->
+
+                    <div class="ot-resumen-bloque">
+
+                        <h3>
+                            Ruta
+                        </h3>
+
+
+                        <span>
+                            Cliente
+                        </span>
+
+                        <strong id="resumen-cliente">
+                            Sin asignar
+                        </strong>
+
+
+                        <span>
+                            Origen
+                        </span>
+
+                        <strong id="resumen-origen">
+                            Sin asignar
+                        </strong>
+
+
+                        <span>
+                            Destino
+                        </span>
+
+                        <strong id="resumen-destino">
+                            Sin asignar
+                        </strong>
+
+                    </div>
+
+
+                    <!-- CARGA -->
+
+                    <div class="ot-resumen-bloque">
+
+                        <h3>
+                            Carga
+                        </h3>
+
+
+                        <span>
+                            Total ítems
+                        </span>
+
+                        <strong id="resumen-items">
+                            0
+                        </strong>
+
+
+                        <span>
+                            Peso total
+                        </span>
+
+                        <strong id="resumen-peso">
+                            0 kg
+                        </strong>
+
+
+                        <span>
+                            Volumen total
+                        </span>
+
+                        <strong id="resumen-volumen">
+                            0 m³
+                        </strong>
+
+                    </div>
+
+
+                    <!-- SERVICIOS ADICIONALES -->
+
+                    <div class="ot-resumen-bloque">
+
+                        <h3>
+                            Servicios adicionales
+                        </h3>
+
+
+                        <span>
+                            Retiro
+                        </span>
+
+                        <strong id="resumen-retiro">
+                            $0
+                        </strong>
+
+
+                        <span>
+                            Recargos
+                        </span>
+
+                        <strong id="resumen-recargos">
+                            $0
+                        </strong>
+
+                    </div>
+
+
+                    <!-- COTIZACIÓN -->
+
+                    <div class="ot-resumen-bloque">
+
+                        <h3>
+                            Cotización
+                        </h3>
+
+
+                        <span>
+                            Valor neto
+                        </span>
+
+                        <strong id="resumen-neto">
+                            $0
+                        </strong>
+
+
+                        <span>
+                            IVA
+                        </span>
+
+                        <strong id="resumen-iva">
+                            $0
+                        </strong>
+
+
+                        <div class="ot-resumen-total">
+
+                            <span>
+                                TOTAL
+                            </span>
+
+                            <strong id="resumen-total">
+                                $0
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <script src="../../js/operador.js"></script>
+
+</body>
+
+</html>

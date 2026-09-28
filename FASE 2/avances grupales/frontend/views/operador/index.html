@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Operador | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/operador.css">
+</head>
+
+<body class="operador-body">
+
+    <div class="operador-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="operador-sidebar">
+
+            <div class="operador-logo">
+                <span>MAREXPRESS</span>
+                <small>Operaciones</small>
+            </div>
+
+            <nav
+                class="operador-menu"
+                aria-label="Menú operador"
+            >
+
+                <a
+                    class="operador-menu-item activo"
+                    href="./index.html"
+                    aria-current="page"
+                >
+                    Inicio
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./recepcion.html"
+                >
+                    Recepción
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./ordenes.html"
+                >
+                    Órdenes de transporte
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./clientes.html"
+                >
+                    Clientes
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./bodega.html"
+                >
+                    Bodega
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./manifiestos.html"
+                >
+                    Manifiestos
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./despacho.html"
+                >
+                    Pronto despacho
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./seguimiento.html"
+                >
+                    Seguimiento
+                </a>
+
+                <a
+                    class="operador-menu-item"
+                    href="./comprobantes.html"
+                >
+                    Comprobantes
+                </a>
+
+            </nav>
+
+            <div class="operador-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-operador"
+                    type="button"
+                    class="operador-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="operador-main">
+
+            <!-- CABECERA -->
+            <header class="operador-header">
+
+                <div>
+
+                    <p class="operador-header-label">
+                        PANEL OPERACIONAL
+                    </p>
+
+                    <h1>Resumen de operaciones</h1>
+
+                </div>
+
+                <div class="operador-usuario">
+
+                    <div class="operador-usuario-texto">
+
+                        <strong id="operador-nombre">
+                            Operador
+                        </strong>
+
+                        <span id="operador-rol">
+                            OPERADOR
+                        </span>
+
+                    </div>
+
+                    <div class="operador-avatar">
+                        O
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- KPI -->
+            <section class="operador-kpis">
+
+                <article class="operador-kpi">
+
+                    <span>OT recibidas hoy</span>
+
+                    <strong id="kpi-ot-recibidas">
+                        --
+                    </strong>
+
+                    <small>
+                        Órdenes ingresadas durante la jornada
+                    </small>
+
+                </article>
+
+
+                <article class="operador-kpi">
+
+                    <span>Bultos en bodega</span>
+
+                    <strong id="kpi-bultos-bodega">
+                        --
+                    </strong>
+
+                    <small>
+                        Carga disponible en sucursal
+                    </small>
+
+                </article>
+
+
+                <article class="operador-kpi">
+
+                    <span>Pronto despacho</span>
+
+                    <strong id="kpi-pronto-despacho">
+                        --
+                    </strong>
+
+                    <small>
+                        Carga preparada para salida
+                    </small>
+
+                </article>
+
+
+                <article class="operador-kpi operador-kpi-verde">
+
+                    <span>En tránsito</span>
+
+                    <strong id="kpi-en-transito">
+                        --
+                    </strong>
+
+                    <small>
+                        Órdenes actualmente en ruta
+                    </small>
+
+                </article>
+
+            </section>
+
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <section class="operador-grid-principal">
+
+                <!-- OT RECIENTES -->
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+
+                            <span>RECEPCIÓN</span>
+
+                            <h2>
+                                Órdenes recientes
+                            </h2>
+
+                        </div>
+
+                        <a
+                            href="./ordenes.html"
+                            class="operador-link-button"
+                        >
+                            Ver todas
+                        </a>
+
+                    </header>
+
+
+                    <div class="operador-table-wrapper">
+
+                        <table class="operador-table">
+
+                            <thead>
+
+                                <tr>
+                                    <th>OT</th>
+                                    <th>Cliente</th>
+                                    <th>Destino</th>
+                                    <th>Bultos</th>
+                                    <th>Estado</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="tabla-ot-operador">
+
+                                <tr>
+                                    <td colspan="5">
+                                        Cargando información...
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ACCIONES RÁPIDAS -->
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+
+                            <span>GESTIÓN</span>
+
+                            <h2>
+                                Acciones rápidas
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+
+                    <div class="operador-acciones">
+
+                        <a href="./recepcion.html">
+                            Recepcionar carga
+                        </a>
+
+                        <a href="./ordenes.html">
+                            Crear orden de transporte
+                        </a>
+
+                        <a href="./bodega.html">
+                            Revisar bodega
+                        </a>
+
+                        <a href="./despacho.html">
+                            Preparar despacho
+                        </a>
+
+                        <a href="./manifiestos.html">
+                            Revisar manifiestos
+                        </a>
+
+                        <a href="./comprobantes.html">
+                            Imprimir comprobante
+                        </a>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <!-- BODEGA Y DESPACHO -->
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+
+                            <span>BODEGA</span>
+
+                            <h2>
+                                Carga pendiente
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div id="operador-carga-pendiente">
+
+                        <p>
+                            Aquí aparecerán los bultos recibidos
+                            que todavía no estén asignados
+                            a un manifiesto.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+
+                            <span>DESPACHO</span>
+
+                            <h2>
+                                Próximas salidas
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div id="operador-proximas-salidas">
+
+                        <p>
+                            Aquí aparecerán los manifiestos
+                            preparados para despacho.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <!-- ALERTAS -->
+            <section class="operador-card operador-alertas">
+
+                <header class="operador-card-header">
+
+                    <div>
+
+                        <span>CONTROL OPERACIONAL</span>
+
+                        <h2>
+                            Alertas y pendientes
+                        </h2>
+
+                    </div>
+
+                </header>
+
+                <div
+                    id="operador-lista-alertas"
+                    class="operador-alertas-lista"
+                >
+
+                    <p>
+                        No hay alertas cargadas todavía.
+                    </p>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/operador.js"
+    ></script>
+
+</body>
+</html>

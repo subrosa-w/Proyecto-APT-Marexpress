@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Mis manifiestos | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/peoneta.css">
+</head>
+
+<body class="peoneta-body">
+
+    <div class="peoneta-layout">
+
+        <aside class="peoneta-sidebar">
+
+            <div class="peoneta-logo">
+                <span>MAREXPRESS</span>
+                <small>Reparto</small>
+            </div>
+
+            <nav
+                class="peoneta-menu"
+                aria-label="Menú peoneta"
+            >
+
+                <a
+                    class="peoneta-menu-item"
+                    href="./index.html"
+                >
+                    Inicio
+                </a>
+
+                <a
+                    class="peoneta-menu-item activo"
+                    href="./manifiestos.html"
+                    aria-current="page"
+                >
+                    Mis manifiestos
+                </a>
+
+                <a
+                    class="peoneta-menu-item"
+                    href="./entregas.html"
+                >
+                    Entregas
+                </a>
+
+                <a
+                    class="peoneta-menu-item"
+                    href="./historial.html"
+                >
+                    Historial
+                </a>
+
+                <a
+                    class="peoneta-menu-item"
+                    href="./perfil.html"
+                >
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="peoneta-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-peoneta"
+                    type="button"
+                    class="peoneta-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="peoneta-main">
+
+            <header class="peoneta-header">
+
+                <div>
+
+                    <p class="peoneta-header-label">
+                        VIAJES ASIGNADOS
+                    </p>
+
+                    <h1>Mis manifiestos</h1>
+
+                </div>
+
+                <div class="peoneta-usuario">
+
+                    <div class="peoneta-usuario-texto">
+
+                        <strong id="peoneta-nombre">
+                            Peoneta
+                        </strong>
+
+                        <span id="peoneta-rol">
+                            PEONETA
+                        </span>
+
+                    </div>
+
+                    <div class="peoneta-avatar">
+                        P
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="peoneta-kpis">
+
+                <article class="peoneta-kpi">
+
+                    <span>Asignados</span>
+
+                    <strong id="kpi-manifiestos-asignados">
+                        --
+                    </strong>
+
+                    <small>
+                        Manifiestos asociados a tu usuario
+                    </small>
+
+                </article>
+
+                <article class="peoneta-kpi">
+
+                    <span>En tránsito</span>
+
+                    <strong id="kpi-manifiestos-transito">
+                        --
+                    </strong>
+
+                    <small>
+                        Viajes actualmente en reparto
+                    </small>
+
+                </article>
+
+                <article class="peoneta-kpi">
+
+                    <span>OT pendientes</span>
+
+                    <strong id="kpi-manifiestos-ot-pendientes">
+                        --
+                    </strong>
+
+                    <small>
+                        Órdenes aún pendientes de entrega
+                    </small>
+
+                </article>
+
+                <article class="peoneta-kpi peoneta-kpi-verde">
+
+                    <span>Bultos asignados</span>
+
+                    <strong id="kpi-manifiestos-bultos">
+                        --
+                    </strong>
+
+                    <small>
+                        Bultos físicos del viaje
+                    </small>
+
+                </article>
+
+            </section>
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+
+                        <span>MANIFIESTOS</span>
+
+                        <h2>
+                            Viajes disponibles
+                        </h2>
+
+                    </div>
+
+                </header>
+
+                <div class="peoneta-table-wrapper">
+
+                    <table class="peoneta-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Manifiesto</th>
+                                <th>Fecha salida</th>
+                                <th>Origen</th>
+                                <th>Destinos</th>
+                                <th>Vehículo</th>
+                                <th>Conductor</th>
+                                <th>OT</th>
+                                <th>Bultos</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-manifiestos-peoneta">
+
+                            <tr>
+                                <td colspan="10">
+                                    Cargando manifiestos asignados...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="peoneta-grid-principal">
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>DETALLE DEL VIAJE</span>
+
+                            <h2>
+                                Órdenes del manifiesto
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-table-wrapper">
+
+                        <table class="peoneta-table">
+
+                            <thead>
+
+                                <tr>
+                                    <th>OT</th>
+                                    <th>Destinatario</th>
+                                    <th>Comuna</th>
+                                    <th>Dirección</th>
+                                    <th>Bultos</th>
+                                    <th>Estado</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="tabla-ot-manifiesto-peoneta">
+
+                                <tr>
+                                    <td colspan="6">
+                                        Selecciona un manifiesto.
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+
+                            <span>CARGA FÍSICA</span>
+
+                            <h2>
+                                Bultos del manifiesto
+                            </h2>
+
+                        </div>
+
+                    </header>
+
+                    <div class="peoneta-table-wrapper">
+
+                        <table class="peoneta-table">
+
+                            <thead>
+
+                                <tr>
+                                    <th>Código</th>
+                                    <th>OT</th>
+                                    <th>Peso</th>
+                                    <th>Dimensiones</th>
+                                    <th>Estado</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="tabla-bultos-manifiesto-peoneta">
+
+                                <tr>
+                                    <td colspan="5">
+                                        Selecciona un manifiesto.
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+
+                        <span>ACCIONES</span>
+
+                        <h2>
+                            Gestión del viaje
+                        </h2>
+
+                    </div>
+
+                </header>
+
+                <div class="peoneta-acciones">
+
+                    <button type="button">
+                        Ver órdenes pendientes
+                    </button>
+
+                    <button type="button">
+                        Ver carga asignada
+                    </button>
+
+                    <button type="button">
+                        Registrar entrega
+                    </button>
+
+                    <button type="button">
+                        Ver historial del manifiesto
+                    </button>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/peoneta.js"
+    ></script>
+
+</body>
+</html>

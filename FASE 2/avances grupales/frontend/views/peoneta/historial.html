@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Historial | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/peoneta.css">
+</head>
+
+<body class="peoneta-body">
+
+    <div class="peoneta-layout">
+
+        <aside class="peoneta-sidebar">
+
+            <div class="peoneta-logo">
+                <span>MAREXPRESS</span>
+                <small>Reparto</small>
+            </div>
+
+            <nav class="peoneta-menu" aria-label="Menú peoneta">
+
+                <a class="peoneta-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="peoneta-menu-item" href="./manifiestos.html">
+                    Mis manifiestos
+                </a>
+
+                <a class="peoneta-menu-item" href="./entregas.html">
+                    Entregas
+                </a>
+
+                <a
+                    class="peoneta-menu-item activo"
+                    href="./historial.html"
+                    aria-current="page"
+                >
+                    Historial
+                </a>
+
+                <a class="peoneta-menu-item" href="./perfil.html">
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="peoneta-sidebar-footer">
+                <button
+                    id="cerrar-sesion-peoneta"
+                    type="button"
+                    class="peoneta-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="peoneta-main">
+
+            <header class="peoneta-header">
+
+                <div>
+                    <p class="peoneta-header-label">
+                        TRAZABILIDAD PERSONAL
+                    </p>
+
+                    <h1>Historial de entregas</h1>
+                </div>
+
+                <div class="peoneta-usuario">
+
+                    <div class="peoneta-usuario-texto">
+                        <strong id="peoneta-nombre">
+                            Peoneta
+                        </strong>
+
+                        <span id="peoneta-rol">
+                            PEONETA
+                        </span>
+                    </div>
+
+                    <div class="peoneta-avatar">
+                        P
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="peoneta-kpis">
+
+                <article class="peoneta-kpi">
+                    <span>Entregadas</span>
+                    <strong id="kpi-historial-entregadas">--</strong>
+                    <small>Entregas completadas</small>
+                </article>
+
+                <article class="peoneta-kpi">
+                    <span>Parciales</span>
+                    <strong id="kpi-historial-parciales">--</strong>
+                    <small>Entregas con carga parcial</small>
+                </article>
+
+                <article class="peoneta-kpi">
+                    <span>Rechazadas</span>
+                    <strong id="kpi-historial-rechazadas">--</strong>
+                    <small>Entregas rechazadas por destinatario</small>
+                </article>
+
+                <article class="peoneta-kpi peoneta-kpi-verde">
+                    <span>No recibidas</span>
+                    <strong id="kpi-historial-no-recibidas">--</strong>
+                    <small>Intentos sin recepción</small>
+                </article>
+
+            </section>
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+                        <span>FILTROS</span>
+                        <h2>Buscar entregas</h2>
+                    </div>
+
+                </header>
+
+                <div class="peoneta-form-grid">
+
+                    <div class="field">
+                        <label for="historial-busqueda">
+                            Buscar
+                        </label>
+
+                        <input
+                            id="historial-busqueda"
+                            type="search"
+                            placeholder="OT, manifiesto o destinatario"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="historial-estado">
+                            Resultado
+                        </label>
+
+                        <select id="historial-estado">
+                            <option value="">Todos</option>
+                            <option value="ENTREGADA">Entregada</option>
+                            <option value="ENTREGA_PARCIAL">Entrega parcial</option>
+                            <option value="RECHAZADA">Rechazada</option>
+                            <option value="NO_RECIBIDO">No recibido</option>
+                        </select>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="peoneta-card">
+
+                <header class="peoneta-card-header">
+
+                    <div>
+                        <span>REGISTROS</span>
+                        <h2>Entregas realizadas</h2>
+                    </div>
+
+                </header>
+
+                <div class="peoneta-table-wrapper">
+
+                    <table class="peoneta-table">
+
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Manifiesto</th>
+                                <th>OT</th>
+                                <th>Destinatario</th>
+                                <th>Comuna</th>
+                                <th>Bultos</th>
+                                <th>Resultado</th>
+                                <th>Receptor</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-historial-peoneta">
+
+                            <tr>
+                                <td colspan="9">
+                                    Cargando historial...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="peoneta-grid-principal">
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+                            <span>DETALLE</span>
+                            <h2>Resultado registrado</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="detalle-historial-entrega">
+
+                        <p>
+                            Selecciona una entrega para revisar
+                            su resultado, receptor, motivo y observaciones.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="peoneta-card">
+
+                    <header class="peoneta-card-header">
+
+                        <div>
+                            <span>EVIDENCIAS</span>
+                            <h2>Respaldo de entrega</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="evidencias-historial-entrega">
+
+                        <p>
+                            Las evidencias autorizadas aparecerán aquí.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/peoneta.js"
+    ></script>
+
+</body>
+</html>

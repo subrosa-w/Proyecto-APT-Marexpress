@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Órdenes de Transporte | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/administrador.css">
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-layout">
+
+        <aside class="admin-sidebar">
+
+            <div class="admin-logo">
+                <span>MAREXPRESS</span>
+                <small>Administración</small>
+            </div>
+
+            <nav class="admin-menu" aria-label="Menú administrador">
+
+                <a
+                    class="admin-menu-item"
+                    href="./index.html"
+                >
+                    Inicio
+                </a>
+
+                <a
+                    class="admin-menu-item activo"
+                    href="./ordenes.html"
+                    aria-current="page"
+                >
+                    Órdenes de transporte
+                </a>
+
+                <button class="admin-menu-item" type="button">
+                    Clientes
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Manifiestos
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Bodega
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Cuenta corriente
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Facturación
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Usuarios
+                </button>
+
+                <button class="admin-menu-item" type="button">
+                    Reportes
+                </button>
+
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button
+                    id="cerrar-sesion-admin"
+                    type="button"
+                    class="admin-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <header class="admin-header">
+
+                <div>
+                    <p class="admin-header-label">
+                        OPERACIONES
+                    </p>
+
+                    <h1>Órdenes de transporte</h1>
+                </div>
+
+                <div class="admin-usuario">
+
+                    <div class="admin-usuario-texto">
+                        <strong id="admin-nombre">
+                            Administrador
+                        </strong>
+
+                        <span id="admin-rol">
+                            ADMINISTRADOR
+                        </span>
+                    </div>
+
+                    <div class="admin-avatar">
+                        A
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="admin-card">
+
+                <header class="admin-card-header">
+
+                    <div>
+                        <span>GESTIÓN DE OT</span>
+                        <h2>Listado de órdenes</h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="button-primary"
+                    >
+                        Nueva orden
+                    </button>
+
+                </header>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>OT</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Estado</th>
+                                <th>Total</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-ordenes">
+                            <tr>
+                                <td colspan="8">
+                                    Cargando órdenes de transporte...
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script type="module" src="../../js/administrador.js"></script>
+
+</body>
+</html>

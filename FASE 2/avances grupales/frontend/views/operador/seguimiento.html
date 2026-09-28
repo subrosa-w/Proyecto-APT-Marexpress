@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Seguimiento | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/operador.css">
+</head>
+
+<body class="operador-body">
+
+    <div class="operador-layout">
+
+        <aside class="operador-sidebar">
+
+            <div class="operador-logo">
+                <span>MAREXPRESS</span>
+                <small>Operaciones</small>
+            </div>
+
+            <nav class="operador-menu" aria-label="Menú operador">
+
+                <a class="operador-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="operador-menu-item" href="./recepcion.html">
+                    Recepción
+                </a>
+
+                <a class="operador-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="operador-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="operador-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="operador-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="operador-menu-item" href="./despacho.html">
+                    Pronto despacho
+                </a>
+
+                <a
+                    class="operador-menu-item activo"
+                    href="./seguimiento.html"
+                    aria-current="page"
+                >
+                    Seguimiento
+                </a>
+
+                <a class="operador-menu-item" href="./comprobantes.html">
+                    Comprobantes
+                </a>
+
+            </nav>
+
+            <div class="operador-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-operador"
+                    type="button"
+                    class="operador-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="operador-main">
+
+            <header class="operador-header">
+
+                <div>
+                    <p class="operador-header-label">
+                        TRAZABILIDAD OPERACIONAL
+                    </p>
+
+                    <h1>Seguimiento</h1>
+                </div>
+
+                <div class="operador-usuario">
+
+                    <div class="operador-usuario-texto">
+                        <strong id="operador-nombre">
+                            Operador
+                        </strong>
+
+                        <span id="operador-rol">
+                            OPERADOR
+                        </span>
+                    </div>
+
+                    <div class="operador-avatar">
+                        O
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>BÚSQUEDA</span>
+                        <h2>Consultar envío</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-form-grid">
+
+                    <div class="field">
+
+                        <label for="seguimiento-busqueda">
+                            OT, manifiesto o código de bulto
+                        </label>
+
+                        <input
+                            id="seguimiento-busqueda"
+                            type="search"
+                            placeholder="Ej: OT-000123"
+                        >
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="seguimiento-tipo">
+                            Tipo de búsqueda
+                        </label>
+
+                        <select id="seguimiento-tipo">
+                            <option value="OT">
+                                Orden de transporte
+                            </option>
+
+                            <option value="MANIFIESTO">
+                                Manifiesto
+                            </option>
+
+                            <option value="BULTO">
+                                Bulto
+                            </option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>ESTADO ACTUAL</span>
+                            <h2>Información del envío</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="seguimiento-resumen">
+
+                        <p>
+                            Realiza una búsqueda para consultar
+                            el estado actual del envío.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>UBICACIÓN</span>
+                            <h2>Situación operacional</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="seguimiento-ubicacion">
+
+                        <p>
+                            Aquí aparecerá la sucursal,
+                            manifiesto o estado físico actual
+                            de la carga.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>HISTORIAL</span>
+                        <h2>Línea de seguimiento</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-table-wrapper">
+
+                    <table class="operador-table">
+
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Evento</th>
+                                <th>Estado</th>
+                                <th>Sucursal / ubicación</th>
+                                <th>Manifiesto</th>
+                                <th>Observación</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-seguimiento-operador">
+
+                            <tr>
+                                <td colspan="6">
+                                    Sin información cargada.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>BULTOS</span>
+                            <h2>Estado físico de la carga</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="operador-table-wrapper">
+
+                        <table class="operador-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Estado</th>
+                                    <th>Sucursal actual</th>
+                                    <th>Peso</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-seguimiento-bultos">
+
+                                <tr>
+                                    <td colspan="4">
+                                        Sin bultos seleccionados.
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>ENTREGA</span>
+                            <h2>Resultado de entrega</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="seguimiento-entrega">
+
+                        <p>
+                            Si existen intentos de entrega,
+                            aparecerán aquí sus resultados.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/operador.js"
+    ></script>
+
+</body>
+</html>

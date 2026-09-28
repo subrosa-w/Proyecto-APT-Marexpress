@@ -1,0 +1,1349 @@
+/* =========================================================
+   MAREXPRESS
+   NUEVA ORDEN DE TRANSPORTE
+   ========================================================= */
+
+
+/* =========================================================
+   VARIABLES
+   ========================================================= */
+
+:root {
+    --mx-navy: #06365e;
+    --mx-navy-dark: #042844;
+
+    --mx-blue: #0b8fd3;
+    --mx-green: #13b866;
+
+    --mx-bg: #f3f8fc;
+    --mx-card: #ffffff;
+
+    --mx-border: #d6e3ee;
+
+    --mx-text: #173851;
+    --mx-text-soft: #526d84;
+    --mx-muted: #74899b;
+
+    --mx-danger: #e5484d;
+
+    --mx-radius: 14px;
+
+    --mx-shadow:
+        0 8px 24px rgba(6, 54, 94, 0.08);
+
+    --sidebar-cerrado: 14px;
+    --sidebar-abierto: 270px;
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+html {
+    background: var(--mx-bg);
+}
+
+body.operador-body {
+    margin: 0;
+
+    min-width: 0;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8fbfe 0%,
+            #edf6fb 100%
+        );
+
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   CORREGIR LAYOUT HEREDADO DE operador.css
+
+   operador.css usa:
+   grid-template-columns: 270px 1fr;
+
+   Para esta vista NO queremos reservar 270px.
+   ========================================================= */
+
+body.operador-body .operador-layout {
+    display: block !important;
+
+    width: 100%;
+
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   SIDEBAR RETRÁCTIL
+   ========================================================= */
+
+body.operador-body .operador-sidebar {
+    position: fixed !important;
+
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+
+    width: var(--sidebar-cerrado) !important;
+    height: 100vh !important;
+
+    padding: 28px 20px 20px !important;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            180deg,
+            #042844 0%,
+            #06365e 55%,
+            #073d68 100%
+        );
+
+    color: #ffffff;
+
+    z-index: 9999;
+
+    box-shadow:
+        4px 0 14px rgba(0, 0, 0, 0.10);
+
+    transition:
+        width 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+/* Pequeña franja visible */
+
+body.operador-body
+.operador-sidebar::after {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    right: 0;
+
+    width: 5px;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            180deg,
+            var(--mx-blue),
+            var(--mx-green)
+        );
+
+    pointer-events: none;
+}
+
+
+/* Abrir al pasar el mouse */
+
+body.operador-body
+.operador-sidebar:hover {
+    width: var(--sidebar-abierto) !important;
+
+    box-shadow:
+        10px 0 35px rgba(0, 0, 0, 0.22);
+}
+
+
+/* El contenido interno mantiene ancho completo */
+
+body.operador-body
+.operador-logo,
+
+body.operador-body
+.operador-menu,
+
+body.operador-body
+.operador-sidebar-footer {
+    width:
+        calc(
+            var(--sidebar-abierto) - 40px
+        );
+
+    min-width:
+        calc(
+            var(--sidebar-abierto) - 40px
+        );
+}
+
+
+/* =========================================================
+   LOGO SIDEBAR
+   ========================================================= */
+
+body.operador-body
+.operador-logo span {
+    background:
+        linear-gradient(
+            90deg,
+            var(--mx-blue),
+            var(--mx-green)
+        );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    color: transparent;
+
+    font-weight: 900;
+}
+
+
+/* =========================================================
+   MENÚ SIDEBAR
+   ========================================================= */
+
+body.operador-body
+.operador-menu-item {
+    white-space: nowrap;
+}
+
+
+body.operador-body
+.operador-menu-item.activo {
+    background:
+        linear-gradient(
+            135deg,
+            var(--mx-blue),
+            var(--mx-green)
+        );
+
+    color: #ffffff;
+}
+
+
+body.operador-body
+.operador-menu-item:hover {
+    background:
+        rgba(255, 255, 255, 0.12);
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   CONTENIDO PRINCIPAL
+
+   Solo dejamos una pequeña franja de 14px.
+   ========================================================= */
+
+body.operador-body
+.operador-main {
+    box-sizing: border-box;
+
+    width:
+        calc(
+            100% - var(--sidebar-cerrado)
+        ) !important;
+
+    max-width: none !important;
+
+    min-width: 0;
+
+    min-height: 100vh;
+
+    margin-left:
+        var(--sidebar-cerrado) !important;
+
+    padding:
+        24px 28px 45px !important;
+
+    background:
+        transparent;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+body.operador-body
+.operador-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 24px;
+
+    margin-bottom: 20px;
+}
+
+
+body.operador-body
+.operador-header-label {
+    margin: 0 0 4px;
+
+    color:
+        var(--mx-green) !important;
+
+    font-size: 0.76rem;
+
+    font-weight: 900;
+
+    letter-spacing: 0.12em;
+}
+
+
+body.operador-body
+.operador-header h1 {
+    margin: 0 0 5px;
+
+    color:
+        var(--mx-navy);
+
+    font-size: 1.8rem;
+}
+
+
+body.operador-body
+.operador-header p {
+    margin: 0;
+
+    color:
+        var(--mx-text-soft);
+}
+
+
+body.operador-body
+.operador-avatar {
+    background:
+        linear-gradient(
+            135deg,
+            var(--mx-blue),
+            var(--mx-green)
+        ) !important;
+}
+
+
+/* =========================================================
+   PASOS
+   ========================================================= */
+
+.ot-pasos {
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr)) !important;
+
+    width: 100%;
+
+    margin-bottom: 18px;
+
+    background: #ffffff;
+
+    border:
+        1px solid var(--mx-border);
+
+    border-radius:
+        var(--mx-radius);
+
+    box-shadow:
+        var(--mx-shadow);
+
+    overflow: hidden;
+}
+
+
+.ot-paso {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    min-width: 0;
+    min-height: 70px;
+
+    padding: 10px;
+
+    box-sizing: border-box;
+
+    color: #8798aa;
+
+    border-bottom:
+        3px solid transparent;
+
+    cursor: pointer;
+}
+
+
+.ot-paso:not(:last-child)::after {
+    content: "";
+
+    position: absolute;
+
+    right: 0;
+    top: 18px;
+
+    width: 1px;
+    height: 34px;
+
+    background:
+        var(--mx-border);
+}
+
+
+.ot-paso span {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 34px;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 50%;
+
+    background: #d8e2eb;
+
+    color: #5c7388;
+
+    font-weight: 900;
+}
+
+
+.ot-paso strong {
+    min-width: 0;
+
+    color: inherit;
+
+    font-size: 0.78rem;
+
+    line-height: 1.2;
+}
+
+
+.ot-paso.activo {
+    color:
+        var(--mx-navy);
+
+    border-bottom-color:
+        var(--mx-blue);
+}
+
+
+.ot-paso.activo span {
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--mx-blue),
+            var(--mx-green)
+        );
+}
+
+
+/* =========================================================
+   LAYOUT DE LA ORDEN
+   ========================================================= */
+
+.ot-layout {
+    display: grid !important;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        300px !important;
+
+    gap: 20px;
+
+    width: 100%;
+
+    min-width: 0;
+
+    align-items: start;
+}
+
+
+.ot-contenido {
+    width: 100%;
+
+    min-width: 0;
+}
+
+
+/* =========================================================
+   SECCIONES
+   ========================================================= */
+
+.ot-seccion {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    margin-bottom: 14px;
+
+    background:
+        var(--mx-card);
+
+    border:
+        1px solid var(--mx-border);
+
+    border-radius:
+        var(--mx-radius);
+
+    box-shadow:
+        var(--mx-shadow);
+
+    overflow: hidden;
+}
+
+
+.ot-seccion-header {
+    padding: 15px 17px;
+
+    cursor: pointer;
+
+    background: #ffffff;
+
+    border-bottom:
+        1px solid transparent;
+}
+
+
+.ot-seccion.abierta
+.ot-seccion-header {
+    border-bottom-color:
+        var(--mx-border);
+}
+
+
+.ot-seccion-header > div {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.ot-numero-paso {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    min-width: 38px;
+
+    border-radius: 50%;
+
+    background: #d8e2eb;
+
+    color: #5c7388;
+
+    font-weight: 900;
+}
+
+
+.ot-seccion.abierta
+.ot-numero-paso {
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--mx-blue),
+            var(--mx-green)
+        );
+}
+
+
+.ot-seccion-header h2 {
+    margin: 0 0 3px;
+
+    color:
+        var(--mx-navy);
+
+    font-size: 1.05rem;
+}
+
+
+.ot-seccion-header p {
+    margin: 0;
+
+    color:
+        var(--mx-muted);
+
+    font-size: 0.82rem;
+}
+
+
+.ot-seccion-body {
+    padding: 18px;
+}
+
+
+/* Solo mostrar la sección abierta */
+
+.ot-seccion:not(.abierta)
+.ot-seccion-body {
+    display: none;
+}
+
+
+.ot-seccion:not(.abierta) {
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   FORMULARIOS
+   ========================================================= */
+
+.ot-seccion
+.operador-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+.ot-seccion .field {
+    min-width: 0;
+
+    margin-bottom: 13px;
+}
+
+
+.ot-seccion
+.field label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color:
+        var(--mx-navy);
+
+    font-size: 0.8rem;
+
+    font-weight: 700;
+}
+
+
+.ot-seccion input,
+.ot-seccion select,
+.ot-seccion textarea {
+    box-sizing: border-box;
+
+    width: 100%;
+
+    min-width: 0;
+
+    min-height: 44px;
+
+    padding: 9px 11px;
+
+    border:
+        1px solid #cbd9e6;
+
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color:
+        var(--mx-text);
+
+    font-size: 0.88rem;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.ot-seccion input:focus,
+.ot-seccion select:focus,
+.ot-seccion textarea:focus {
+    border-color:
+        var(--mx-blue);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(11, 143, 211, 0.11);
+}
+
+
+.ot-seccion
+input[readonly] {
+    background:
+        #f5f8fb;
+
+    color:
+        #60768a;
+}
+
+
+/* =========================================================
+   TARJETAS REMITENTE / DESTINATARIO
+   ========================================================= */
+
+.ot-personas-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+
+.ot-persona-card {
+    box-sizing: border-box;
+
+    min-width: 0;
+
+    margin-bottom: 15px;
+
+    padding: 16px;
+
+    border:
+        1px solid var(--mx-border);
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f9fcfe 100%
+        );
+}
+
+
+.ot-persona-card h3 {
+    margin:
+        0 0 8px;
+
+    color:
+        var(--mx-navy);
+
+    font-size:
+        1rem;
+}
+
+
+.ot-persona-card > p {
+    margin:
+        0 0 14px;
+
+    color:
+        var(--mx-muted);
+
+    font-size:
+        0.82rem;
+}
+
+
+/* =========================================================
+   RETIRO / RECARGO
+   ========================================================= */
+
+#datos-retiro[hidden],
+#datos-recargo[hidden] {
+    display: none !important;
+}
+
+
+#datos-retiro,
+#datos-recargo {
+    margin-top: 12px;
+
+    padding-top: 14px;
+
+    border-top:
+        1px solid var(--mx-border);
+}
+
+
+/* =========================================================
+   TABLA DE CARGAS
+   ========================================================= */
+
+#agregar-carga {
+    margin-bottom: 14px;
+}
+
+
+.ot-seccion
+.operador-table-wrapper {
+    box-sizing: border-box;
+
+    width: 100%;
+
+    max-width: 100%;
+
+    overflow-x: auto;
+
+    border:
+        1px solid var(--mx-border);
+
+    border-radius: 10px;
+
+    background: #ffffff;
+}
+
+
+.ot-seccion
+.operador-table {
+    width: 100%;
+
+    min-width: 900px;
+
+    border-collapse: collapse;
+}
+
+
+.ot-seccion
+.operador-table thead {
+    background:
+        linear-gradient(
+            90deg,
+            #edf7fd,
+            #effaf5
+        );
+}
+
+
+.ot-seccion
+.operador-table th {
+    padding: 10px 8px;
+
+    color:
+        var(--mx-navy);
+
+    font-size:
+        0.74rem;
+
+    font-weight:
+        800;
+
+    text-align: left;
+
+    white-space: nowrap;
+}
+
+
+.ot-seccion
+.operador-table td {
+    padding: 8px;
+
+    border-top:
+        1px solid var(--mx-border);
+
+    color:
+        var(--mx-text-soft);
+
+    font-size:
+        0.8rem;
+
+    vertical-align:
+        middle;
+}
+
+
+.ot-seccion
+.operador-table input,
+
+.ot-seccion
+.operador-table select {
+    min-height: 37px;
+
+    padding: 6px 7px;
+
+    font-size: 0.8rem;
+}
+
+
+.carga-tipo {
+    min-width: 110px;
+}
+
+
+.carga-descripcion {
+    min-width: 140px;
+}
+
+
+.carga-cantidad {
+    min-width: 65px;
+}
+
+
+.carga-peso,
+.carga-largo,
+.carga-ancho,
+.carga-alto {
+    min-width: 75px;
+}
+
+
+.carga-volumen {
+    white-space: nowrap;
+
+    color:
+        var(--mx-navy) !important;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
+
+.button-primary,
+.ot-seccion
+.button-primary {
+    min-height: 42px;
+
+    padding:
+        0 17px;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--mx-blue),
+            var(--mx-green)
+        );
+
+    color: #ffffff;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.button-primary:hover {
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 7px 18px
+        rgba(11, 143, 211, 0.20);
+}
+
+
+.button-secondary {
+    min-height: 42px;
+
+    padding:
+        0 17px;
+
+    border:
+        1px solid var(--mx-blue);
+
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color:
+        var(--mx-blue);
+
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+
+.button-secondary:hover {
+    background:
+        #edf8fd;
+}
+
+
+.button-danger,
+.eliminar-carga {
+    min-height: 34px;
+
+    padding:
+        0 10px;
+
+    border:
+        1px solid
+        rgba(229, 72, 77, 0.28);
+
+    border-radius: 7px;
+
+    background:
+        rgba(229, 72, 77, 0.08);
+
+    color:
+        var(--mx-danger);
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.button-danger:hover,
+.eliminar-carga:hover {
+    background:
+        var(--mx-danger);
+
+    color:
+        #ffffff;
+}
+
+
+/* =========================================================
+   CONFIRMACIÓN
+   ========================================================= */
+
+.ot-confirmacion-acciones {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+}
+
+
+#btn-confirmar-ot:disabled {
+    background: #9dc9b1;
+
+    color: #ffffff;
+
+    opacity: 0.7;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+
+    transform: none;
+}
+
+
+/* =========================================================
+   RESUMEN DERECHO
+   ========================================================= */
+
+.ot-resumen {
+    position: sticky;
+
+    top: 16px;
+
+    align-self: start;
+
+    box-sizing: border-box;
+
+    width: 100%;
+
+    min-width: 0;
+
+    max-height:
+        calc(100vh - 32px);
+
+    padding: 18px;
+
+    overflow-y: auto;
+
+    background: #ffffff;
+
+    border:
+        1px solid var(--mx-border);
+
+    border-radius:
+        var(--mx-radius);
+
+    box-shadow:
+        var(--mx-shadow);
+}
+
+
+.ot-resumen > h2 {
+    margin:
+        0 0 4px;
+
+    color:
+        var(--mx-navy);
+
+    font-size:
+        1.12rem;
+}
+
+
+.ot-resumen > p {
+    margin:
+        0 0 15px;
+
+    color:
+        var(--mx-muted);
+
+    font-size:
+        0.81rem;
+}
+
+
+.ot-resumen-bloque {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        auto;
+
+    gap:
+        7px 12px;
+
+    padding:
+        14px 0;
+
+    align-items:
+        center;
+
+    border-top:
+        1px solid var(--mx-border);
+}
+
+
+.ot-resumen-bloque h3 {
+    grid-column:
+        1 / -1;
+
+    margin:
+        0 0 5px;
+
+    color:
+        var(--mx-navy);
+
+    font-size:
+        0.92rem;
+}
+
+
+.ot-resumen-bloque span {
+    color:
+        #617a90;
+
+    font-size:
+        0.8rem;
+}
+
+
+.ot-resumen-bloque strong {
+    max-width: 150px;
+
+    color:
+        var(--mx-text);
+
+    font-size:
+        0.82rem;
+
+    text-align:
+        right;
+
+    overflow-wrap:
+        anywhere;
+}
+
+
+.ot-resumen-total {
+    grid-column:
+        1 / -1;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 6px;
+
+    padding: 12px;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #e9f6fd,
+            #ebfaf3
+        );
+}
+
+
+.ot-resumen-total span,
+.ot-resumen-total strong {
+    color:
+        var(--mx-navy);
+
+    font-weight:
+        900;
+}
+
+
+.ot-resumen-total strong {
+    font-size:
+        1.15rem;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.ot-resumen::-webkit-scrollbar,
+.operador-table-wrapper::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+
+.ot-resumen::-webkit-scrollbar-thumb,
+.operador-table-wrapper::-webkit-scrollbar-thumb {
+    background:
+        #b8cddd;
+
+    border-radius:
+        10px;
+}
+
+
+/* =========================================================
+   NOTEBOOK
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+    body.operador-body
+    .operador-main {
+        padding:
+            20px 20px 40px !important;
+    }
+
+
+    .ot-layout {
+        grid-template-columns:
+            minmax(0, 1fr)
+            270px !important;
+    }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 950px) {
+
+    .ot-layout {
+        grid-template-columns:
+            1fr !important;
+    }
+
+
+    .ot-resumen {
+        position: static;
+
+        max-height: none;
+    }
+
+
+    .ot-pasos {
+        grid-template-columns:
+            repeat(
+                5,
+                minmax(130px, 1fr)
+            ) !important;
+
+        overflow-x: auto;
+    }
+
+
+    .ot-paso {
+        min-width: 130px;
+    }
+
+}
+
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    :root {
+        --sidebar-cerrado: 8px;
+        --sidebar-abierto: 240px;
+    }
+
+
+    body.operador-body
+    .operador-main {
+        padding:
+            16px 12px 35px !important;
+    }
+
+
+    body.operador-body
+    .operador-header {
+        flex-direction: column;
+
+        align-items:
+            flex-start;
+    }
+
+
+    .ot-personas-grid,
+    .ot-seccion
+    .operador-form-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .ot-confirmacion-acciones {
+        flex-direction:
+            column;
+    }
+
+
+    .ot-confirmacion-acciones button {
+        width: 100%;
+    }
+
+
+    body.operador-body
+    .operador-header h1 {
+        font-size:
+            1.45rem;
+    }
+
+}

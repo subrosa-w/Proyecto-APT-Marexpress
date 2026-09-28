@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Cliente | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/cliente.css">
+</head>
+
+<body class="cliente-body">
+
+    <div class="cliente-layout">
+
+        <aside class="cliente-sidebar">
+
+            <div class="cliente-logo">
+                <span>MAREXPRESS</span>
+                <small>Portal Cliente</small>
+            </div>
+
+            <nav class="cliente-menu" aria-label="Menú cliente">
+
+                <a
+                    class="cliente-menu-item activo"
+                    href="./index.html"
+                    aria-current="page"
+                >
+                    Inicio
+                </a>
+
+                <a
+                    class="cliente-menu-item"
+                    href="./ordenes.html"
+                >
+                    Mis órdenes
+                </a>
+
+                <a
+                    class="cliente-menu-item"
+                    href="./seguimiento.html"
+                >
+                    Seguimiento
+                </a>
+
+                <a
+                    class="cliente-menu-item"
+                    href="./documentos.html"
+                >
+                    Documentos
+                </a>
+
+                <a
+                    class="cliente-menu-item"
+                    href="./pagos.html"
+                >
+                    Pagos
+                </a>
+
+                <a
+                    class="cliente-menu-item"
+                    href="./evidencias.html"
+                >
+                    Evidencias
+                </a>
+
+                <a
+                    class="cliente-menu-item"
+                    href="./perfil.html"
+                >
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="cliente-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-cliente"
+                    type="button"
+                    class="cliente-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="cliente-main">
+
+            <header class="cliente-header">
+
+                <div>
+                    <p class="cliente-header-label">
+                        PORTAL CLIENTE
+                    </p>
+
+                    <h1>Resumen de mis envíos</h1>
+                </div>
+
+                <div class="cliente-usuario">
+
+                    <div class="cliente-usuario-texto">
+
+                        <strong id="cliente-nombre">
+                            Cliente
+                        </strong>
+
+                        <span id="cliente-rol">
+                            CLIENTE
+                        </span>
+
+                    </div>
+
+                    <div class="cliente-avatar">
+                        C
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="cliente-kpis">
+
+                <article class="cliente-kpi">
+
+                    <span>Órdenes activas</span>
+
+                    <strong id="kpi-cliente-ordenes">
+                        --
+                    </strong>
+
+                    <small>
+                        Envíos actualmente en proceso
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi">
+
+                    <span>En tránsito</span>
+
+                    <strong id="kpi-cliente-transito">
+                        --
+                    </strong>
+
+                    <small>
+                        Órdenes actualmente viajando
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi">
+
+                    <span>Entregadas</span>
+
+                    <strong id="kpi-cliente-entregadas">
+                        --
+                    </strong>
+
+                    <small>
+                        Entregas completadas
+                    </small>
+
+                </article>
+
+                <article class="cliente-kpi cliente-kpi-verde">
+
+                    <span>Pagos pendientes</span>
+
+                    <strong id="kpi-cliente-pagos">
+                        --
+                    </strong>
+
+                    <small>
+                        Documentos o cobros pendientes
+                    </small>
+
+                </article>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>SEGUIMIENTO</span>
+                            <h2>Buscar una orden</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="cliente-buscador">
+
+                        <div class="field">
+
+                            <label for="cliente-buscar-ot">
+                                Número de OT
+                            </label>
+
+                            <input
+                                id="cliente-buscar-ot"
+                                type="search"
+                                placeholder="Ej: OT-000123"
+                            >
+
+                        </div>
+
+                        <a
+                            href="./seguimiento.html"
+                            class="cliente-link-button"
+                        >
+                            Ir a seguimiento
+                        </a>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>ACCESOS RÁPIDOS</span>
+                            <h2>Mis servicios</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="cliente-acciones">
+
+                        <a href="./ordenes.html">
+                            Ver mis órdenes
+                        </a>
+
+                        <a href="./seguimiento.html">
+                            Rastrear envío
+                        </a>
+
+                        <a href="./documentos.html">
+                            Ver documentos
+                        </a>
+
+                        <a href="./pagos.html">
+                            Revisar pagos
+                        </a>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>MIS ENVÍOS</span>
+                        <h2>Órdenes recientes</h2>
+                    </div>
+
+                    <a
+                        href="./ordenes.html"
+                        class="cliente-link-button"
+                    >
+                        Ver todas
+                    </a>
+
+                </header>
+
+                <div class="cliente-table-wrapper">
+
+                    <table class="cliente-table">
+
+                        <thead>
+                            <tr>
+                                <th>OT</th>
+                                <th>Fecha</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Bultos</th>
+                                <th>Documento</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-ordenes-cliente">
+
+                            <tr>
+                                <td colspan="8">
+                                    Cargando tus órdenes...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>ÚLTIMO ENVÍO</span>
+                            <h2>Estado de transporte</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="cliente-ultimo-seguimiento">
+
+                        <p>
+                            Aquí aparecerá el estado actualizado
+                            de tu último envío.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>DOCUMENTOS</span>
+                            <h2>Últimos comprobantes</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="cliente-documentos-recientes">
+
+                        <p>
+                            Aquí podrás acceder a tus documentos,
+                            comprobantes y respaldos disponibles.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>ENTREGAS</span>
+                            <h2>Evidencias recientes</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="cliente-evidencias-recientes">
+
+                        <p>
+                            Las fotografías, firmas y respaldos
+                            autorizados de tus entregas aparecerán aquí.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>CUENTA</span>
+                            <h2>Información comercial</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="cliente-resumen-cuenta">
+
+                        <p>
+                            Aquí aparecerá información de pagos,
+                            cuenta corriente o documentos pendientes
+                            cuando corresponda.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/cliente.js"
+    ></script>
+
+</body>
+</html>

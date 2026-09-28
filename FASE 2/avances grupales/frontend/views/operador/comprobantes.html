@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Comprobantes | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/operador.css">
+</head>
+
+<body class="operador-body">
+
+    <div class="operador-layout">
+
+        <aside class="operador-sidebar">
+
+            <div class="operador-logo">
+                <span>MAREXPRESS</span>
+                <small>Operaciones</small>
+            </div>
+
+            <nav class="operador-menu" aria-label="Menú operador">
+
+                <a class="operador-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="operador-menu-item" href="./recepcion.html">
+                    Recepción
+                </a>
+
+                <a class="operador-menu-item" href="./ordenes.html">
+                    Órdenes de transporte
+                </a>
+
+                <a class="operador-menu-item" href="./clientes.html">
+                    Clientes
+                </a>
+
+                <a class="operador-menu-item" href="./bodega.html">
+                    Bodega
+                </a>
+
+                <a class="operador-menu-item" href="./manifiestos.html">
+                    Manifiestos
+                </a>
+
+                <a class="operador-menu-item" href="./despacho.html">
+                    Pronto despacho
+                </a>
+
+                <a class="operador-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a
+                    class="operador-menu-item activo"
+                    href="./comprobantes.html"
+                    aria-current="page"
+                >
+                    Comprobantes
+                </a>
+
+            </nav>
+
+            <div class="operador-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-operador"
+                    type="button"
+                    class="operador-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="operador-main">
+
+            <header class="operador-header">
+
+                <div>
+                    <p class="operador-header-label">
+                        DOCUMENTOS OPERACIONALES
+                    </p>
+
+                    <h1>Comprobantes</h1>
+                </div>
+
+                <div class="operador-usuario">
+
+                    <div class="operador-usuario-texto">
+                        <strong id="operador-nombre">
+                            Operador
+                        </strong>
+
+                        <span id="operador-rol">
+                            OPERADOR
+                        </span>
+                    </div>
+
+                    <div class="operador-avatar">
+                        O
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>BÚSQUEDA</span>
+                        <h2>Seleccionar orden</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-form-grid">
+
+                    <div class="field">
+
+                        <label for="comprobante-ot">
+                            Número de OT
+                        </label>
+
+                        <input
+                            id="comprobante-ot"
+                            type="search"
+                            placeholder="Ej: OT-000123"
+                        >
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="comprobante-formato">
+                            Formato de impresión
+                        </label>
+
+                        <select id="comprobante-formato">
+
+                            <option value="80">
+                                Térmico 80 mm
+                            </option>
+
+                            <option value="40">
+                                Térmico 40 mm
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="operador-grid-principal">
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>DATOS DE LA ORDEN</span>
+                            <h2>Información del comprobante</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="detalle-comprobante">
+
+                        <p>
+                            Selecciona una OT para cargar remitente,
+                            destinatario, carga, documento, pago
+                            y valores del servicio.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="operador-card">
+
+                    <header class="operador-card-header">
+
+                        <div>
+                            <span>ACCIONES</span>
+                            <h2>Documento</h2>
+                        </div>
+
+                    </header>
+
+                    <div class="operador-acciones">
+
+                        <button type="button">
+                            Vista previa 80 mm
+                        </button>
+
+                        <button type="button">
+                            Vista previa 40 mm
+                        </button>
+
+                        <button type="button">
+                            Imprimir comprobante
+                        </button>
+
+                        <button type="button">
+                            Reimprimir
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>VISTA PREVIA</span>
+                        <h2>Voucher MAREXPRESS</h2>
+                    </div>
+
+                </header>
+
+                <div id="voucher-preview" class="voucher-preview">
+
+                    <div class="voucher-documento">
+
+                        <header>
+                            <strong>MAREXPRESS</strong>
+                            <span>Transporte y logística</span>
+                        </header>
+
+                        <div class="voucher-linea"></div>
+
+                        <p>
+                            OT:
+                            <strong id="voucher-ot">--</strong>
+                        </p>
+
+                        <p>
+                            Fecha:
+                            <strong id="voucher-fecha">--</strong>
+                        </p>
+
+                        <div class="voucher-linea"></div>
+
+                        <p>
+                            Remitente:
+                            <strong id="voucher-remitente">--</strong>
+                        </p>
+
+                        <p>
+                            Destinatario:
+                            <strong id="voucher-destinatario">--</strong>
+                        </p>
+
+                        <p>
+                            Origen:
+                            <strong id="voucher-origen">--</strong>
+                        </p>
+
+                        <p>
+                            Destino:
+                            <strong id="voucher-destino">--</strong>
+                        </p>
+
+                        <div class="voucher-linea"></div>
+
+                        <p>
+                            Carga:
+                            <strong id="voucher-carga">--</strong>
+                        </p>
+
+                        <p>
+                            Bultos:
+                            <strong id="voucher-bultos">--</strong>
+                        </p>
+
+                        <p>
+                            Peso:
+                            <strong id="voucher-peso">--</strong>
+                        </p>
+
+                        <p>
+                            Volumen:
+                            <strong id="voucher-volumen">--</strong>
+                        </p>
+
+                        <div class="voucher-linea"></div>
+
+                        <p>
+                            Documento:
+                            <strong id="voucher-documento">--</strong>
+                        </p>
+
+                        <p>
+                            N° documento:
+                            <strong id="voucher-numero-documento">--</strong>
+                        </p>
+
+                        <p>
+                            Forma de pago:
+                            <strong id="voucher-pago">--</strong>
+                        </p>
+
+                        <div class="voucher-linea"></div>
+
+                        <p>
+                            Neto:
+                            <strong id="voucher-neto">--</strong>
+                        </p>
+
+                        <p>
+                            IVA:
+                            <strong id="voucher-iva">--</strong>
+                        </p>
+
+                        <p class="voucher-total">
+                            TOTAL:
+                            <strong id="voucher-total">--</strong>
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="operador-card">
+
+                <header class="operador-card-header">
+
+                    <div>
+                        <span>HISTORIAL</span>
+                        <h2>Comprobantes recientes</h2>
+                    </div>
+
+                </header>
+
+                <div class="operador-table-wrapper">
+
+                    <table class="operador-table">
+
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>OT</th>
+                                <th>Cliente</th>
+                                <th>Documento</th>
+                                <th>Total</th>
+                                <th>Formato</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabla-comprobantes-operador">
+
+                            <tr>
+                                <td colspan="7">
+                                    Cargando comprobantes...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/operador.js"
+    ></script>
+
+</body>
+</html>

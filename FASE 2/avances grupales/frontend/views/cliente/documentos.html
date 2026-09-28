@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+
+    <title>Documentos | MAREXPRESS</title>
+
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/cliente.css">
+</head>
+
+<body class="cliente-body">
+
+    <div class="cliente-layout">
+
+        <aside class="cliente-sidebar">
+
+            <div class="cliente-logo">
+                <span>MAREXPRESS</span>
+                <small>Portal Cliente</small>
+            </div>
+
+            <nav class="cliente-menu" aria-label="Menú cliente">
+
+                <a class="cliente-menu-item" href="./index.html">
+                    Inicio
+                </a>
+
+                <a class="cliente-menu-item" href="./ordenes.html">
+                    Mis órdenes
+                </a>
+
+                <a class="cliente-menu-item" href="./seguimiento.html">
+                    Seguimiento
+                </a>
+
+                <a
+                    class="cliente-menu-item activo"
+                    href="./documentos.html"
+                    aria-current="page"
+                >
+                    Documentos
+                </a>
+
+                <a class="cliente-menu-item" href="./pagos.html">
+                    Pagos
+                </a>
+
+                <a class="cliente-menu-item" href="./evidencias.html">
+                    Evidencias
+                </a>
+
+                <a class="cliente-menu-item" href="./perfil.html">
+                    Mi perfil
+                </a>
+
+            </nav>
+
+            <div class="cliente-sidebar-footer">
+
+                <button
+                    id="cerrar-sesion-cliente"
+                    type="button"
+                    class="cliente-cerrar-sesion"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="cliente-main">
+
+            <header class="cliente-header">
+
+                <div>
+
+                    <p class="cliente-header-label">
+                        DOCUMENTACIÓN
+                    </p>
+
+                    <h1>Mis documentos</h1>
+
+                </div>
+
+                <div class="cliente-usuario">
+
+                    <div class="cliente-usuario-texto">
+
+                        <strong id="cliente-nombre">
+                            Cliente
+                        </strong>
+
+                        <span id="cliente-rol">
+                            CLIENTE
+                        </span>
+
+                    </div>
+
+                    <div class="cliente-avatar">
+                        C
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="cliente-kpis">
+
+                <article class="cliente-kpi">
+                    <span>Documentos</span>
+                    <strong id="kpi-documentos-total">--</strong>
+                    <small>Documentos asociados a tus OT</small>
+                </article>
+
+                <article class="cliente-kpi">
+                    <span>Facturas</span>
+                    <strong id="kpi-documentos-facturas">--</strong>
+                    <small>Facturas registradas</small>
+                </article>
+
+                <article class="cliente-kpi">
+                    <span>Boletas</span>
+                    <strong id="kpi-documentos-boletas">--</strong>
+                    <small>Boletas registradas</small>
+                </article>
+
+                <article class="cliente-kpi cliente-kpi-verde">
+                    <span>Comprobantes</span>
+                    <strong id="kpi-documentos-comprobantes">--</strong>
+                    <small>Comprobantes disponibles</small>
+                </article>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>BÚSQUEDA</span>
+                        <h2>Buscar documentos</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-form-grid">
+
+                    <div class="field">
+
+                        <label for="documentos-busqueda">
+                            Buscar
+                        </label>
+
+                        <input
+                            id="documentos-busqueda"
+                            type="search"
+                            placeholder="OT o número de documento"
+                        >
+
+                    </div>
+
+                    <div class="field">
+
+                        <label for="documentos-tipo">
+                            Tipo de documento
+                        </label>
+
+                        <select id="documentos-tipo">
+
+                            <option value="">
+                                Todos
+                            </option>
+
+                            <option value="FACTURA">
+                                Factura
+                            </option>
+
+                            <option value="BOLETA">
+                                Boleta
+                            </option>
+
+                            <option value="SIN_DOCUMENTO">
+                                Sin documento
+                            </option>
+
+                            <option value="COMPROBANTE">
+                                Comprobante de transporte
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>ARCHIVOS</span>
+                        <h2>Documentos disponibles</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-table-wrapper">
+
+                    <table class="cliente-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Fecha</th>
+                                <th>OT</th>
+                                <th>Tipo</th>
+                                <th>Número</th>
+                                <th>Estado</th>
+                                <th>Total</th>
+                                <th>Acciones</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-documentos-cliente">
+
+                            <tr>
+                                <td colspan="7">
+                                    Cargando documentos...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <section class="cliente-grid-principal">
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>DETALLE</span>
+                            <h2>Información del documento</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="detalle-documento-cliente">
+
+                        <p>
+                            Selecciona un documento para revisar
+                            su información.
+                        </p>
+
+                    </div>
+
+                </section>
+
+                <section class="cliente-card">
+
+                    <header class="cliente-card-header">
+
+                        <div>
+                            <span>COMPROBANTE</span>
+                            <h2>Comprobante de transporte</h2>
+                        </div>
+
+                    </header>
+
+                    <div id="comprobante-cliente">
+
+                        <p>
+                            Aquí podrás visualizar el comprobante
+                            asociado a tu envío.
+                        </p>
+
+                    </div>
+
+                    <div class="cliente-acciones">
+
+                        <button
+                            id="btn-ver-comprobante"
+                            type="button"
+                        >
+                            Ver comprobante
+                        </button>
+
+                        <button
+                            id="btn-imprimir-comprobante"
+                            type="button"
+                        >
+                            Imprimir
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="cliente-card">
+
+                <header class="cliente-card-header">
+
+                    <div>
+                        <span>INFORMACIÓN DEL ENVÍO</span>
+                        <h2>Documentación asociada a la OT</h2>
+                    </div>
+
+                </header>
+
+                <div class="cliente-table-wrapper">
+
+                    <table class="cliente-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>OT</th>
+                                <th>Documento carga</th>
+                                <th>Número</th>
+                                <th>Valor declarado</th>
+                                <th>Forma de pago</th>
+                                <th>Estado pago</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tabla-documentacion-ot-cliente">
+
+                            <tr>
+                                <td colspan="6">
+                                    Selecciona una OT.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script
+        type="module"
+        src="../../js/cliente.js"
+    ></script>
+
+</body>
+</html>
