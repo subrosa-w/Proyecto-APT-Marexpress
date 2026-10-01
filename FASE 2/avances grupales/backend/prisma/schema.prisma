@@ -18,13 +18,16 @@ model cliente {
   correo            String?             @db.VarChar(150)
   estado            Boolean             @default(true)
   idComuna          Int
+  idTarifa          Int?
   comuna            comuna              @relation(fields: [idComuna], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente_comuna")
+  tarifa            tarifa?             @relation(fields: [idTarifa], references: [idTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente_tarifa")
   cliente_ubicacion cliente_ubicacion[]
   cliente_usuario   cliente_usuario[]
   cuenta_corriente  cuenta_corriente?
   orden_transporte  orden_transporte[]
 
   @@index([idComuna], map: "fk_cliente_comuna")
+  @@index([idTarifa], map: "fk_cliente_tarifa")
 }
 
 model cliente_usuario {
@@ -53,6 +56,7 @@ model comuna {
   sucursal                                                  sucursal[]
   tarifa_trayecto_tarifa_trayecto_idComunaDestinoTocomuna   tarifa_trayecto[]   @relation("tarifa_trayecto_idComunaDestinoTocomuna")
   tarifa_trayecto_tarifa_trayecto_idComunaOrigenTocomuna    tarifa_trayecto[]   @relation("tarifa_trayecto_idComunaOrigenTocomuna")
+  manifiesto                                                manifiesto[]
 
   @@unique([nombreComuna, idRegion], map: "uq_comuna_region")
   @@index([idRegion], map: "fk_comuna_region")
@@ -172,22 +176,26 @@ model historial_ot {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model manifiesto {
-  idManifiesto       Int                  @id @default(autoincrement())
-  numeroManifiesto   String               @unique(map: "numeroManifiesto") @db.VarChar(30)
-  fechaCreacion      DateTime             @default(now()) @db.DateTime(0)
-  fechaSalida        DateTime?            @db.DateTime(0)
-  observacion        String?              @db.VarChar(250)
-  estado             String               @default("PREPARACION") @db.VarChar(50)
-  idVehiculo         Int?
-  idConductor        Int?
-  conductor          conductor?           @relation(fields: [idConductor], references: [idConductor], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_conductor")
-  vehiculo           vehiculo?            @relation(fields: [idVehiculo], references: [idVehiculo], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_vehiculo")
-  manifiesto_ot      manifiesto_ot[]
-  manifiesto_usuario manifiesto_usuario[]
-  movimiento_bulto   movimiento_bulto[]
+  idManifiesto            Int                  @id @default(autoincrement())
+  numeroManifiesto        String               @unique(map: "numeroManifiesto") @db.VarChar(30)
+  fechaCreacion           DateTime             @default(now()) @db.DateTime(0)
+  fechaSalida             DateTime?            @db.DateTime(0)
+  fechaSalidaProgramada   DateTime?            @db.DateTime(0)
+  observacion             String?              @db.VarChar(250)
+  estado                  String               @default("PREPARACION") @db.VarChar(50)
+  idVehiculo              Int?
+  idConductor             Int?
+  idComuna                Int?
+  conductor               conductor?           @relation(fields: [idConductor], references: [idConductor], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_conductor")
+  vehiculo                vehiculo?            @relation(fields: [idVehiculo], references: [idVehiculo], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_vehiculo")
+  comuna                  comuna?              @relation(fields: [idComuna], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_comuna")
+  manifiesto_ot           manifiesto_ot[]
+  manifiesto_usuario      manifiesto_usuario[]
+  movimiento_bulto        movimiento_bulto[]
 
   @@index([idConductor], map: "fk_manifiesto_conductor")
   @@index([idVehiculo], map: "fk_manifiesto_vehiculo")
+  @@index([idComuna], map: "fk_manifiesto_comuna")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -438,6 +446,8 @@ model tarifa {
   estado            Boolean            @default(true)
   idTipoTarifa      Int
   valorRetiro       Decimal            @default(0.00) @db.Decimal(10, 2)
+  valorRetiroMediano Decimal           @default(0.00) @db.Decimal(10, 2)
+  valorRetiroGrande Decimal            @default(0.00) @db.Decimal(10, 2)
   valorZonaLejana   Decimal            @default(0.00) @db.Decimal(10, 2)
   valorZonaUrbana   Decimal            @default(0.00) @db.Decimal(10, 2)
   factorVolumetrico Int                @default(4000)
@@ -445,8 +455,40 @@ model tarifa {
   orden_transporte  orden_transporte[]
   tipo_tarifa       tipo_tarifa        @relation(fields: [idTipoTarifa], references: [idTipoTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_tarifa_tipo_tarifa")
   tarifa_trayecto   tarifa_trayecto[]
+  tarifa_tramo      tarifa_tramo[]
+  historial_tarifa  historial_tarifa[]
+  cliente           cliente[]
 
   @@index([idTipoTarifa], map: "fk_tarifa_tipo_tarifa")
+}
+
+model tarifa_tramo {
+  idTarifaTramo Int     @id @default(autoincrement())
+  idTarifa      Int
+  kgDesde       Decimal @db.Decimal(10, 2)
+  kgHasta       Decimal @db.Decimal(10, 2)
+  valorFijo     Decimal? @db.Decimal(10, 2)
+  valorKg       Decimal? @db.Decimal(10, 2)
+  tarifa        tarifa  @relation(fields: [idTarifa], references: [idTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_tarifa_tramo_tarifa")
+
+  @@index([idTarifa], map: "fk_tarifa_tramo_tarifa")
+}
+
+model historial_tarifa {
+  idHistorial    Int      @id @default(autoincrement())
+  idTarifa       Int
+  idUsuario      Int?
+  tipoCambio     String   @db.VarChar(40)
+  campo          String?  @db.VarChar(80)
+  valorAnterior  String?  @db.Text
+  valorNuevo     String?  @db.Text
+  variacionPct   Decimal? @db.Decimal(10, 2)
+  fechaCambio    DateTime @default(now()) @db.DateTime(0)
+  tarifa         tarifa   @relation(fields: [idTarifa], references: [idTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_historial_tarifa_tarifa")
+  usuario        usuario? @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_historial_tarifa_usuario")
+
+  @@index([idTarifa], map: "fk_historial_tarifa_tarifa")
+  @@index([idUsuario], map: "fk_historial_tarifa_usuario")
 }
 
 model tipo_bulto {
@@ -479,6 +521,7 @@ model usuario {
   cliente_usuario     cliente_usuario[]
   entrega_ot          entrega_ot[]
   historial_ot        historial_ot[]
+  historial_tarifa    historial_tarifa[]
   manifiesto_usuario  manifiesto_usuario[]
   movimiento_bulto    movimiento_bulto[]
   movimiento_cuenta   movimiento_cuenta[]
