@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="MAREXPRESS">
+  <rect width="48" height="48" rx="8" fill="#06365e"/>
+  <path fill="#fff" d="M9.5 34V14.2h6.2l8.3 12.6 8.3-12.6h6.2V34h-5.4V22.3L27.4 34h-6.8l-5.7-11.7V34H9.5z"/>
+  <rect x="8" y="38" width="32" height="4" rx="2" fill="#18743b"/>
+</svg>

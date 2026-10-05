@@ -1,9 +1,10 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx server.js",
     "start": "tsx server.js"
   },
   "keywords": [],
@@ -20,7 +21,8 @@
     "express-rate-limit": "^8.7.0",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^10.0.3",
-    "prisma": "^7.10.0"
+    "prisma": "^7.10.0",
+    "transbank-sdk": "^6.1.1"
   },
   "type": "module",
   "devDependencies": {

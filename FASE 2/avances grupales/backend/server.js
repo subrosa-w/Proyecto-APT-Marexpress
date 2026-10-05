@@ -1,7 +1,7 @@
 import app from "./src/app.js";
 
-const PORT = 3000;
+const puerto = Number(process.env.PORT) || 3000;
 
-app.listen(PORT, () => {
-    console.log(`Servidor MAREXPRESS ejecutándose en http://localhost:${PORT}`);
+app.listen(puerto, () => {
+    console.log(`MAREXPRESS API en http://localhost:${puerto}`);
 });
