@@ -1,0 +1,395 @@
+/*
+  ============================================================
+  MAREXPRESS - Diseño del sistema interno
+  ============================================================
+  Las vistas del sistema (copiadas del front de prueba) usan las mismas
+  clases de siempre: admin-card, button-primary, mx-table, field, ot-grid...
+  Aquí se les da el diseño actual (azul marino + verde, tarjetas con
+  profundidad, fuente Plus Jakarta Sans) usando las utilidades de Tailwind.
+
+  Si quieres cambiar cómo se ve un botón o una tabla en TODO el sistema,
+  se cambia aquí, una sola vez.
+  ============================================================
+*/
+
+@layer components {
+  /* ---------- Textos sueltos dentro del contenido ---------- */
+  .mx-contenido h3 {
+    @apply text-base font-bold text-marino;
+  }
+  .mx-contenido small {
+    @apply text-xs text-texto-suave;
+  }
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-wider text-verde;
+  }
+  .mx-note,
+  .form-note {
+    @apply text-sm leading-relaxed text-texto-suave;
+  }
+
+  /* ---------- Campos de formulario ---------- */
+  .mx-contenido input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .mx-contenido select,
+  .mx-contenido textarea {
+    @apply block min-h-10 w-full min-w-0 rounded-lg border border-borde bg-white px-3 py-2 text-sm text-marino placeholder:text-gray-400 transition-shadow focus:border-azul focus:outline-none focus:ring-2 focus:ring-azul/20;
+  }
+  .mx-contenido input[readonly],
+  .mx-contenido textarea[readonly] {
+    @apply bg-slate-50 text-slate-500;
+  }
+  .mx-contenido input:disabled,
+  .mx-contenido select:disabled {
+    @apply cursor-not-allowed bg-slate-100 text-slate-400;
+  }
+  .mx-contenido input[type="checkbox"],
+  .mx-contenido input[type="radio"] {
+    @apply h-4 w-4 shrink-0 accent-azul;
+  }
+  /* Inputs dentro de tablas (por ejemplo, los tramos de tarifas): más compactos */
+  .mx-table input:not([type="checkbox"]):not([type="radio"]),
+  .mx-table select {
+    @apply min-h-9 min-w-24 py-1.5;
+  }
+
+  .field {
+    @apply flex min-w-0 flex-col gap-1.5;
+  }
+  .field > label {
+    @apply text-xs font-bold text-marino;
+  }
+
+  /* Grillas de formulario: 1 columna en celular, 2 desde tablet */
+  .ot-grid,
+  .admin-grid-2,
+  .operador-form-grid {
+    @apply grid grid-cols-1 items-start gap-4 md:grid-cols-2;
+  }
+  .ot-grid > .mx-form-actions,
+  .admin-grid-2 > .mx-form-actions,
+  .operador-form-grid > .mx-form-actions {
+    @apply col-span-full;
+  }
+
+  .mx-form-actions {
+    @apply flex flex-col gap-3 sm:flex-row sm:flex-wrap;
+  }
+  .mx-toolbar {
+    @apply flex flex-wrap items-center justify-between gap-3;
+  }
+  /* Buscador y filtros en una misma fila: el buscador se estira, el filtro no */
+  .mx-contenido .mx-toolbar > input {
+    @apply w-auto min-w-60 flex-1;
+  }
+  .mx-contenido .mx-toolbar > select {
+    @apply w-auto min-w-44 flex-none;
+  }
+
+  /* ---------- Botones ---------- */
+  .button-primary,
+  .button-secondary,
+  .button-danger {
+    @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0;
+  }
+  .button-primary {
+    @apply bg-linear-to-br from-verde-claro to-verde text-white shadow-md shadow-verde/25 hover:-translate-y-px hover:shadow-lg hover:shadow-verde/30;
+  }
+  .button-secondary {
+    @apply border border-borde bg-white text-marino shadow-sm hover:border-azul/40 hover:bg-celeste-suave;
+  }
+  .button-danger {
+    @apply border border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:bg-red-100;
+  }
+  /* Botones chicos dentro de las tablas */
+  .mx-acciones {
+    @apply flex flex-wrap gap-1.5;
+  }
+  .mx-table .mx-acciones {
+    @apply flex-nowrap;
+  }
+  .mx-table .button-primary,
+  .mx-table .button-secondary,
+  .mx-table .button-danger {
+    @apply min-h-8 whitespace-nowrap px-2.5 text-xs;
+  }
+
+  /* ---------- Mensajes (componente Message) ---------- */
+  .message,
+  .ot-alta-error {
+    @apply rounded-lg border px-4 py-3 text-sm font-medium;
+  }
+  .message-info {
+    @apply border-celeste bg-celeste-suave text-marino;
+  }
+  .message-success {
+    @apply border-green-200 bg-green-50 text-green-800;
+  }
+  .message-error,
+  .ot-alta-error {
+    @apply border-red-200 bg-red-50 text-red-800;
+  }
+  .message-warning {
+    @apply border-amber-200 bg-amber-50 text-amber-800;
+  }
+
+  /* ---------- Tarjetas ---------- */
+  .admin-card,
+  .operador-card,
+  .peoneta-card,
+  .cliente-card {
+    @apply flex min-w-0 flex-col gap-4 rounded-2xl border border-borde/70 bg-white p-5 shadow-[0_4px_20px_-6px_rgba(11,45,91,0.15)] sm:p-6;
+  }
+  /* Encabezado de la tarjeta: etiqueta pequeña azul + título */
+  .admin-card-header,
+  .operador-card-header {
+    @apply -mx-5 -mt-5 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-b border-borde bg-slate-50/70 px-5 py-4 sm:-mx-6 sm:-mt-6 sm:px-6;
+  }
+  .admin-card-header > div > span,
+  .operador-card-header > div > span {
+    @apply block text-[11px] font-bold uppercase tracking-wider text-azul;
+  }
+  .admin-card-header h2,
+  .operador-card-header h2 {
+    @apply text-base font-bold text-marino sm:text-lg;
+  }
+  .operador-acciones {
+    @apply flex flex-wrap gap-2;
+  }
+  .operador-acciones a {
+    @apply rounded-lg border border-borde bg-white px-3 py-1.5 text-sm font-semibold text-marino transition-colors hover:border-azul/40 hover:bg-celeste-suave;
+  }
+
+  /* ---------- Indicadores (KPI) ---------- */
+  /* Con 3 indicadores: 3 columnas. Con 4: 2 columnas en tablet y 4 en escritorio (sin tarjetas huérfanas) */
+  .admin-kpis,
+  .operador-kpis {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-3;
+  }
+  .admin-kpis:has(> :nth-child(4)),
+  .operador-kpis:has(> :nth-child(4)) {
+    @apply sm:grid-cols-2 xl:grid-cols-4;
+  }
+  .admin-kpi,
+  .operador-kpi {
+    @apply relative flex flex-col gap-1 overflow-hidden rounded-2xl border border-borde/70 bg-white p-5 shadow-[0_4px_20px_-6px_rgba(11,45,91,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(11,45,91,0.30)];
+  }
+  /* Franja de color arriba de cada indicador */
+  .admin-kpi::before,
+  .operador-kpi::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-1 bg-linear-to-r from-azul to-verde-claro;
+  }
+  .admin-kpi span,
+  .operador-kpi span {
+    @apply text-xs font-bold uppercase tracking-wider text-texto-suave;
+  }
+  .admin-kpi strong,
+  .operador-kpi strong {
+    @apply text-3xl font-extrabold text-marino;
+  }
+
+  /* ---------- Tablas ---------- */
+  .mx-table-wrap {
+    @apply max-w-full overflow-x-auto rounded-xl border border-borde;
+  }
+  /* Notas o botones que van dentro del recuadro de la tabla (ej. tramos de tarifas) */
+  .mx-table-wrap > :not(table) {
+    @apply m-3;
+  }
+  .mx-table {
+    @apply w-full border-collapse text-left text-sm;
+  }
+  .mx-table th {
+    @apply whitespace-nowrap bg-slate-100/70 px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-texto-suave;
+  }
+  /* Las celdas no se cortan en varias líneas: si la tabla es ancha, se desplaza hacia el lado */
+  .mx-table td {
+    @apply border-t border-borde/70 px-4 py-3 align-middle whitespace-nowrap text-slate-700;
+  }
+  .mx-table tbody tr:hover td {
+    @apply bg-slate-50/80;
+  }
+  .mx-table tbody tr.mx-fila-grupo td,
+  .mx-fila-grupo td {
+    @apply bg-celeste-suave font-semibold text-marino;
+  }
+  .mx-empty {
+    @apply py-8 text-center text-sm text-texto-suave;
+  }
+  .ot-fila-anulada td {
+    @apply text-slate-400;
+  }
+  .mx-badge-anulada {
+    @apply inline-flex rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700;
+  }
+
+  /* ---------- Bloques de datos ---------- */
+  /* Ficha con pares etiqueta/valor (ciudad, camión, estado...) */
+  .mx-ciudad-info {
+    @apply col-span-full grid grid-cols-1 gap-x-4 gap-y-2 rounded-xl border border-borde bg-celeste-suave/60 p-4 sm:grid-cols-2;
+  }
+  .mx-ciudad-info span {
+    @apply block text-[11px] font-semibold uppercase tracking-wide text-texto-suave;
+  }
+  .mx-ciudad-info strong {
+    @apply text-sm font-bold text-marino;
+  }
+  .mx-detalle-pago {
+    @apply grid gap-2 rounded-xl border border-borde bg-slate-50 p-4 text-sm text-slate-700;
+  }
+
+  /* Lector de pistola: campo grande para escanear códigos */
+  .mx-scan {
+    @apply grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-2xl border-2 border-dashed border-azul/30 bg-celeste-suave/50 p-4;
+  }
+  .mx-scan label {
+    @apply col-span-full text-xs font-bold uppercase tracking-wider text-texto-suave;
+  }
+  .mx-scan input:not([type="checkbox"]) {
+    @apply min-h-13 font-mono text-xl tracking-wider;
+  }
+
+  /* ---------- Ventana emergente (modal) ---------- */
+  .mx-modal-fondo {
+    @apply fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-marino-oscuro/60 px-4 py-6 backdrop-blur-sm;
+  }
+  .mx-modal {
+    @apply my-6 flex w-full max-w-[920px] flex-col gap-4 rounded-2xl bg-white p-6 shadow-2xl;
+  }
+
+  /* ---------- Nueva OT (pasos, secciones y resumen lateral) ---------- */
+  .ot-layout {
+    @apply grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px];
+  }
+  .ot-contenido {
+    @apply flex min-w-0 flex-col gap-4;
+  }
+  .ot-pasos {
+    @apply flex gap-1 overflow-x-auto rounded-2xl border border-borde bg-white p-1.5 shadow-sm;
+  }
+  .ot-paso {
+    @apply flex-1 cursor-pointer whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-texto-suave transition-colors hover:bg-slate-50 hover:text-marino;
+  }
+  .ot-paso.activo {
+    @apply bg-linear-to-br from-azul to-marino text-white shadow-md hover:bg-transparent hover:text-white;
+  }
+  .ot-seccion {
+    @apply rounded-2xl border border-borde/70 bg-white p-5 shadow-[0_4px_20px_-6px_rgba(11,45,91,0.15)] sm:p-6;
+  }
+  .ot-seccion:not(.abierta) .ot-seccion-body {
+    @apply hidden;
+  }
+  .ot-seccion-body {
+    @apply flex flex-col gap-4;
+  }
+  .ot-bulto-form,
+  .ot-alta {
+    @apply flex flex-col gap-4 rounded-xl border border-borde bg-slate-50/70 p-4 sm:p-5;
+  }
+  .admin-card .ot-alta {
+    @apply border-0 bg-transparent p-0;
+  }
+  .ot-consolidar {
+    @apply flex cursor-pointer items-start gap-3 rounded-xl border border-borde bg-white px-4 py-3 text-sm leading-snug text-slate-700;
+  }
+  .ot-consolidar input {
+    @apply mt-0.5;
+  }
+
+  .ot-resumen {
+    @apply min-w-0 overflow-y-auto rounded-2xl border border-borde/70 bg-white p-5 shadow-[0_4px_20px_-6px_rgba(11,45,91,0.15)] xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)];
+  }
+  .ot-resumen > h2 {
+    @apply text-lg font-bold text-marino;
+  }
+  .ot-resumen > p {
+    @apply mb-3 text-xs text-texto-suave;
+  }
+  .ot-resumen-bloque {
+    @apply grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 border-t border-borde py-3;
+  }
+  .ot-resumen-bloque h3 {
+    @apply col-span-full text-sm;
+  }
+  .ot-resumen-bloque span {
+    @apply text-xs text-texto-suave;
+  }
+  .ot-resumen-bloque strong {
+    @apply max-w-[150px] text-right text-xs font-semibold break-words text-slate-800;
+  }
+  .ot-resumen-total {
+    @apply mt-2 flex items-center justify-between rounded-xl bg-linear-to-r from-marino to-azul px-4 py-3 text-white;
+  }
+  .ot-resumen-total strong {
+    @apply text-lg font-extrabold;
+  }
+
+  /* ---------- Vista previa de impresión (ticket 88 mm y etiquetas 100×70 mm) ---------- */
+  /* La impresión real la genera jsPDF (utils/impresionTermica.js); esto es solo la vista previa */
+  .ot-impresion {
+    @apply col-span-full flex flex-col gap-5 rounded-2xl border border-borde/70 bg-white p-5 shadow-[0_4px_20px_-6px_rgba(11,45,91,0.15)];
+  }
+  .ot-impresion-acciones {
+    @apply flex flex-wrap items-center gap-3;
+  }
+  .ot-ticket {
+    @apply mx-auto w-[88mm] max-w-full border border-dashed border-borde bg-white px-[3mm] py-[4mm] text-[11px] leading-snug text-marino;
+  }
+  .ot-ticket h3 {
+    @apply mt-2 mb-0.5 border-b border-marino text-[10px] uppercase tracking-wider;
+  }
+  .ot-ticket p {
+    @apply mb-0.5;
+  }
+  .ot-ticket-cabeza,
+  .ot-etiqueta-cabeza {
+    @apply mb-1 flex items-center justify-between gap-2 border-b border-marino pb-1;
+  }
+  .ot-ticket-cabeza > div:last-child,
+  .ot-etiqueta-cabeza > div:last-child {
+    @apply text-right;
+  }
+  .ot-ticket-cabeza span,
+  .ot-etiqueta-cabeza span {
+    @apply block text-[9px] font-semibold tracking-wide;
+  }
+  .ot-logo {
+    @apply flex items-center gap-1.5;
+  }
+  .ot-logo img {
+    @apply h-6 w-auto;
+  }
+  .ot-barcode {
+    @apply my-1 h-auto w-full;
+  }
+  .ot-ticket-linea {
+    @apply flex flex-col border-b border-dashed border-borde py-1;
+  }
+  .ot-ticket-total {
+    @apply mt-2 text-right text-sm font-extrabold;
+  }
+  .ot-ticket-pie {
+    @apply mt-1 text-center text-[9px];
+  }
+  .ot-etiquetas {
+    @apply grid justify-items-center gap-4;
+  }
+  .ot-etiqueta {
+    @apply h-[70mm] w-[100mm] max-w-full overflow-hidden rounded-sm border border-marino bg-white px-[3.5mm] py-[3mm] text-[10px] text-marino;
+  }
+  .ot-etiqueta-codigo {
+    @apply text-center font-mono text-sm font-bold;
+  }
+  .ot-etiqueta-cuerpo {
+    @apply grid grid-cols-2 gap-x-2 gap-y-0.5;
+  }
+  .ot-etiqueta-cuerpo span {
+    @apply block text-[8px] uppercase text-slate-500;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

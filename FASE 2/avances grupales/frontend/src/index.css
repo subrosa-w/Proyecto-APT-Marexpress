@@ -1,0 +1,165 @@
+@import "tailwindcss";
+/* Diseño de las vistas del sistema interno (admin, operador, peoneta, cliente) */
+@import "./sistema/sistema.css";
+
+/*
+  Colores y fuentes de la marca (sacados del logo y los camiones de Marexpress).
+  Cada variable --color-X crea clases como bg-X, text-X, border-X.
+  Ejemplo: --color-verde  →  bg-verde, text-verde, border-verde
+*/
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Azules: el "MAR" del logo */
+  --color-marino: #0b2d5b;
+  --color-marino-oscuro: #061a36;
+  --color-azul: #1870b8;
+  --color-celeste: #cfe3f5;
+  --color-celeste-suave: #eff6fc;
+
+  /* Verdes: el "EXPRESS" del logo */
+  --color-verde: #009040;
+  --color-verde-oscuro: #007533;
+  --color-verde-claro: #23a455;
+
+  /* Neutros */
+  --color-gris-texto: #5a6478;
+  --color-borde: #dce3ee;
+  --color-texto-suave: #64748b;
+
+  /* Animaciones propias: crean clases animate-latido y animate-flotar */
+  --animate-latido: latido 2s ease-out infinite;
+  --animate-flotar: flotar 6s ease-in-out infinite;
+
+  @keyframes latido {
+    0% { transform: scale(1); opacity: 0.7; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  @keyframes flotar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+}
+
+/* Estilos base: van dentro de @layer base para que Tailwind pueda sobrescribirlos */
+@layer base {
+  body {
+    @apply bg-white font-sans text-marino antialiased;
+  }
+}
+
+@layer components {
+  /* Botón de vidrio: semitransparente y con desenfoque. Al pasar el mouse
+     se ilumina, sube un poco y un brillo lo cruza de izquierda a derecha. */
+  .boton-vidrio {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-white/30 bg-white/10 px-6 py-3 font-semibold text-white shadow-lg shadow-black/10 backdrop-blur-md transition-all duration-300;
+  }
+  .boton-vidrio::after {
+    content: "";
+    @apply absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-linear-to-r from-transparent via-white/40 to-transparent transition-all duration-700;
+  }
+  .boton-vidrio:hover {
+    @apply -translate-y-0.5 border-white/60 bg-white/20 shadow-xl shadow-black/20;
+  }
+  .boton-vidrio:hover::after {
+    @apply left-[150%];
+  }
+
+  /* Los íconos dentro de los botones nunca se achican */
+  .boton-vidrio > svg,
+  .boton-vidrio > span,
+  .boton-principal > svg,
+  .boton-principal > span {
+    @apply shrink-0;
+  }
+
+  /* Botón principal verde, con la misma sensación de relieve */
+  .boton-principal {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-linear-to-br from-verde-claro to-verde px-6 py-3 font-semibold text-white shadow-lg shadow-verde/30 transition-all duration-300;
+  }
+  .boton-principal::after {
+    content: "";
+    @apply absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-linear-to-r from-transparent via-white/40 to-transparent transition-all duration-700;
+  }
+  .boton-principal:hover {
+    @apply -translate-y-0.5 shadow-xl shadow-verde/40;
+  }
+  .boton-principal:hover::after {
+    @apply left-[150%];
+  }
+
+  /* Link con barrita: una línea verde crece desde el centro al pasar el mouse */
+  .link-barra {
+    @apply relative py-1 transition-colors;
+  }
+  .link-barra::after {
+    content: "";
+    @apply absolute -bottom-0.5 left-0 h-0.5 w-full origin-center scale-x-0 rounded-full bg-verde transition-transform duration-300;
+  }
+  .link-barra:hover::after,
+  .link-barra.active::after {
+    @apply scale-x-100;
+  }
+
+  /* Botones del sistema interno (panel admin y operador) */
+  .boton-sistema {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-marino px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-px hover:bg-marino-oscuro hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+  }
+  .boton-sistema-secundario {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-borde bg-white px-3.5 py-2 text-sm font-semibold text-marino shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Campos de formulario del sistema interno */
+  .campo {
+    @apply block h-10 w-full rounded-lg border border-borde bg-white px-3 text-sm text-marino placeholder:text-gray-400 focus:border-azul focus:outline-none focus:ring-2 focus:ring-azul/20;
+  }
+
+  /* Tarjeta con profundidad: sombra suave que crece y se eleva al pasar el mouse */
+  .tarjeta {
+    @apply rounded-2xl border border-borde/70 bg-white shadow-[0_4px_20px_-6px_rgba(11,45,91,0.15)] transition-all duration-300;
+  }
+  .tarjeta-hover:hover {
+    @apply -translate-y-1.5 shadow-[0_20px_40px_-12px_rgba(11,45,91,0.30)];
+  }
+}
+
+/*
+  Aparecer al hacer scroll (lo usa el componente <Aparecer>).
+  El elemento parte corrido e invisible; al entrar en pantalla se le agrega
+  la clase "visible" y se desliza a su lugar.
+*/
+.aparecer {
+  opacity: 0;
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.aparecer.desde-izquierda { transform: translateX(-60px); }
+.aparecer.desde-derecha { transform: translateX(60px); }
+.aparecer.desde-abajo { transform: translateY(40px); }
+.aparecer.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Si la persona pidió menos movimiento en su sistema, se respeta */
+@media (prefers-reduced-motion: reduce) {
+  .aparecer { opacity: 1; transform: none; transition: none; }
+  .animate-latido, .animate-flotar { animation: none; }
+}
+
+/* Íconos de Google: <span className="material-symbols-outlined">local_shipping</span> */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.material-symbols-outlined.relleno {
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+}

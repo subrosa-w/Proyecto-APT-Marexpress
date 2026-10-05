@@ -1,0 +1,775 @@
+/* =========================================================
+   MAREXPRESS - PANEL PEONETA
+   ========================================================= */
+
+.peoneta-body {
+    margin: 0;
+    min-height: 100vh;
+    background: #f3f7fb;
+    color: #163651;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.peoneta-layout {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 270px minmax(0, 1fr);
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.peoneta-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 20px 20px;
+    background:
+        linear-gradient(
+            180deg,
+            #073763 0%,
+            #062849 55%,
+            #05243f 100%
+        );
+    color: #ffffff;
+    box-shadow: 8px 0 28px rgba(7, 55, 99, 0.12);
+    z-index: 20;
+}
+
+.peoneta-logo {
+    padding: 6px 10px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.peoneta-logo span {
+    display: block;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.peoneta-logo small {
+    display: block;
+    margin-top: 6px;
+    color: #86d6a0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.peoneta-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-top: 24px;
+}
+
+.peoneta-menu-item {
+    display: flex;
+    align-items: center;
+    min-height: 45px;
+    box-sizing: border-box;
+    padding: 0 15px;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.82);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.peoneta-menu-item:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+    transform: translateX(2px);
+}
+
+.peoneta-menu-item.activo {
+    background: linear-gradient(
+        135deg,
+        #16864b,
+        #25a95f
+    );
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(22, 134, 75, 0.25);
+}
+
+.peoneta-sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.peoneta-cerrar-sesion {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.peoneta-cerrar-sesion:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.32);
+}
+
+
+/* =========================================================
+   CONTENIDO PRINCIPAL
+   ========================================================= */
+
+.peoneta-main {
+    min-width: 0;
+    padding: 30px 34px 45px;
+}
+
+.peoneta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.peoneta-header h1 {
+    margin: 4px 0 0;
+    color: #073763;
+    font-size: 30px;
+    line-height: 1.2;
+}
+
+.peoneta-header-label {
+    margin: 0;
+    color: #16864b;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+.peoneta-usuario {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.peoneta-usuario-texto {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.peoneta-usuario-texto strong {
+    color: #163651;
+    font-size: 14px;
+}
+
+.peoneta-usuario-texto span {
+    margin-top: 3px;
+    color: #74879a;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.peoneta-avatar {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(
+        135deg,
+        #073763,
+        #16864b
+    );
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 800;
+    box-shadow: 0 7px 18px rgba(7, 55, 99, 0.2);
+}
+
+
+/* =========================================================
+   KPI
+   ========================================================= */
+
+.peoneta-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.peoneta-kpi {
+    position: relative;
+    overflow: hidden;
+    min-height: 125px;
+    box-sizing: border-box;
+    padding: 20px;
+    border: 1px solid #dce6ef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 7px 22px rgba(18, 58, 91, 0.06);
+}
+
+.peoneta-kpi::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: #1679b5;
+}
+
+.peoneta-kpi-verde::before {
+    background: #25a95f;
+}
+
+.peoneta-kpi span {
+    display: block;
+    margin-bottom: 10px;
+    color: #657b90;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.peoneta-kpi strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #073763;
+    font-size: 25px;
+    line-height: 1;
+}
+
+.peoneta-kpi small {
+    color: #7a8b9b;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
+.peoneta-grid-principal {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.peoneta-card {
+    min-width: 0;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+    padding: 22px;
+    border: 1px solid #dce6ef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 7px 22px rgba(18, 58, 91, 0.055);
+}
+
+.peoneta-grid-principal .peoneta-card {
+    margin-bottom: 0;
+}
+
+.peoneta-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.peoneta-card-header span {
+    color: #16864b;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+}
+
+.peoneta-card-header h2 {
+    margin: 4px 0 0;
+    color: #073763;
+    font-size: 19px;
+}
+
+.peoneta-card p {
+    color: #64788e;
+    line-height: 1.65;
+}
+
+
+/* =========================================================
+   BOTONES Y ACCIONES
+   ========================================================= */
+
+.peoneta-link-button,
+.peoneta-acciones a,
+.peoneta-acciones button {
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 9px;
+    background: #073763;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.peoneta-link-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 16px;
+    white-space: nowrap;
+}
+
+.peoneta-link-button:hover,
+.peoneta-acciones a:hover,
+.peoneta-acciones button:hover {
+    background: #16864b;
+    transform: translateY(-1px);
+    box-shadow: 0 7px 16px rgba(22, 134, 75, 0.18);
+}
+
+.peoneta-acciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.peoneta-acciones a,
+.peoneta-acciones button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 13px;
+    text-align: center;
+}
+
+
+/* =========================================================
+   FORMULARIOS
+   ========================================================= */
+
+.peoneta-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.peoneta-body .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 15px;
+}
+
+.peoneta-body .field label {
+    color: #294a65;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.peoneta-body .field input,
+.peoneta-body .field select,
+.peoneta-body .field textarea {
+    width: 100%;
+    min-height: 43px;
+    box-sizing: border-box;
+    border: 1px solid #cfdbe7;
+    border-radius: 9px;
+    outline: none;
+    background: #ffffff;
+    color: #173851;
+    padding: 10px 12px;
+    font: inherit;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.peoneta-body .field textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.peoneta-body .field input:focus,
+.peoneta-body .field select:focus,
+.peoneta-body .field textarea:focus {
+    border-color: #16864b;
+    box-shadow: 0 0 0 3px rgba(22, 134, 75, 0.1);
+}
+
+.peoneta-body input[type="file"] {
+    padding: 8px;
+    background: #f8fafc;
+}
+
+.peoneta-body input[type="file"]::file-selector-button {
+    margin-right: 10px;
+    border: 0;
+    border-radius: 7px;
+    background: #073763;
+    color: #ffffff;
+    padding: 8px 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.peoneta-body input[type="file"]::file-selector-button:hover {
+    background: #16864b;
+}
+
+.form-note {
+    margin: 6px 0 0;
+    color: #7a8b9b !important;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   TABLAS
+   ========================================================= */
+
+.peoneta-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e0e8f0;
+    border-radius: 11px;
+}
+
+.peoneta-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    background: #ffffff;
+}
+
+.peoneta-table th {
+    padding: 13px 14px;
+    border-bottom: 1px solid #dbe5ed;
+    background: #f5f8fb;
+    color: #3f5b72;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.peoneta-table td {
+    padding: 14px;
+    border-bottom: 1px solid #edf1f5;
+    color: #50677b;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+.peoneta-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.peoneta-table tbody tr:hover {
+    background: #f8fbfd;
+}
+
+
+/* =========================================================
+   PERFIL
+   ========================================================= */
+
+.peoneta-perfil-datos {
+    display: grid;
+    gap: 3px;
+}
+
+.peoneta-perfil-datos p {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 0;
+    padding: 12px 0;
+    border-bottom: 1px solid #edf1f5;
+    color: #60758a;
+}
+
+.peoneta-perfil-datos p:last-child {
+    border-bottom: 0;
+}
+
+.peoneta-perfil-datos strong {
+    color: #173851;
+    text-align: right;
+}
+
+
+/* =========================================================
+   ESTADOS
+   ========================================================= */
+
+.peoneta-estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.peoneta-estado-verde {
+    background: #e4f7ea;
+    color: #16864b;
+}
+
+.peoneta-estado-azul {
+    background: #e4f2fb;
+    color: #12689c;
+}
+
+.peoneta-estado-amarillo {
+    background: #fff5d9;
+    color: #916b00;
+}
+
+.peoneta-estado-rojo {
+    background: #fde8e8;
+    color: #b33a3a;
+}
+
+.peoneta-estado-gris {
+    background: #edf1f5;
+    color: #667b8f;
+}
+
+
+/* =========================================================
+   RESULTADO DE ENTREGA
+   ========================================================= */
+
+.peoneta-resultado {
+    padding: 15px;
+    border: 1px solid #dce6ef;
+    border-radius: 11px;
+    background: #f8fafc;
+}
+
+.peoneta-resultado strong {
+    color: #073763;
+}
+
+.peoneta-resultado-entregada {
+    border-left: 5px solid #25a95f;
+}
+
+.peoneta-resultado-parcial {
+    border-left: 5px solid #e5a11b;
+}
+
+.peoneta-resultado-rechazada {
+    border-left: 5px solid #c84545;
+}
+
+.peoneta-resultado-no-recibido {
+    border-left: 5px solid #75879a;
+}
+
+
+/* =========================================================
+   EVIDENCIAS
+   ========================================================= */
+
+.peoneta-evidencia {
+    display: grid;
+    gap: 12px;
+}
+
+.peoneta-evidencia img {
+    display: block;
+    width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+    border: 1px solid #dde6ed;
+    border-radius: 12px;
+    background: #f6f8fa;
+}
+
+
+/* =========================================================
+   MENSAJES
+   ========================================================= */
+
+.peoneta-mensaje {
+    padding: 13px 15px;
+    border: 1px solid #d9e4ec;
+    border-radius: 10px;
+    background: #f7fafc;
+    color: #61778a;
+    font-size: 13px;
+}
+
+.peoneta-mensaje-error {
+    border-color: #f0c9c9;
+    background: #fff3f3;
+    color: #a63a3a;
+}
+
+.peoneta-mensaje-exito {
+    border-color: #c9e8d4;
+    background: #f0fbf4;
+    color: #167a43;
+}
+
+
+/* =========================================================
+   MODO MÓVIL
+   Muy importante para el peoneta, porque probablemente
+   utilizará estas vistas desde un teléfono.
+   ========================================================= */
+
+@media (max-width: 1150px) {
+
+    .peoneta-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 900px) {
+
+    .peoneta-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .peoneta-sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        padding: 18px;
+    }
+
+    .peoneta-logo {
+        padding-bottom: 18px;
+    }
+
+    .peoneta-menu {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding-top: 18px;
+    }
+
+    .peoneta-sidebar-footer {
+        margin-top: 18px;
+    }
+
+    .peoneta-main {
+        padding: 24px 18px 38px;
+    }
+
+    .peoneta-grid-principal {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 650px) {
+
+    .peoneta-main {
+        padding: 20px 12px 35px;
+    }
+
+    .peoneta-header {
+        align-items: flex-start;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+
+    .peoneta-header h1 {
+        font-size: 25px;
+    }
+
+    .peoneta-usuario {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .peoneta-usuario-texto {
+        align-items: flex-start;
+    }
+
+    .peoneta-kpis {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .peoneta-kpi {
+        min-height: 105px;
+        padding: 17px;
+    }
+
+    .peoneta-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .peoneta-acciones {
+        grid-template-columns: 1fr;
+    }
+
+    .peoneta-menu {
+        grid-template-columns: 1fr;
+    }
+
+    .peoneta-card {
+        padding: 17px;
+        border-radius: 13px;
+    }
+
+    .peoneta-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .peoneta-link-button {
+        width: 100%;
+    }
+
+    .peoneta-perfil-datos p {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .peoneta-perfil-datos strong {
+        text-align: left;
+    }
+
+    .peoneta-body .field input,
+    .peoneta-body .field select,
+    .peoneta-body .field textarea {
+        font-size: 16px;
+    }
+
+}
