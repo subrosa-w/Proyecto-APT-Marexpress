@@ -35,6 +35,9 @@ const iconos = {
     "Historial": "history",
     "Mi perfil": "person",
     "Mis órdenes": "receipt_long",
+    "Pendientes de pago": "pending_actions",
+    "Cotizar OT": "calculate",
+    "Mis cotizaciones": "request_quote",
     "Documentos": "description",
     "Pagos": "payments",
     "Evidencias": "photo_camera"

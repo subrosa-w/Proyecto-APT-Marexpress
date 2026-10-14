@@ -24,6 +24,12 @@ import TarifasPage from './sistema/pages/admin/TarifasPage.jsx'
 import UsuariosPage from './sistema/pages/admin/UsuariosPage.jsx'
 import MaestrosPage from './sistema/pages/admin/MaestrosPage.jsx'
 import ClienteLayout from './sistema/pages/cliente/ClienteLayout.jsx'
+import ClienteInicioPage from './sistema/pages/cliente/ClienteInicioPage.jsx'
+import OrdenesClientePage from './sistema/pages/cliente/OrdenesClientePage.jsx'
+import PagosPendientesPage from './sistema/pages/cliente/PagosPendientesPage.jsx'
+import CotizarPage from './sistema/pages/cliente/CotizarPage.jsx'
+import CotizacionesPage from './sistema/pages/cliente/CotizacionesPage.jsx'
+import SoloCuentaCorriente from './sistema/pages/cliente/SoloCuentaCorriente.jsx'
 import PeonetaLayout from './sistema/pages/peoneta/PeonetaLayout.jsx'
 import ManifiestosPeonetaPage from './sistema/pages/peoneta/ManifiestosPeonetaPage.jsx'
 import ClientesPage from './sistema/pages/shared/ClientesPage.jsx'
@@ -114,21 +120,16 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route
-          index
-          element={
-            <PlaceholderPage
-              titulo="Portal cliente"
-              descripcion="Tu cuenta ya está autenticada. El detalle de OT propias se habilitará con los endpoints filtrados por cliente."
-            />
-          }
-        />
-        <Route path="ordenes" element={<PlaceholderPage titulo="Mis órdenes" />} />
-        <Route path="seguimiento" element={<PlaceholderPage titulo="Seguimiento" />} />
-        <Route path="documentos" element={<PlaceholderPage titulo="Documentos" />} />
-        <Route path="pagos" element={<PlaceholderPage titulo="Pagos" />} />
-        <Route path="evidencias" element={<PlaceholderPage titulo="Evidencias" />} />
+        {/* Ambos tipos de cliente */}
+        <Route index element={<ClienteInicioPage />} />
+        <Route path="ordenes" element={<OrdenesClientePage />} />
         <Route path="perfil" element={<PerfilPage />} />
+        {/* Solo cliente normal */}
+        <Route path="historial" element={<OrdenesClientePage vista="historial" />} />
+        {/* Solo cliente con cuenta corriente */}
+        <Route path="pagos" element={<SoloCuentaCorriente><PagosPendientesPage /></SoloCuentaCorriente>} />
+        <Route path="cotizar" element={<SoloCuentaCorriente><CotizarPage /></SoloCuentaCorriente>} />
+        <Route path="cotizaciones" element={<SoloCuentaCorriente><CotizacionesPage /></SoloCuentaCorriente>} />
       </Route>
 
       <Route

@@ -318,7 +318,13 @@
     @apply max-w-[150px] text-right text-xs font-semibold break-words text-slate-800;
   }
   .ot-resumen-total {
-    @apply mt-2 flex items-center justify-between rounded-xl bg-linear-to-r from-marino to-azul px-4 py-3 text-white;
+    @apply col-span-full mt-2 flex items-center justify-between rounded-xl bg-linear-to-r from-marino to-azul px-4 py-3 text-white;
+  }
+  .ot-resumen-bloque .ot-resumen-total span {
+    @apply text-sm font-bold text-white;
+  }
+  .ot-resumen-bloque .ot-resumen-total strong {
+    @apply max-w-none text-white;
   }
   .ot-resumen-total strong {
     @apply text-lg font-extrabold;
