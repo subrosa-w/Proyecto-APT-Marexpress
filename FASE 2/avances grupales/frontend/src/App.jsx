@@ -66,6 +66,7 @@ function App() {
 
       {/* Acceso al sistema */}
       <Route path="/acceso" element={<PaginaAcceso />} />
+      {/* Registro público: toda cuenta nueva parte como cliente normal */}
       <Route path="/registro" element={<RegistroPage />} />
 
       {/* ===== Rutas del sistema: iguales al front de prueba ===== */}

@@ -207,6 +207,11 @@ export default function RegistroPage() {
                                 Usa al menos 10 caracteres, incluyendo mayúscula,
                                 minúscula, número y carácter especial.
                             </p>
+                            {/* El backend crea toda cuenta nueva con rol CLIENTE, sin cuenta corriente */}
+                            <p className="form-note">
+                                Tu cuenta se crea como cliente. Si tu empresa trabaja con cuenta
+                                corriente, Marexpress la habilita después.
+                            </p>
                             <button className="button-primary h-12 w-full text-base" type="submit" disabled={cargando}>
                                 {cargando ? "Creando cuenta..." : "Crear cuenta y verificar correo"}
                             </button>
