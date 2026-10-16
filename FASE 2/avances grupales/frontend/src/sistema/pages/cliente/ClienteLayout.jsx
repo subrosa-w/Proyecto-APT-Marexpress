@@ -31,41 +31,19 @@ const itemsCuentaCorriente = [
     { to: "/cliente/perfil", label: "Mi perfil" }
 ];
 
-// Aviso del modo ejemplo + selector para probar los dos portales
-function AvisoEjemplo() {
-    const { tipoEjemplo, cambiarTipoEjemplo } = useCliente();
-
+// El usuario todavía no está asociado a una empresa: no hay datos que mostrar
+function AvisoSinEmpresa() {
     return (
-        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 md:flex-row md:items-center md:justify-between">
-            <p>
-                <strong>Datos de ejemplo:</strong> el backend todavía no tiene las rutas <code>/api/cliente</code>.
-                Los datos y pagos de esta vista son simulados.
-            </p>
-            <div className="flex shrink-0 gap-1 rounded-lg bg-white p-1 ring-1 ring-amber-200" role="group" aria-label="Tipo de cliente a simular">
-                {[
-                    ["normal", "Cliente normal"],
-                    ["cuenta", "Con cuenta corriente"]
-                ].map(([valor, texto]) => (
-                    <button
-                        key={valor}
-                        type="button"
-                        aria-pressed={tipoEjemplo === valor}
-                        onClick={() => cambiarTipoEjemplo(valor)}
-                        className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                            tipoEjemplo === valor ? "bg-marino text-white" : "text-marino hover:bg-slate-100"
-                        }`}
-                    >
-                        {texto}
-                    </button>
-                ))}
-            </div>
+        <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <strong>Tu cuenta aún no está asociada a una empresa.</strong> Cuando Marexpress la asocie,
+            aquí verás tus órdenes de transporte. Si ya eres cliente, contáctanos para activarla.
         </div>
     );
 }
 
 function PortalCliente() {
     const { pathname } = useLocation();
-    const { cargando, error, tieneCuentaCorriente, modoEjemplo } = useCliente();
+    const { cargando, error, cliente, tieneCuentaCorriente } = useCliente();
     const [etiqueta, titulo] = titulos[pathname] || ["PORTAL", "Cliente"];
 
     return (
@@ -77,7 +55,7 @@ function PortalCliente() {
                 titulo={titulo}
                 items={tieneCuentaCorriente ? itemsCuentaCorriente : itemsNormal}
             >
-                {modoEjemplo ? <AvisoEjemplo /> : null}
+                {!cargando && !error && !cliente ? <AvisoSinEmpresa /> : null}
                 {cargando ? (
                     <p className="mx-note">Cargando tu información...</p>
                 ) : error ? (

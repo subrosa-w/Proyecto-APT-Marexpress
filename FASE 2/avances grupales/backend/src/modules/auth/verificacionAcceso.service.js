@@ -12,6 +12,15 @@ const PROPOSITOS_PERMITIDOS = [
 const DURACION_OTP_MS = 5 * 60 * 1000;
 const MAX_INTENTOS = 5;
 
+/*
+ * Solo para desarrollo (pruebas con Postman): con OTP_EN_CONSOLA=true
+ * el código también se imprime en la consola del backend.
+ * Nunca se activa con NODE_ENV=production.
+ */
+const otpEnConsola = () =>
+    process.env.OTP_EN_CONSOLA === "true" &&
+    process.env.NODE_ENV !== "production";
+
 const validarProposito = (proposito) => {
     if (typeof proposito !== "string") {
         throw new Error("Propósito de verificación inválido");
@@ -170,6 +179,12 @@ export const generarCodigoAcceso = async (
         };
     });
 
+    if (otpEnConsola()) {
+        console.log(
+            `[OTP DESARROLLO] ${propositoNormalizado} para ${resultado.correo}: ${codigo}`
+        );
+    }
+
     // El correo se envía fuera de la transacción.
     try {
         await enviarCodigoOtp({
@@ -178,6 +193,19 @@ export const generarCodigoAcceso = async (
             nombre: resultado.nombre
         });
     } catch {
+        // En desarrollo el código ya está en consola: el desafío sigue válido.
+        if (otpEnConsola()) {
+            console.warn(
+                "[OTP DESARROLLO] No se pudo enviar el correo; usa el código de la consola"
+            );
+
+            return {
+                enviado: false,
+                challengeId: resultado.verificacion.challengeId,
+                expiraEn: resultado.verificacion.expiraEn
+            };
+        }
+
         try {
             // Solo invalida el desafío cuyo envío falló.
             await prisma.verificacion_acceso.updateMany({

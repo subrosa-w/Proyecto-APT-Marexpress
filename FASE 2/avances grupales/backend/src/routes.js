@@ -11,6 +11,7 @@ import peonetaRoutes from "./modules/peoneta/peoneta.routes.js";
 import maestrosRoutes from "./modules/maestros/maestros.routes.js";
 import manifiestosRoutes from "./modules/manifiestos/manifiestos.routes.js";
 import pagosRoutes from "./modules/pagos/pagos.routes.js";
+import portalClienteRoutes from "./modules/portalCliente/portalCliente.routes.js";
 import { actualizarTarifaCliente } from "./modules/clientes/clientes.controller.js";
 import { anularOrdenTransporteController } from "./modules/ordenes/ordenesTransporte.controller.js";
 import { autenticar } from "./common/middlewares/auth.middleware.js";
@@ -49,4 +50,5 @@ export const registrarRutas = (app) => {
     app.use("/api/maestros", maestrosRoutes);
     app.use("/api/manifiestos", manifiestosRoutes);
     app.use("/api/pagos", pagosRoutes);
+    app.use("/api/cliente", portalClienteRoutes);
 };

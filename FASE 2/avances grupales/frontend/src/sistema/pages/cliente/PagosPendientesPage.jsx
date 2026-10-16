@@ -1,8 +1,27 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import Message from "../../components/Message.jsx";
 import { formatearCLP } from "../../utils.js";
 import { useCliente } from "./clienteContexto.jsx";
 import { obtenerPendientesPago, pagarOrdenes } from "./clienteDatos.js";
+
+// Mensaje según cómo volvió el cliente desde Webpay (?estado=ok|rechazado|anulado|error)
+const mensajeRetorno = (estado, cantidad) => {
+    if (estado === "ok") {
+        const texto = Number(cantidad) === 1 ? "La OT quedó pagada" : `Las ${cantidad || ""} OT quedaron pagadas`;
+        return { texto: `Pago autorizado por Webpay. ${texto} y se descontó de tu cuenta corriente.`, tipo: "success" };
+    }
+    if (estado === "rechazado") {
+        return { texto: "Webpay rechazó el pago. Tus OT siguen pendientes; puedes intentarlo de nuevo.", tipo: "error" };
+    }
+    if (estado === "anulado") {
+        return { texto: "Cancelaste el pago en Webpay. Tus OT siguen pendientes.", tipo: "info" };
+    }
+    if (estado === "error") {
+        return { texto: "No se pudo confirmar el pago con Webpay. Revisa tus pendientes e inténtalo de nuevo.", tipo: "error" };
+    }
+    return null;
+};
 
 // Mismo envío a Webpay que usa el operador en PagosOtPage
 const irAWebpay = (url, token) => {
@@ -23,19 +42,29 @@ const fecha = (valor) =>
     valor ? new Intl.DateTimeFormat("es-CL", { dateStyle: "short" }).format(new Date(valor)) : "—";
 
 export default function PagosPendientesPage() {
-    const { cuentaCorriente } = useCliente();
+    const { cuentaCorriente, recargarPerfil } = useCliente();
+    const [params, setParams] = useSearchParams();
+    // Si viene de vuelta desde Webpay, el mensaje se arma una sola vez al entrar
+    const [retorno] = useState(() => mensajeRetorno(params.get("estado"), params.get("cantidad")));
     const [pendientes, setPendientes] = useState(null);
-    const [version, setVersion] = useState(0);
     const [seleccion, setSeleccion] = useState([]);
     const [porPagar, setPorPagar] = useState(null); // OT esperando confirmación
     const [pagando, setPagando] = useState(false);
-    const [mensaje, setMensaje] = useState("");
-    const [tipo, setTipo] = useState("info");
+    const [mensaje, setMensaje] = useState(retorno?.texto || "");
+    const [tipo, setTipo] = useState(retorno?.tipo || "info");
+
+    // Tras volver de Webpay se limpia la URL y se recarga el crédito disponible
+    useEffect(() => {
+        if (retorno) {
+            setParams({}, { replace: true });
+            recargarPerfil();
+        }
+    }, [retorno, setParams, recargarPerfil]);
 
     useEffect(() => {
         let vigente = true;
-        obtenerPendientesPago(cuentaCorriente?.diasCredito || 30)
-            .then(({ datos }) => {
+        obtenerPendientesPago()
+            .then((datos) => {
                 if (!vigente) return;
                 // Las atrasadas primero, y entre ellas las con más días de atraso
                 setPendientes([...datos].sort((a, b) => Number(b.atrasada) - Number(a.atrasada) || b.diasAtraso - a.diasAtraso));
@@ -49,13 +78,13 @@ export default function PagosPendientesPage() {
         return () => {
             vigente = false;
         };
-    }, [version, cuentaCorriente?.diasCredito]);
+    }, []);
 
     const lista = pendientes || [];
     const atrasadas = lista.filter((item) => item.atrasada);
     const suma = (items) => items.reduce((total, item) => total + Number(item.monto || 0), 0);
     const seleccionadas = lista.filter((item) => seleccion.includes(item.idOrden));
-    const disponible = Number(cuentaCorriente?.limiteCredito || 0) - Number(cuentaCorriente?.saldoActual || 0);
+    const disponible = Number(cuentaCorriente?.disponible || 0);
 
     const alternar = (idOrden) =>
         setSeleccion((prev) => (prev.includes(idOrden) ? prev.filter((id) => id !== idOrden) : [...prev, idOrden]));
@@ -64,22 +93,15 @@ export default function PagosPendientesPage() {
         setPagando(true);
         setMensaje("");
         try {
-            const { datos, ejemplo } = await pagarOrdenes(porPagar.map((item) => item.idOrden));
-            if (!ejemplo) {
-                if (!datos.url || !datos.token) {
-                    throw new Error("Webpay no devolvió la URL de pago");
-                }
-                irAWebpay(datos.url, datos.token);
-                return;
+            const datos = await pagarOrdenes(porPagar.map((item) => item.idOrden));
+            if (!datos?.url || !datos?.token) {
+                throw new Error("Webpay no devolvió la URL de pago");
             }
-            setMensaje(`Pago simulado de ${porPagar.length} OT por ${formatearCLP(suma(porPagar))}.`);
-            setTipo("success");
-            setPorPagar(null);
-            setVersion((v) => v + 1);
+            // La página se va a Webpay: "pagando" queda activo hasta salir
+            irAWebpay(datos.url, datos.token);
         } catch (error) {
             setMensaje(error.message);
             setTipo("error");
-        } finally {
             setPagando(false);
         }
     };

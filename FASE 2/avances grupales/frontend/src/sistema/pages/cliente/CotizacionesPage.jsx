@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import Message from "../../components/Message.jsx";
-import { formatearCLP, formatearKg, formatearM3 } from "../../utils.js";
+import { formatearCLP, formatearFechaSola, formatearKg, formatearM3 } from "../../utils.js";
 import { obtenerCotizaciones } from "./clienteDatos.js";
 
 const DIA = 24 * 60 * 60 * 1000;
 
 // Una cotización "vigente" cuya fecha de validez ya pasó se muestra como vencida
-const estadoReal = (c) => (c.estado === "VIGENTE" && new Date(c.validaHasta).getTime() < Date.now() ? "VENCIDA" : c.estado);
+// (validaHasta es una fecha sin hora: vale hasta el final de ese día)
+const estadoReal = (c) => (c.estado === "VIGENTE" && new Date(c.validaHasta).getTime() + DIA < Date.now() ? "VENCIDA" : c.estado);
 
 const insignias = {
     VIGENTE: ["Vigente", "border-blue-200 bg-blue-50 text-blue-700"],
@@ -31,7 +32,7 @@ export default function CotizacionesPage() {
     useEffect(() => {
         let vigente = true;
         obtenerCotizaciones()
-            .then(({ datos }) => {
+            .then((datos) => {
                 if (!vigente) return;
                 // El estado real (vigente o vencida) se calcula una vez, al cargar
                 const conEstado = datos.map((c) => ({ ...c, estado: estadoReal(c) }));
@@ -145,11 +146,11 @@ export default function CotizacionesPage() {
                                         <td><strong className="font-mono text-marino">{c.numero}</strong></td>
                                         <td>{fecha(c.fecha)}</td>
                                         <td>{c.comunaOrigen?.nombreComuna || "—"} → {c.comunaDestino?.nombreComuna || "—"}</td>
-                                        <td>{c.tipoServicio === "EXPRESS" ? "Express" : "Normal"}</td>
+                                        <td>{c.tipoServicio === "NORMAL" ? "Normal" : c.tipoServicio}</td>
                                         <td>{c.cantidadBultos}</td>
                                         <td>{formatearKg(c.pesoTotal)} · {formatearM3(c.volumenM3)}</td>
                                         <td><strong>{formatearCLP(c.valorTotal)}</strong></td>
-                                        <td>{fecha(c.validaHasta)}</td>
+                                        <td>{formatearFechaSola(c.validaHasta)}</td>
                                         <td>
                                             <span className={`inline-flex rounded-md border px-2 py-0.5 text-[11px] font-bold ${clases}`}>
                                                 {textoEstado}{c.numeroOT ? ` · ${c.numeroOT}` : ""}

@@ -8,7 +8,7 @@ import { esHistorial, estadoDe } from "./clienteEstados.js";
 import InsigniaOt from "./InsigniaOt.jsx";
 
 export default function ClienteInicioPage() {
-    const { perfil, cuentaCorriente, tieneCuentaCorriente } = useCliente();
+    const { cliente: empresa, cuentaCorriente, tieneCuentaCorriente } = useCliente();
     const [ordenes, setOrdenes] = useState([]);
     const [pendientes, setPendientes] = useState([]);
     const [mensaje, setMensaje] = useState("");
@@ -17,46 +17,47 @@ export default function ClienteInicioPage() {
         let vigente = true;
         Promise.all([
             obtenerOrdenes(),
-            tieneCuentaCorriente ? obtenerPendientesPago(cuentaCorriente?.diasCredito || 30) : Promise.resolve({ datos: [] })
+            tieneCuentaCorriente ? obtenerPendientesPago() : Promise.resolve([])
         ])
             .then(([listaOrdenes, listaPendientes]) => {
                 if (!vigente) return;
-                setOrdenes(listaOrdenes.datos);
-                setPendientes(listaPendientes.datos);
+                setOrdenes(listaOrdenes);
+                setPendientes(listaPendientes);
             })
             .catch((error) => vigente && setMensaje(error.message));
         return () => {
             vigente = false;
         };
-    }, [tieneCuentaCorriente, cuentaCorriente?.diasCredito]);
+    }, [tieneCuentaCorriente]);
 
     const enCurso = ordenes.filter((orden) => !esHistorial(orden));
     const entregadas = ordenes.filter((orden) => ["ENTREGADA", "ENTREGADO"].includes(estadoDe(orden)));
     const atrasadas = pendientes.filter((item) => item.atrasada);
     const montoPendiente = pendientes.reduce((s, item) => s + Number(item.monto || 0), 0);
-    const disponible = Number(cuentaCorriente?.limiteCredito || 0) - Number(cuentaCorriente?.saldoActual || 0);
-    const empresa = perfil?.cliente;
+    const disponible = Number(cuentaCorriente?.disponible || 0);
     const ultimas = [...ordenes].sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion)).slice(0, 5);
 
     return (
         <>
-            <section className="cliente-card">
-                <header className="admin-card-header">
-                    <div>
-                        <span>TU EMPRESA</span>
-                        <h2>{empresa?.nombreFantasia || empresa?.razonSocial || "Mi empresa"}</h2>
+            {empresa ? (
+                <section className="cliente-card">
+                    <header className="admin-card-header">
+                        <div>
+                            <span>TU EMPRESA</span>
+                            <h2>{empresa?.nombreFantasia || empresa?.razonSocial || "Mi empresa"}</h2>
+                        </div>
+                        <span className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-bold ${tieneCuentaCorriente ? "border-green-200 bg-green-50 text-green-700" : "border-slate-200 bg-slate-100 text-slate-600"}`}>
+                            {tieneCuentaCorriente ? "Cliente con cuenta corriente" : "Cliente"}
+                        </span>
+                    </header>
+                    <div className="mx-ciudad-info">
+                        <p><span>Razón social</span><strong>{empresa?.razonSocial || "—"}</strong></p>
+                        <p><span>RUT</span><strong>{empresa?.rut || "—"}</strong></p>
+                        <p><span>Dirección</span><strong>{empresa?.direccion || "—"}</strong></p>
+                        <p><span>Comuna</span><strong>{etiquetaComuna(empresa?.comuna) || "—"}</strong></p>
                     </div>
-                    <span className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-bold ${tieneCuentaCorriente ? "border-green-200 bg-green-50 text-green-700" : "border-slate-200 bg-slate-100 text-slate-600"}`}>
-                        {tieneCuentaCorriente ? "Cliente con cuenta corriente" : "Cliente"}
-                    </span>
-                </header>
-                <div className="mx-ciudad-info">
-                    <p><span>Razón social</span><strong>{empresa?.razonSocial || "—"}</strong></p>
-                    <p><span>RUT</span><strong>{empresa?.rut || "—"}</strong></p>
-                    <p><span>Dirección</span><strong>{empresa?.direccion || "—"}</strong></p>
-                    <p><span>Comuna</span><strong>{etiquetaComuna(empresa?.comuna) || "—"}</strong></p>
-                </div>
-            </section>
+                </section>
+            ) : null}
 
             <Message texto={mensaje} tipo="error" />
 

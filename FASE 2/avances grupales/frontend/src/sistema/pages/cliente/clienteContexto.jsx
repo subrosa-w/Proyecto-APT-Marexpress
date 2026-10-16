@@ -1,8 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { obtenerPerfil } from "./clienteDatos.js";
 
 /*
-  Contexto del portal cliente: carga una vez el perfil de la empresa del usuario
+  Contexto del portal cliente: carga el perfil de la empresa del usuario
   y decide qué tipo de cliente es.
   - Cliente normal: sin cuenta corriente → ve sus órdenes y su historial.
   - Cliente con cuenta corriente → además paga pendientes, cotiza y ve sus cotizaciones.
@@ -10,41 +10,34 @@ import { obtenerPerfil } from "./clienteDatos.js";
 
 const ClienteContext = createContext(null);
 
-// Solo en modo ejemplo (sin backend) se puede elegir qué tipo de cliente simular
-const CLAVE_TIPO = "marexpress_cliente_ejemplo";
-
 export function ClienteProvider({ children }) {
-    const [tipoEjemplo, setTipoEjemplo] = useState(
-        () => sessionStorage.getItem(CLAVE_TIPO) || "normal"
-    );
-    const [estado, setEstado] = useState({ clave: null, perfil: null, ejemplo: false, error: "" });
+    const [version, setVersion] = useState(0);
+    const [estado, setEstado] = useState({ version: -1, perfil: null, error: "" });
 
     useEffect(() => {
         let vigente = true;
-        obtenerPerfil(tipoEjemplo)
-            .then(({ datos, ejemplo }) => vigente && setEstado({ clave: tipoEjemplo, perfil: datos, ejemplo, error: "" }))
-            .catch((error) => vigente && setEstado({ clave: tipoEjemplo, perfil: null, ejemplo: false, error: error.message }));
+        obtenerPerfil()
+            .then((perfil) => vigente && setEstado({ version, perfil, error: "" }))
+            .catch((error) => vigente && setEstado({ version, perfil: null, error: error.message }));
         return () => {
             vigente = false;
         };
-    }, [tipoEjemplo]);
+    }, [version]);
 
-    const cambiarTipoEjemplo = (tipo) => {
-        sessionStorage.setItem(CLAVE_TIPO, tipo);
-        setTipoEjemplo(tipo);
-    };
+    // Vuelve a pedir el perfil (por ejemplo, después de pagar: cambia el crédito disponible)
+    const recargarPerfil = useCallback(() => setVersion((v) => v + 1), []);
 
     const cuenta = estado.perfil?.cuentaCorriente || null;
 
     const valor = {
-        cargando: estado.clave !== tipoEjemplo,
+        // Solo la primera carga bloquea el portal; al recargar se mantiene lo anterior
+        cargando: estado.version === -1,
         error: estado.error,
         perfil: estado.perfil,
+        cliente: estado.perfil?.cliente || null,
         cuentaCorriente: cuenta,
         tieneCuentaCorriente: Boolean(cuenta?.estado),
-        modoEjemplo: estado.ejemplo,
-        tipoEjemplo,
-        cambiarTipoEjemplo
+        recargarPerfil
     };
 
     return <ClienteContext.Provider value={valor}>{children}</ClienteContext.Provider>;

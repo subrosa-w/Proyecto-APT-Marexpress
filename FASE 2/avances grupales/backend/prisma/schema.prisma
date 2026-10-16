@@ -23,6 +23,7 @@ model cliente {
   tarifa            tarifa?             @relation(fields: [idTarifa], references: [idTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente_tarifa")
   cliente_ubicacion cliente_ubicacion[]
   cliente_usuario   cliente_usuario[]
+  cotizacion        cotizacion[]
   cuenta_corriente  cuenta_corriente?
   orden_transporte  orden_transporte[]
 
@@ -56,6 +57,8 @@ model comuna {
   sucursal                                                  sucursal[]
   tarifa_trayecto_tarifa_trayecto_idComunaDestinoTocomuna   tarifa_trayecto[]   @relation("tarifa_trayecto_idComunaDestinoTocomuna")
   tarifa_trayecto_tarifa_trayecto_idComunaOrigenTocomuna    tarifa_trayecto[]   @relation("tarifa_trayecto_idComunaOrigenTocomuna")
+  cotizacion_origen                                         cotizacion[]        @relation("cotizacion_idComunaOrigenTocomuna")
+  cotizacion_destino                                        cotizacion[]        @relation("cotizacion_idComunaDestinoTocomuna")
   manifiesto                                                manifiesto[]
 
   @@unique([nombreComuna, idRegion], map: "uq_comuna_region")
@@ -313,6 +316,7 @@ model orden_transporte {
   idTarifaTrayecto                                Int?
   valorM3Aplicado                                 Decimal?            @db.Decimal(12, 2)
   idDestinatario                                  Int?
+  cotizacion                                      cotizacion[]
   detalle_carga                                   detalle_carga[]
   entrega_ot                                      entrega_ot[]
   historial_ot                                    historial_ot[]
@@ -457,6 +461,7 @@ model tarifa {
   tarifa_trayecto   tarifa_trayecto[]
   tarifa_tramo      tarifa_tramo[]
   historial_tarifa  historial_tarifa[]
+  cotizacion        cotizacion[]
   cliente           cliente[]
 
   @@index([idTipoTarifa], map: "fk_tarifa_tipo_tarifa")
@@ -495,6 +500,7 @@ model tipo_bulto {
   idTipoBulto   Int             @id @default(autoincrement())
   nombreTipo    String          @unique(map: "nombreTipo") @db.VarChar(50)
   descripcion   String?         @db.VarChar(150)
+  cotizacion_detalle cotizacion_detalle[]
   detalle_carga detalle_carga[]
 }
 
@@ -519,6 +525,7 @@ model usuario {
   correoVerificadoEn  DateTime?             @db.DateTime(0)
   registroPendiente   Boolean               @default(false)
   cliente_usuario     cliente_usuario[]
+  cotizacion          cotizacion[]
   entrega_ot          entrega_ot[]
   historial_ot        historial_ot[]
   historial_tarifa    historial_tarifa[]
@@ -694,4 +701,59 @@ model destinatario {
   estado            Boolean            @default(true)
   fechaCreacion     DateTime           @default(now()) @db.DateTime(0)
   orden_transporte  orden_transporte[]
+}
+
+/// Cotizaciones del portal cliente con cuenta corriente. Tablas creadas con scripts/agregar-cotizacion.js
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cotizacion {
+  idCotizacion       Int                  @id @default(autoincrement())
+  numeroCotizacion   String?              @unique(map: "uq_cotizacion_numero") @db.VarChar(20)
+  fechaCreacion      DateTime             @default(now()) @db.DateTime(0)
+  validaHasta        DateTime             @db.Date
+  estado             String               @default("VIGENTE") @db.VarChar(20)
+  tipoServicio       String               @default("NORMAL") @db.VarChar(30)
+  cantidadBultos     Int
+  pesoTotal          Decimal              @db.Decimal(12, 2)
+  volumenTotalM3     Decimal              @default(0.0000) @db.Decimal(12, 4)
+  tipoCobro          String?              @db.VarChar(20)
+  valorNeto          Decimal              @db.Decimal(12, 2)
+  valorIva           Decimal              @db.Decimal(12, 2)
+  valorTotal         Decimal              @db.Decimal(12, 2)
+  idCliente          Int
+  idUsuario          Int
+  idComunaOrigen     Int
+  idComunaDestino    Int
+  idTarifa           Int
+  idOrden            Int?
+  cliente            cliente              @relation(fields: [idCliente], references: [idCliente], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_cliente")
+  usuario            usuario              @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_usuario")
+  comuna_origen      comuna               @relation("cotizacion_idComunaOrigenTocomuna", fields: [idComunaOrigen], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_comuna_origen")
+  comuna_destino     comuna               @relation("cotizacion_idComunaDestinoTocomuna", fields: [idComunaDestino], references: [idComuna], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_comuna_destino")
+  tarifa             tarifa               @relation(fields: [idTarifa], references: [idTarifa], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_tarifa")
+  orden_transporte   orden_transporte?    @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_orden")
+  cotizacion_detalle cotizacion_detalle[]
+
+  @@index([idCliente], map: "fk_cotizacion_cliente")
+  @@index([idUsuario], map: "fk_cotizacion_usuario")
+  @@index([idComunaOrigen], map: "fk_cotizacion_comuna_origen")
+  @@index([idComunaDestino], map: "fk_cotizacion_comuna_destino")
+  @@index([idTarifa], map: "fk_cotizacion_tarifa")
+  @@index([idOrden], map: "fk_cotizacion_orden")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cotizacion_detalle {
+  idCotizacionDetalle Int        @id @default(autoincrement())
+  idCotizacion        Int
+  idTipoBulto         Int
+  cantidad            Int
+  pesoUnitario        Decimal    @db.Decimal(10, 2)
+  largoCm             Decimal    @db.Decimal(10, 2)
+  anchoCm             Decimal    @db.Decimal(10, 2)
+  altoCm              Decimal    @db.Decimal(10, 2)
+  cotizacion          cotizacion @relation(fields: [idCotizacion], references: [idCotizacion], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_detalle_cotizacion")
+  tipo_bulto          tipo_bulto @relation(fields: [idTipoBulto], references: [idTipoBulto], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_detalle_tipo_bulto")
+
+  @@index([idCotizacion], map: "fk_cotizacion_detalle_cotizacion")
+  @@index([idTipoBulto], map: "fk_cotizacion_detalle_tipo_bulto")
 }

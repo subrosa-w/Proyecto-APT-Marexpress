@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import Message from "../../components/Message.jsx";
-import { etiquetaComuna, formatearCLP, formatearKg, formatearM3 } from "../../utils.js";
-import { useCliente } from "./clienteContexto.jsx";
-import { cotizar, obtenerComunas } from "./clienteDatos.js";
+import { etiquetaComuna, etiquetaTipoCarga, formatearCLP, formatearFechaSola, formatearKg, formatearM3 } from "../../utils.js";
+import { cotizar, obtenerComunas, obtenerTiposBulto } from "./clienteDatos.js";
 
-const tipos = ["Bulto", "Pallet", "Saco"];
-const bultoVacio = { tipo: "Bulto", cantidad: "1", pesoUnitario: "", largoCm: "", anchoCm: "", altoCm: "" };
+const bultoVacio = { idTipoBulto: "", cantidad: "1", pesoUnitario: "", largoCm: "", anchoCm: "", altoCm: "" };
+const rutaVacia = { idComunaOrigen: "", idComunaDestino: "" };
 
 const volumenDe = (b) => (Number(b.largoCm) * Number(b.anchoCm) * Number(b.altoCm) * Number(b.cantidad)) / 1000000;
 
 export default function CotizarPage() {
-    const { modoEjemplo } = useCliente();
     const [comunas, setComunas] = useState([]);
-    const [ruta, setRuta] = useState({ idComunaOrigen: "", idComunaDestino: "", tipoServicio: "NORMAL" });
+    const [tipos, setTipos] = useState([]);
+    const [ruta, setRuta] = useState(rutaVacia);
     const [bulto, setBulto] = useState(bultoVacio);
     const [bultos, setBultos] = useState([]);
     const [resultado, setResultado] = useState(null);
@@ -23,13 +22,26 @@ export default function CotizarPage() {
 
     useEffect(() => {
         let vigente = true;
-        obtenerComunas()
-            .then(({ datos }) => vigente && setComunas(datos))
-            .catch((error) => vigente && setMensaje(error.message));
+        Promise.all([obtenerComunas(), obtenerTiposBulto()])
+            .then(([listaComunas, listaTipos]) => {
+                if (!vigente) return;
+                setComunas(listaComunas);
+                setTipos(listaTipos);
+            })
+            .catch((error) => {
+                if (!vigente) return;
+                setMensaje(error.message);
+                setTipo("error");
+            });
         return () => {
             vigente = false;
         };
     }, []);
+
+    // Si no se elige tipo, se usa el primero del catálogo (Caja)
+    const tipoElegido = bulto.idTipoBulto || String(tipos[0]?.idTipoBulto || "");
+    const nombreTipo = (idTipoBulto) =>
+        etiquetaTipoCarga(tipos.find((t) => String(t.idTipoBulto) === String(idTipoBulto))?.nombreTipo);
 
     const aviso = (texto, clase = "info") => {
         setMensaje(texto);
@@ -45,11 +57,11 @@ export default function CotizarPage() {
     const anadirBulto = () => {
         const valido = Number(bulto.cantidad) >= 1 && Number(bulto.pesoUnitario) > 0
             && Number(bulto.largoCm) > 0 && Number(bulto.anchoCm) > 0 && Number(bulto.altoCm) > 0;
-        if (!valido) {
+        if (!valido || !tipoElegido) {
             aviso("Completa cantidad, peso y las tres medidas del bulto (mayores a 0).", "error");
             return;
         }
-        setBultos((prev) => [...prev, bulto]);
+        setBultos((prev) => [...prev, { ...bulto, idTipoBulto: tipoElegido }]);
         setBulto(bultoVacio);
         setResultado(null);
         aviso("");
@@ -65,22 +77,18 @@ export default function CotizarPage() {
         setCargando(true);
         aviso("");
         try {
-            const { datos } = await cotizar(
-                {
-                    idComunaOrigen: Number(ruta.idComunaOrigen),
-                    idComunaDestino: Number(ruta.idComunaDestino),
-                    tipoServicio: ruta.tipoServicio,
-                    bultos: bultos.map((b) => ({
-                        tipo: b.tipo,
-                        cantidad: Number(b.cantidad),
-                        pesoUnitario: Number(b.pesoUnitario),
-                        largoCm: Number(b.largoCm),
-                        anchoCm: Number(b.anchoCm),
-                        altoCm: Number(b.altoCm)
-                    }))
-                },
-                comunas
-            );
+            const datos = await cotizar({
+                idComunaOrigen: Number(ruta.idComunaOrigen),
+                idComunaDestino: Number(ruta.idComunaDestino),
+                bultos: bultos.map((b) => ({
+                    idTipoBulto: Number(b.idTipoBulto),
+                    cantidad: Number(b.cantidad),
+                    pesoUnitario: Number(b.pesoUnitario),
+                    largoCm: Number(b.largoCm),
+                    anchoCm: Number(b.anchoCm),
+                    altoCm: Number(b.altoCm)
+                }))
+            });
             setResultado(datos);
             aviso(`Cotización ${datos.numero} guardada en Mis cotizaciones.`, "success");
         } catch (error) {
@@ -91,7 +99,7 @@ export default function CotizarPage() {
     };
 
     const nueva = () => {
-        setRuta({ idComunaOrigen: "", idComunaDestino: "", tipoServicio: "NORMAL" });
+        setRuta(rutaVacia);
         setBultos([]);
         setResultado(null);
         aviso("");
@@ -124,13 +132,6 @@ export default function CotizarPage() {
                                     ))}
                                 </select>
                             </div>
-                            <div className="field">
-                                <label htmlFor="cot-servicio">Tipo de servicio</label>
-                                <select id="cot-servicio" value={ruta.tipoServicio} onChange={(e) => cambiarRuta("tipoServicio", e.target.value)}>
-                                    <option value="NORMAL">Normal</option>
-                                    <option value="EXPRESS">Express</option>
-                                </select>
-                            </div>
                         </div>
                     </div>
                 </section>
@@ -142,8 +143,10 @@ export default function CotizarPage() {
                             <div className="ot-grid">
                                 <div className="field">
                                     <label htmlFor="cot-tipo">Tipo</label>
-                                    <select id="cot-tipo" value={bulto.tipo} onChange={(e) => setBulto({ ...bulto, tipo: e.target.value })}>
-                                        {tipos.map((t) => <option key={t}>{t}</option>)}
+                                    <select id="cot-tipo" value={tipoElegido} onChange={(e) => setBulto({ ...bulto, idTipoBulto: e.target.value })}>
+                                        {tipos.map((t) => (
+                                            <option key={t.idTipoBulto} value={t.idTipoBulto}>{etiquetaTipoCarga(t.nombreTipo)}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="field">
@@ -188,8 +191,8 @@ export default function CotizarPage() {
                                     {bultos.length === 0 ? (
                                         <tr><td colSpan={6} className="mx-empty">Aún no hay bultos. Completa el formulario y pulsa Añadir bulto.</td></tr>
                                     ) : bultos.map((b, indice) => (
-                                        <tr key={`${b.tipo}-${indice}`}>
-                                            <td>{b.tipo}</td>
+                                        <tr key={`${b.idTipoBulto}-${indice}`}>
+                                            <td>{nombreTipo(b.idTipoBulto)}</td>
                                             <td>{b.cantidad}</td>
                                             <td>{formatearKg(b.pesoUnitario)}</td>
                                             <td>{b.largoCm} × {b.anchoCm} × {b.altoCm} cm</td>
@@ -231,7 +234,7 @@ export default function CotizarPage() {
                     <h3>Ruta</h3>
                     <span>Origen</span><strong>{comunaPorId(ruta.idComunaOrigen)?.nombreComuna || "—"}</strong>
                     <span>Destino</span><strong>{comunaPorId(ruta.idComunaDestino)?.nombreComuna || "—"}</strong>
-                    <span>Servicio</span><strong>{ruta.tipoServicio === "EXPRESS" ? "Express" : "Normal"}</strong>
+                    <span>Servicio</span><strong>Normal</strong>
                 </div>
                 <div className="ot-resumen-bloque">
                     <h3>Carga</h3>
@@ -243,17 +246,16 @@ export default function CotizarPage() {
                     <>
                         <div className="ot-resumen-bloque">
                             <h3>Valor</h3>
+                            <span>Cobro</span><strong>{resultado.tipoCobro === "VOLUMEN" ? "Por volumen (m³)" : "Por peso (kg)"}</strong>
                             <span>Neto</span><strong>{formatearCLP(resultado.valorNeto)}</strong>
                             <span>IVA (19%)</span><strong>{formatearCLP(resultado.valorIva)}</strong>
-                            <span>Válida hasta</span><strong>{new Intl.DateTimeFormat("es-CL", { dateStyle: "short" }).format(new Date(resultado.validaHasta))}</strong>
+                            <span>Válida hasta</span><strong>{formatearFechaSola(resultado.validaHasta)}</strong>
                             <div className="ot-resumen-total">
                                 <span>Total</span>
                                 <strong>{formatearCLP(resultado.valorTotal)}</strong>
                             </div>
                         </div>
-                        {modoEjemplo ? (
-                            <p className="mx-note">Valor referencial de ejemplo: el precio real lo calculará el backend con tu tarifario.</p>
-                        ) : null}
+                        <p className="mx-note">Calculado con tu tarifario vigente. El valor final se confirma al emitir la OT.</p>
                         <Link className="button-secondary mt-3 w-full" to="/cliente/cotizaciones">Ver mis cotizaciones</Link>
                     </>
                 ) : null}

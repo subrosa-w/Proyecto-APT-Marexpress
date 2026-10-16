@@ -41,7 +41,7 @@ function DetalleOrden({ idOrden, cerrar }) {
     useEffect(() => {
         let vigente = true;
         obtenerOrden(idOrden)
-            .then(({ datos }) => vigente && setOrden(datos))
+            .then((datos) => vigente && setOrden(datos))
             .catch((e) => vigente && setError(e.message));
         return () => {
             vigente = false;
@@ -141,7 +141,7 @@ export default function OrdenesClientePage({ vista: vistaPedida }) {
     useEffect(() => {
         let vigente = true;
         obtenerOrdenes()
-            .then(({ datos }) => vigente && setOrdenes(datos))
+            .then((datos) => vigente && setOrdenes(datos))
             .catch((error) => vigente && setMensaje(error.message));
         return () => {
             vigente = false;
