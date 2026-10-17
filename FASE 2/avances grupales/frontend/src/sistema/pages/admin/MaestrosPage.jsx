@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api.js";
 import { formatos } from "../../formatos.js";
+import { CampoRut, CampoTelefono } from "../../entrada.jsx";
 import Message from "../../components/Message.jsx";
 
 // Formulario de conductor en blanco, para abrirlo y para limpiarlo después de guardar.
@@ -119,7 +120,7 @@ export default function MaestrosPage() {
                     <form className="admin-grid-2" onSubmit={guardarConductor}>
                         <div className="field">
                             <label>RUT *</label>
-                            <input {...formatos.rut} value={conductor.rut} onChange={(e) => setConductor({ ...conductor, rut: e.target.value })} required />
+                            <CampoRut value={conductor.rut} onChange={(valor) => setConductor({ ...conductor, rut: valor })} required />
                         </div>
                         <div className="field">
                             <label>Nombre *</label>
@@ -131,7 +132,7 @@ export default function MaestrosPage() {
                         </div>
                         <div className="field">
                             <label>Teléfono</label>
-                            <input {...formatos.telefono} value={conductor.telefono} onChange={(e) => setConductor({ ...conductor, telefono: e.target.value })} />
+                            <CampoTelefono value={conductor.telefono} onChange={(valor) => setConductor({ ...conductor, telefono: valor })} />
                         </div>
                         <div className="field">
                             <label>Licencia *</label>

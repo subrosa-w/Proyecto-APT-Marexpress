@@ -13,7 +13,7 @@ import {
     textoResumenTipos
 } from "../../utils.js";
 import { useCliente } from "./clienteContexto.jsx";
-import { obtenerOrden, obtenerOrdenes } from "./clienteDatos.js";
+import { obtenerOrden, obtenerOrdenes, pedirDevolucion } from "./clienteDatos.js";
 import { esHistorial, estadoPagoDe, textoEstadoOt } from "./clienteEstados.js";
 import InsigniaOt from "./InsigniaOt.jsx";
 
@@ -34,9 +34,12 @@ const periodos = [
 const origenDe = (orden) => orden.comuna_orden_transporte_idComunaOrigenTocomuna?.nombreComuna || "—";
 const destinoDe = (orden) => orden.comuna_orden_transporte_idComunaDestinoTocomuna?.nombreComuna || "—";
 
-function DetalleOrden({ idOrden, cerrar }) {
+function DetalleOrden({ idOrden, cerrar, alCambiar }) {
     const [orden, setOrden] = useState(null);
     const [error, setError] = useState("");
+    const [motivo, setMotivo] = useState("");
+    const [avisos, setAvisos] = useState("");
+    const [pidiendo, setPidiendo] = useState(false);
 
     useEffect(() => {
         let vigente = true;
@@ -49,6 +52,34 @@ function DetalleOrden({ idOrden, cerrar }) {
     }, [idOrden]);
 
     const eventos = orden ? lineaTiempoOt(orden) : [];
+    const estado = String(orden?.estado_ot?.nombreEstado || "").toUpperCase();
+    const puedePedir = orden && ![
+        "ENTREGADA",
+        "ENTREGADO",
+        "ENTREGA_PARCIAL",
+        "ANULADA",
+        "CANCELADA",
+        "DEVUELTA",
+        "DEVOLUCION_SOLICITADA"
+    ].includes(estado);
+
+    const pedir = async (evento) => {
+        evento.preventDefault();
+        setPidiendo(true);
+        setError("");
+        try {
+            const resultado = await pedirDevolucion(idOrden, motivo);
+            const fresca = await obtenerOrden(idOrden);
+            setOrden(fresca);
+            setAvisos(resultado.mensaje || "Pediste la devolución.");
+            setMotivo("");
+            alCambiar?.();
+        } catch (e) {
+            setError(e.message);
+        } finally {
+            setPidiendo(false);
+        }
+    };
 
     return (
         <div className="mx-modal-fondo" onClick={cerrar} role="presentation">
@@ -62,6 +93,7 @@ function DetalleOrden({ idOrden, cerrar }) {
                 </header>
 
                 <Message texto={error} tipo="error" />
+                <Message texto={avisos} tipo="success" />
 
                 {orden ? (
                     <>
@@ -75,6 +107,34 @@ function DetalleOrden({ idOrden, cerrar }) {
                             <p><span>Servicio</span><strong>{orden.tipoServicio === "EXPRESS" ? "Express" : "Normal"}</strong></p>
                             <p><span>Valor</span><strong>{formatearCLP(orden.valorTotal)}</strong></p>
                         </div>
+                        {puedePedir ? (
+                            <form className="admin-grid-2" onSubmit={pedir}>
+                                <p className="mx-note" style={{ gridColumn: "1 / -1" }}>
+                                    Si ya no quieres enviar esta carga, pide la devolución. Si salió a ruta, vuelve a la oficina y ahí te la entregan.
+                                </p>
+                                <div className="field" style={{ gridColumn: "1 / -1" }}>
+                                    <label>Motivo de la devolución *</label>
+                                    <input
+                                        value={motivo}
+                                        onChange={(evento) => setMotivo(evento.target.value)}
+                                        placeholder="Ya no quiero enviar esta carga"
+                                        required
+                                        minLength={3}
+                                    />
+                                </div>
+                                <div className="mx-form-actions">
+                                    <button className="button-primary" type="submit" disabled={pidiendo}>
+                                        {pidiendo ? "Enviando..." : "Pedir devolución"}
+                                    </button>
+                                </div>
+                            </form>
+                        ) : null}
+                        {estado === "DEVOLUCION_SOLICITADA" ? (
+                            <p className="mx-note">Pediste la devolución. Si la carga ya salió, vuelve a la oficina y ahí te la entregan.</p>
+                        ) : null}
+                        {estado === "DEVUELTA" ? (
+                            <p className="mx-note">Tu carga fue devuelta.</p>
+                        ) : null}
 
                         <h3>Carga</h3>
                         <div className="mx-table-wrap">
@@ -240,7 +300,7 @@ export default function OrdenesClientePage({ vista: vistaPedida }) {
                                     <td>{formatearCLP(orden.valorTotal)}</td>
                                     {tieneCuentaCorriente ? (
                                         <td className={pago === "PAGADO" ? "text-green-700" : pago ? "font-semibold text-amber-700" : "text-slate-400"}>
-                                            {pago === "PAGADO" ? "Pagada" : pago ? "Pendiente" : "—"}
+                                            {pago === "PAGADO" ? "Pagada" : pago === "POR_CUADRAR" ? "Por cuadrar" : pago === "PENDIENTE" ? "Impaga" : pago ? pago : "—"}
                                         </td>
                                     ) : null}
                                     <td>
@@ -255,7 +315,7 @@ export default function OrdenesClientePage({ vista: vistaPedida }) {
                 </table>
             </div>
 
-            {abierta ? <DetalleOrden idOrden={abierta} cerrar={() => setAbierta(null)} /> : null}
+            {abierta ? <DetalleOrden idOrden={abierta} cerrar={() => setAbierta(null)} alCambiar={() => obtenerOrdenes().then(setOrdenes).catch(() => {})} /> : null}
         </section>
     );
 }

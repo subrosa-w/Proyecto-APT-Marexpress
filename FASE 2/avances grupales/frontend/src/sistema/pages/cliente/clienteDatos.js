@@ -26,6 +26,11 @@ export const obtenerOrdenes = async () => (await api("/cliente/ordenes")).ordene
 
 export const obtenerOrden = async (idOrden) => (await api(`/cliente/ordenes/${idOrden}`)).orden;
 
+export const pedirDevolucion = (idOrden, motivo) => api(`/cliente/ordenes/${idOrden}/devolucion`, {
+    method: "POST",
+    body: JSON.stringify({ motivo })
+});
+
 export const obtenerPendientesPago = async () => (await api("/cliente/pagos/pendientes")).pendientes || [];
 
 export const pagarOrdenes = (idOrdenes) =>

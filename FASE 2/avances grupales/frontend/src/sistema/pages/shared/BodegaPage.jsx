@@ -7,6 +7,7 @@
 */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../api.js";
+import { PREFIJO_OT, codigoConPrefijo } from "../../entrada.jsx";
 import { guardarBorrador, leerBorrador } from "../../borrador.js";
 import { useBodegaTrabajo } from "../../bodegaTrabajo.jsx";
 import Message from "../../components/Message.jsx";
@@ -40,7 +41,7 @@ export default function BodegaPage() {
     const [bultos, setBultos] = useState([]);
     const [resumen, setResumen] = useState({ total: 0, enBodega: 0, enTraslado: 0, sinUbicacion: 0 });
     const [sucursales, setSucursales] = useState([]);
-    const [busqueda, setBusqueda] = useState(() => (leerBorrador("bodega") || {}).busqueda || "");
+    const [busqueda, setBusqueda] = useState(() => (leerBorrador("bodega") || {}).busqueda || PREFIJO_OT);
     const [estado, setEstado] = useState(() => (leerBorrador("bodega") || {}).estado || "EN_BODEGA");
     const [idSucursal, setIdSucursal] = useState("");
     const [mensaje, setMensaje] = useState("");
@@ -48,7 +49,7 @@ export default function BodegaPage() {
     const [cargando, setCargando] = useState(false);
     const [recibiendo, setRecibiendo] = useState(null);
     const [sucursalIngreso, setSucursalIngreso] = useState("");
-    const [scanReingreso, setScanReingreso] = useState("");
+    const [scanReingreso, setScanReingreso] = useState(PREFIJO_OT);
     const scanRef = useRef(null);
 
     // Aviso único de la pantalla.
@@ -66,7 +67,7 @@ export default function BodegaPage() {
         if (idSucursal) {
             params.set("idSucursal", idSucursal);
         }
-        if (busqueda.trim()) {
+        if (busqueda.trim() && busqueda.trim() !== PREFIJO_OT && busqueda.trim() !== "MAN-") {
             params.set("q", busqueda.trim());
         }
 
@@ -175,7 +176,7 @@ export default function BodegaPage() {
                 })
             });
             aviso(resultado.mensaje, "success");
-            setScanReingreso("");
+            setScanReingreso(PREFIJO_OT);
             await cargar();
         } catch (error) {
             aviso(error.message, "error");
@@ -220,24 +221,27 @@ export default function BodegaPage() {
                 <Message texto={mensaje} tipo={tipo} />
                 <form className="mx-scan" onSubmit={reingresarRechazo}>
                     <label htmlFor="scan-rechazo">Reingreso de OT rechazada (pistola / OT o bulto)</label>
+                    <p className="mx-note">Una orden rechazada sigue en reparto hasta este escaneo. Si el cliente pidió la devolución y la carga ya salió, el mismo escaneo la devuelve a bodega para entregársela.</p>
                     <input
                         id="scan-rechazo"
                         ref={scanRef}
                         value={scanReingreso}
                         autoComplete="off"
-                        placeholder="Escanea la OT rechazada y presiona Enter"
-                        onChange={(event) => setScanReingreso(event.target.value)}
+                        placeholder="OT-000065 o el código de la etiqueta"
+                        onFocus={(event) => event.target.select()}
+                        onChange={(event) => setScanReingreso(codigoConPrefijo(event.target.value, PREFIJO_OT))}
                     />
-                    <button type="submit" className="button-primary" disabled={cargando || !scanReingreso.trim()}>
+                    <button type="submit" className="button-primary" disabled={cargando || scanReingreso === PREFIJO_OT}>
                         Ingresar
                     </button>
                 </form>
                 <form className="mx-toolbar" onSubmit={buscar}>
                     <input
                         type="search"
-                        placeholder="Número de OT, por ejemplo 65"
+                        placeholder="OT-000065"
                         value={busqueda}
-                        onChange={(event) => setBusqueda(event.target.value)}
+                        onFocus={(event) => event.target.select()}
+                        onChange={(event) => setBusqueda(codigoConPrefijo(event.target.value, PREFIJO_OT))}
                     />
                     <select value={estado} onChange={(event) => setEstado(event.target.value)}>
                         <option value="EN_BODEGA">En bodega</option>

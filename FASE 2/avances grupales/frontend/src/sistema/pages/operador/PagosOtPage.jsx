@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useSearchParams } from "react-router";
 import { api } from "../../api.js";
+import { PREFIJO_OT, codigoConPrefijo } from "../../entrada.jsx";
 import { useBodegaTrabajo } from "../../bodegaTrabajo.jsx";
 import Message from "../../components/Message.jsx";
 import { formatearCLP, ordenAnulada } from "../../utils.js";
@@ -58,7 +59,7 @@ export default function PagosOtPage() {
     const { idComuna } = useBodegaTrabajo();
     const [searchParams, setSearchParams] = useSearchParams();
     const scanRef = useRef(null);
-    const [numeroOT, setNumeroOT] = useState(searchParams.get("ot") || "");
+    const [numeroOT, setNumeroOT] = useState(searchParams.get("ot") || PREFIJO_OT);
     const [orden, setOrden] = useState(null);
     const [pendientes, setPendientes] = useState([]);
     const [tarjetas, setTarjetas] = useState([]);
@@ -210,12 +211,13 @@ export default function PagosOtPage() {
                         <input
                             ref={scanRef}
                             value={numeroOT}
-                            onChange={(evento) => setNumeroOT(evento.target.value.toUpperCase())}
-                            placeholder="Solo el número, por ejemplo 65"
+                            onFocus={(evento) => evento.target.select()}
+                            onChange={(evento) => setNumeroOT(codigoConPrefijo(evento.target.value, PREFIJO_OT))}
+                            placeholder="OT-000065"
                             autoComplete="off"
                         />
                     </label>
-                    <button type="submit" className="button-primary" disabled={cargando}>
+                    <button type="submit" className="button-primary" disabled={cargando || numeroOT === PREFIJO_OT}>
                         {cargando ? "Buscando..." : "Buscar"}
                     </button>
                 </form>

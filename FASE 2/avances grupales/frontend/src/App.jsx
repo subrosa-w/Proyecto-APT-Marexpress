@@ -48,6 +48,7 @@ import PerfilPage from './sistema/pages/shared/PerfilPage.jsx'
 import PlaceholderPage from './sistema/pages/shared/PlaceholderPage.jsx'
 import ReportesPage from './sistema/pages/admin/ReportesPage.jsx'
 import CuentasCorrientesPage from './sistema/pages/admin/CuentasCorrientesPage.jsx'
+import CajaRetiroPage from './sistema/pages/shared/CajaRetiroPage.jsx'
 import FronteraError from './sistema/components/FronteraError.jsx'
 
 // Si ya hay sesión iniciada, /acceso lleva directo al panel de su rol
@@ -102,6 +103,7 @@ function App() {
         <Route path="despacho" element={<ProntoDespachoPage />} />
         <Route path="seguimiento" element={<SeguimientoPage />} />
         <Route path="pagos" element={<PagosOtPage />} />
+        <Route path="caja" element={<CajaRetiroPage />} />
         <Route path="comprobantes" element={<RedirigirComprobantesAPagos />} />
       </Route>
 
@@ -128,6 +130,7 @@ function App() {
         <Route path="bodega" element={<BodegaPage />} />
         <Route path="seguimiento" element={<SeguimientoPage />} />
         <Route path="cuentas" element={<CuentasCorrientesPage />} />
+        <Route path="caja" element={<CajaRetiroPage />} />
         <Route path="reportes" element={<ReportesPage />} />
       </Route>
 

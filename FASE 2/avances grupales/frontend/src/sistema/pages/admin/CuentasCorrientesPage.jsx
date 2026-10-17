@@ -3,11 +3,12 @@
   RUTA: /administrador/cuentas
   CSS: admin-card, mx-table
   API: GET /api/clientes/cuentas-corrientes?periodo=
-  FUNCIONES: cuatro listas: con deuda, al día, frecuentes y posibles bajas
+  FUNCIONES: cuatro listas de cuentas y la planilla del mes, con descarga en Excel.
 */
 import { useEffect, useState } from "react";
 import { api } from "../../api.js";
 import { formatearCLP, formatearFechaHora } from "../../utils.js";
+import { descargarPlanillaExcel } from "../../utils/planillaExcel.js";
 import Message from "../../components/Message.jsx";
 
 // Tabla reutilizada por los cuatro grupos. El motivo solo aparece en posibles bajas.
@@ -55,6 +56,11 @@ export default function CuentasCorrientesPage() {
     const [resumen, setResumen] = useState(null);
     const [mensaje, setMensaje] = useState("");
     const [cargando, setCargando] = useState(false);
+    const [mes, setMes] = useState(() => {
+        const hoy = new Date();
+        return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
+    });
+    const [planilla, setPlanilla] = useState(null);
 
     // Pide el resumen. El período cambia quién cuenta como frecuente, no la deuda.
     const cargar = async (siguiente = periodo) => {
@@ -70,8 +76,45 @@ export default function CuentasCorrientesPage() {
         }
     };
 
+    const cargarPlanilla = async (siguiente = mes) => {
+        const datos = await api(`/clientes/cuentas-corrientes/planilla?mes=${siguiente}`);
+        setPlanilla(datos.planilla);
+    };
+
+    const descargarExcel = async () => {
+        setCargando(true);
+        try {
+            const datos = await api(`/clientes/cuentas-corrientes/planilla?mes=${mes}`);
+            setPlanilla(datos.planilla);
+            descargarPlanillaExcel(datos.planilla);
+            setMensaje("");
+        } catch (error) {
+            setMensaje(error.message);
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    const cerrarMes = async () => {
+        setCargando(true);
+        try {
+            const datos = await api("/clientes/cuentas-corrientes/planilla/cierre", {
+                method: "POST",
+                body: JSON.stringify({ mes })
+            });
+            setPlanilla(datos.planilla);
+            setMensaje(datos.mensaje);
+            await cargar();
+        } catch (error) {
+            setMensaje(error.message);
+        } finally {
+            setCargando(false);
+        }
+    };
+
     useEffect(() => {
         cargar();
+        cargarPlanilla().catch((error) => setMensaje(error.message));
     }, []);
 
     const umbral = resumen?.umbralFrecuente || 2;
@@ -140,6 +183,65 @@ export default function CuentasCorrientesPage() {
                 filas={resumen?.posiblesBaja || []}
                 conMotivo
             />
+            <h3 className="mt-6">Planilla del mes</h3>
+            <p className="mx-note">Un solo mes. El flete es el valor por carga. El neto suma flete, retiro y recargo. El IVA es el 19 %.</p>
+            <form className="mx-toolbar" onSubmit={(event) => { event.preventDefault(); cargarPlanilla().catch((error) => setMensaje(error.message)); }}>
+                <input type="month" value={mes} onChange={(event) => setMes(event.target.value)} aria-label="Mes de la planilla" />
+                <button className="button-secondary" type="submit" disabled={cargando}>Ver mes</button>
+                <button className="button-secondary" type="button" disabled={cargando} onClick={descargarExcel}>Descargar Excel</button>
+                <button className="button-primary" type="button" disabled={cargando} onClick={cerrarMes}>Registrar cierre del mes</button>
+            </form>
+            <div className="mx-table-wrap">
+                <table className="mx-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>OT</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Método</th>
+                            <th>Valor flete</th>
+                            <th>Valor retiro</th>
+                            <th>Valor recargo</th>
+                            <th>Valor neto</th>
+                            <th>Valor IVA</th>
+                            <th>Valor total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {(planilla?.filas || []).length === 0 ? (
+                            <tr><td colSpan={11} className="mx-empty">No hay cargos de cuenta corriente en ese mes.</td></tr>
+                        ) : planilla.filas.map((fila) => (
+                            <tr key={fila.idPago}>
+                                <td>{fila.cliente}</td>
+                                <td>{fila.numeroOT}</td>
+                                <td>{formatearFechaHora(fila.fecha)}</td>
+                                <td>{fila.estado}</td>
+                                <td>{fila.metodo}</td>
+                                <td>{formatearCLP(fila.flete)}</td>
+                                <td>{formatearCLP(fila.retiro)}</td>
+                                <td>{formatearCLP(fila.recargo)}</td>
+                                <td>{formatearCLP(fila.neto)}</td>
+                                <td>{formatearCLP(fila.iva)}</td>
+                                <td>{formatearCLP(fila.total)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    {planilla?.totales ? (
+                        <tfoot>
+                            <tr>
+                                <td colSpan={5}>Total del mes</td>
+                                <td>{formatearCLP(planilla.totales.flete)}</td>
+                                <td>{formatearCLP(planilla.totales.retiro)}</td>
+                                <td>{formatearCLP(planilla.totales.recargo)}</td>
+                                <td>{formatearCLP(planilla.totales.neto)}</td>
+                                <td>{formatearCLP(planilla.totales.iva)}</td>
+                                <td>{formatearCLP(planilla.totales.total)}</td>
+                            </tr>
+                        </tfoot>
+                    ) : null}
+                </table>
+            </div>
         </section>
     );
 }

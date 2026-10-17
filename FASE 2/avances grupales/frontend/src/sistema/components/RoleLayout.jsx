@@ -32,6 +32,7 @@ const iconos = {
     "Pronto despacho": "schedule_send",
     "Seguimiento": "route",
     "Pago de OT": "payments",
+    "Caja y retiro": "point_of_sale",
     "Tarifas": "sell",
     "Conductores y vehículos": "local_shipping",
     "Usuarios": "manage_accounts",

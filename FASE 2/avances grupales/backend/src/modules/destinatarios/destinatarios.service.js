@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.js";
-import { validarRut } from "../../common/utils/rut.js";
+import { formatearRut, validarRut } from "../../common/utils/rut.js";
+import { correoValido, normalizarTelefono } from "../../common/utils/contacto.js";
 import { asegurarClienteConCuenta } from "../clientes/clientes.service.js";
 
 export const obtenerDestinatarios = async () => {
@@ -38,7 +39,15 @@ export const crearDestinatario = async (datos) => {
         throw new Error("La comuna es obligatoria");
     }
 
-    const rutNormalizado = rut?.replace(/\./g, "").trim().toUpperCase() || null;
+    const rutNormalizado = rut?.trim() ? formatearRut(rut) : null;
+    const telefonoNormalizado = normalizarTelefono(telefono);
+    const correoNormalizado = correo?.trim().toLowerCase() || null;
+    if (telefono?.trim() && telefonoNormalizado === "") {
+        throw new Error("El teléfono debe incluir un código conocido, por ejemplo +569");
+    }
+    if (correoNormalizado && !correoValido(correoNormalizado)) {
+        throw new Error("El correo no tiene un formato válido");
+    }
     const quiereCuenta = [true, "true", "SI", "si", 1, "1"].includes(crearCuentaCorriente);
 
     if (rutNormalizado && !validarRut(rutNormalizado)) {
@@ -59,8 +68,8 @@ export const crearDestinatario = async (datos) => {
                 rut: rutNormalizado,
                 razonSocial: nombreRazonSocial.trim(),
                 direccion: direccion.trim(),
-                telefono: telefono?.trim() || null,
-                correo: correo?.trim() || null,
+                telefono: telefonoNormalizado,
+                correo: correoNormalizado,
                 idComuna: Number(idComuna),
                 crearCuentaCorriente: true,
                 limiteCredito: Number.isFinite(Number(limiteCredito))
@@ -70,13 +79,26 @@ export const crearDestinatario = async (datos) => {
             });
         }
 
+        if (rutNormalizado) {
+            const limpio = rutNormalizado.replace(/\./g, "").replace(/-/g, "");
+            const repetidos = await tx.$queryRaw`
+                SELECT idDestinatario
+                FROM destinatario
+                WHERE REPLACE(REPLACE(UPPER(rut), '.', ''), '-', '') = ${limpio}
+                LIMIT 1
+            `;
+            if (repetidos.length) {
+                throw new Error("Ya existe un destinatario con ese RUT");
+            }
+        }
+
         return tx.destinatario.create({
             data: {
                 rut: rutNormalizado,
                 nombreRazonSocial: nombreRazonSocial.trim(),
                 direccion: direccion.trim(),
-                telefono: telefono?.trim() || null,
-                correo: correo?.trim() || null,
+                telefono: telefonoNormalizado,
+                correo: correoNormalizado,
                 referencia: referencia?.trim() || null,
                 idComuna: Number(idComuna),
                 estado: true

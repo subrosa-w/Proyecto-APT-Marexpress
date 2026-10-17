@@ -578,3 +578,133 @@ export const finalizarRetornoWebpayCliente = async ({ tokenWs, tbkToken }) => {
     await abonarPagosCuenta(token, resultado);
     return redirigirCliente({ estado: "ok", cantidad: pagos.length });
 };
+
+const incluirCaja = {
+    pago: { orderBy: { idPago: "desc" }, take: 1 },
+    estado_ot: true,
+    recargo: { select: { monto: true } },
+    cliente: { select: { razonSocial: true } },
+    destinatario: { select: { nombreRazonSocial: true, telefono: true } },
+    comuna_orden_transporte_idComunaDestinoTocomuna: { select: { nombreComuna: true } }
+};
+
+const textoMedio = (valor) => ({
+    EFECTIVO: "Efectivo",
+    TARJETA: "Tarjeta",
+    TRANSFERENCIA: "Transferencia",
+    TRANSBANK: "Tarjeta",
+    CHEQUE: "Cheque",
+    CONTADO: "Contado",
+    POR_PAGAR: "Por pagar",
+    CUENTA_CORRIENTE: "Cuenta corriente"
+}[String(valor || "").toUpperCase()] || "");
+
+const ordenParaCaja = async (codigo) => {
+    const candidatos = candidatosCodigo(codigo);
+    if (!candidatos.length) {
+        throw new ErrorPago("Indica la orden de transporte");
+    }
+    const orden = await prisma.orden_transporte.findFirst({
+        where: { numeroOT: { in: candidatos } },
+        include: incluirCaja
+    });
+    if (!orden) {
+        throw new ErrorPago("No existe esa orden", 404);
+    }
+    return orden;
+};
+
+const resumenCaja = (orden) => {
+    const pago = orden.pago?.[0] || null;
+    const tipo = String(pago?.tipoPago || "").toUpperCase();
+    const estado = String(pago?.estadoPago || "").toUpperCase();
+    const anulada = ["ANULADA", "CANCELADA"].includes(String(orden.estado_ot?.nombreEstado || "").toUpperCase());
+    const medio = textoMedio(pago?.metodoPago) || textoMedio(tipo);
+    let etiqueta = "Sin registro";
+    let puedeCobrar = false;
+    let accion = "Esta orden no tiene un pago registrado.";
+    if (anulada) {
+        accion = "La orden está anulada. No se cobra ni se retira.";
+    } else if (tipo === "CUENTA_CORRIENTE") {
+        etiqueta = "Cuenta corriente";
+        accion = "No se cobra en caja. Sigue en el mes.";
+    } else if (estado === "PAGADO") {
+        etiqueta = "Pagada";
+        accion = "Puede retirar. No se cobra de nuevo.";
+    } else if (estado === "POR_CUADRAR") {
+        etiqueta = "Por cuadrar";
+        accion = "No se cobra en caja. Se da de baja al cuadrar el manifiesto.";
+    } else if (pago) {
+        etiqueta = "Impaga";
+        puedeCobrar = true;
+        accion = "Cobrar en efectivo, tarjeta o transferencia";
+    }
+    const recargo = (orden.recargo || []).reduce((suma, item) => suma + (Number(item.monto) || 0), 0);
+    return {
+        idOrden: orden.idOrden,
+        numeroOT: orden.numeroOT,
+        cliente: orden.cliente?.razonSocial || "",
+        destinatario: orden.destinatario?.nombreRazonSocial || orden.contactoDestino || "",
+        telefono: orden.telefonoDestino || orden.destinatario?.telefono || "",
+        direccion: orden.direccionDestino || "",
+        comuna: orden.comuna_orden_transporte_idComunaDestinoTocomuna?.nombreComuna || "",
+        flete: Number(orden.valorCargaAplicado) || 0,
+        retiro: Number(orden.valorRetiroAplicado) || 0,
+        recargo,
+        neto: Number(orden.valorNeto) || 0,
+        iva: Number(orden.valorIva) || 0,
+        total: Number(orden.valorTotal) || 0,
+        etiqueta,
+        medio: medio || "—",
+        puedeCobrar,
+        accion
+    };
+};
+
+export const consultarCaja = async (codigo) => resumenCaja(await ordenParaCaja(codigo));
+
+export const listarCajaBodega = async (idComuna) => {
+    const comuna = Number(idComuna);
+    const ordenes = await prisma.orden_transporte.findMany({
+        where: {
+            ...(Number.isInteger(comuna) && comuna > 0 ? { idComunaOrigen: comuna } : {}),
+            estado_ot: { nombreEstado: { notIn: ["ANULADA", "CANCELADA", "ENTREGADA", "ENTREGADO", "DEVUELTA"] } },
+            detalle_carga: { some: { bulto: { some: { estado: "EN_BODEGA" } } } }
+        },
+        include: incluirCaja,
+        orderBy: { fechaCreacion: "desc" },
+        take: 40
+    });
+    return ordenes.map(resumenCaja);
+};
+
+export const cobrarEnCaja = async ({ codigo, metodoPago, idUsuario }) => {
+    const metodo = String(metodoPago || "").trim().toUpperCase();
+    if (!["EFECTIVO", "TARJETA", "TRANSFERENCIA"].includes(metodo)) {
+        throw new ErrorPago("El medio debe ser efectivo, tarjeta o transferencia");
+    }
+    const orden = await ordenParaCaja(codigo);
+    const vista = resumenCaja(orden);
+    if (!vista.puedeCobrar) {
+        throw new ErrorPago(vista.accion || "Esta orden no se puede cobrar en caja");
+    }
+    const pago = orden.pago[0];
+    await prisma.pago.update({
+        where: { idPago: pago.idPago },
+        data: {
+            estadoPago: "PAGADO",
+            metodoPago: metodo,
+            tipoPago: pago.tipoPago || "CONTADO",
+            fechaPago: new Date(),
+            observacion: `Cobrado en caja: ${metodo}`.slice(0, 200)
+        }
+    });
+    await registrarEventoOt({
+        idOrden: orden.idOrden,
+        idEstado: orden.idEstado,
+        idUsuario,
+        descripcion: `Flete cobrado en caja por ${metodo}.`,
+        ubicacion: "Caja"
+    });
+    return consultarCaja(orden.numeroOT);
+};

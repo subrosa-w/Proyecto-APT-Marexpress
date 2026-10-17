@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
 import prisma from "../../config/prisma.js";
+import { formatearRut } from "../../common/utils/rut.js";
+import { correoValido, normalizarTelefono } from "../../common/utils/contacto.js";
 
 export const registrarCliente = async (datos = {}) => {
     const {
@@ -39,7 +41,10 @@ export const registrarCliente = async (datos = {}) => {
     const apellidoNormalizado = apellido.trim();
     const correoNormalizado = correo.trim().toLowerCase();
     const usuarioNormalizado = nombreUsuario.trim().toLowerCase();
-    const telefonoNormalizado = telefono?.trim() || null;
+    const telefonoNormalizado = normalizarTelefono(telefono);
+    if (telefono?.trim() && telefonoNormalizado === "") {
+        throw new Error("El teléfono debe incluir un código conocido, por ejemplo +569");
+    }
 
     const rutLimpio = rut
         .trim()
@@ -73,7 +78,7 @@ export const registrarCliente = async (datos = {}) => {
         throw new Error("El RUT no es válido");
     }
 
-    const rutNormalizado = `${cuerpo}-${dvIngresado}`;
+    const rutNormalizado = formatearRut(rutLimpio);
 
     if (
         nombreNormalizado.length > 100 ||
@@ -86,7 +91,7 @@ export const registrarCliente = async (datos = {}) => {
 
     if (
         correoNormalizado.length > 150 ||
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoNormalizado)
+        !correoValido(correoNormalizado)
     ) {
         throw new Error("El correo electrónico no es válido");
     }

@@ -11,6 +11,7 @@ import { api } from "../api.js";
 import Message from "../components/Message.jsx";
 import PanelMarca from "../components/PanelMarca.jsx";
 import Icono from "../../components/Icono.jsx";
+import { CampoCorreo, CampoRut, CampoTelefono } from "../entrada.jsx";
 
 // Campos del alta. Se limpian solo si se vuelve a entrar a la pantalla.
 const estadoInicial = {
@@ -27,6 +28,7 @@ const estadoInicial = {
 export default function RegistroPage() {
     const [formulario, setFormulario] = useState(estadoInicial);
     const [challengeId, setChallengeId] = useState(null);
+    const [mostrarCodigo, setMostrarCodigo] = useState(false);
     const [codigo, setCodigo] = useState("");
     const [cargando, setCargando] = useState(false);
     const [mensaje, setMensaje] = useState("");
@@ -71,8 +73,15 @@ export default function RegistroPage() {
             });
 
             setChallengeId(datos.challengeId);
-            aviso(datos.mensaje || "Revisa tu correo para verificar la cuenta", "success");
+            setMostrarCodigo(true);
+            aviso(`Enviamos el código a ${formulario.correo}. Revisa también el correo no deseado.`, "success");
         } catch (error) {
+            if (error.datos?.pendienteVerificacion) {
+                setChallengeId(error.datos.challengeId || null);
+                setMostrarCodigo(true);
+                aviso(error.datos.mensaje || "La cuenta está pendiente. Reenvía el código.", "info");
+                return;
+            }
             aviso(error.message, "error");
         } finally {
             setCargando(false);
@@ -80,6 +89,27 @@ export default function RegistroPage() {
     };
 
     // Confirma el código. Recién ahí la cuenta queda lista para iniciar sesión.
+    const reenviar = async () => {
+        setCargando(true);
+        aviso("");
+        try {
+            const datos = await api("/auth/registro/reenviar-otp", {
+                method: "POST",
+                body: JSON.stringify({
+                    identificador: formulario.correo.trim(),
+                    password: formulario.password
+                })
+            });
+            setChallengeId(datos.challengeId);
+            setMostrarCodigo(true);
+            aviso(`Enviamos otro código a ${formulario.correo}. Revisa también el correo no deseado.`, "success");
+        } catch (error) {
+            aviso(error.message, "error");
+        } finally {
+            setCargando(false);
+        }
+    };
+
     const verificar = async (event) => {
         event.preventDefault();
         setCargando(true);
@@ -135,7 +165,7 @@ export default function RegistroPage() {
                         <p className="text-sm text-gray-600">
                             <Link to="/acceso" className="font-bold text-verde hover:underline">Inicia sesión</Link> con tu usuario y contraseña.
                         </p>
-                    ) : !challengeId ? (
+                    ) : !mostrarCodigo ? (
                         <form onSubmit={registrar} className="flex flex-col gap-4">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="field">
@@ -165,40 +195,15 @@ export default function RegistroPage() {
                                 </div>
                                 <div className="field">
                                     <label htmlFor="rut">RUT personal *</label>
-                                    <input
-                                        id="rut"
-                                        value={formulario.rut}
-                                        onChange={(e) => actualizar("rut", e.target.value)}
-                                        placeholder="12.345.678-9"
-                                        title="RUT chileno con puntos y guion"
-                                        maxLength={12}
-                                        required
-                                    />
+                                    <CampoRut id="rut" value={formulario.rut} onChange={(valor) => actualizar("rut", valor)} required />
                                 </div>
                                 <div className="field">
                                     <label htmlFor="telefono">Teléfono</label>
-                                    <input
-                                        id="telefono"
-                                        type="tel"
-                                        placeholder="+56 9 1234 5678"
-                                        title="Teléfono chileno, con código de país"
-                                        maxLength={16}
-                                        value={formulario.telefono}
-                                        onChange={(e) => actualizar("telefono", e.target.value)}
-                                    />
+                                    <CampoTelefono id="telefono" value={formulario.telefono} onChange={(valor) => actualizar("telefono", valor)} />
                                 </div>
                                 <div className="field sm:col-span-2">
                                     <label htmlFor="correo">Correo electrónico *</label>
-                                    <input
-                                        id="correo"
-                                        type="email"
-                                        placeholder="nombre@correo.cl"
-                                        maxLength={150}
-                                        autoComplete="email"
-                                        value={formulario.correo}
-                                        onChange={(e) => actualizar("correo", e.target.value)}
-                                        required
-                                    />
+                                    <CampoCorreo id="correo" value={formulario.correo} onChange={(valor) => actualizar("correo", valor)} required />
                                 </div>
                                 <div className="field sm:col-span-2">
                                     <label htmlFor="nombreUsuario">Nombre de usuario *</label>
@@ -253,6 +258,9 @@ export default function RegistroPage() {
                             <button className="button-primary h-12 w-full text-base" type="submit" disabled={cargando}>
                                 {cargando ? "Creando cuenta..." : "Crear cuenta y verificar correo"}
                             </button>
+                            <button className="button-secondary w-full" type="button" disabled={cargando} onClick={reenviar}>
+                                Ya me registré: reenviar código
+                            </button>
                         </form>
                     ) : (
                         <form onSubmit={verificar} className="flex flex-col gap-4">
@@ -273,9 +281,13 @@ export default function RegistroPage() {
                                     required
                                 />
                             </div>
-                            <button className="button-primary h-12 w-full text-base" type="submit" disabled={cargando}>
+                            <button className="button-primary h-12 w-full text-base" type="submit" disabled={cargando || !challengeId}>
                                 {cargando ? "Verificando..." : "Verificar correo"}
                             </button>
+                            <button className="button-secondary w-full" type="button" disabled={cargando} onClick={reenviar}>
+                                Reenviar código
+                            </button>
+                            <p className="form-note">El código dura 5 minutos y llega a {formulario.correo}.</p>
                         </form>
                     )}
                 </div>

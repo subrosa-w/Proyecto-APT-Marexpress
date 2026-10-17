@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { api } from "../../api.js";
+import { PREFIJO_OT, codigoConPrefijo } from "../../entrada.jsx";
 import { useBodegaTrabajo } from "../../bodegaTrabajo.jsx";
 import Message from "../../components/Message.jsx";
 import {
@@ -68,7 +69,7 @@ export default function RecepcionPage() {
     const { idSucursal: idBodegaTrabajo, nombreBodega } = useBodegaTrabajo();
     const scanRef = useRef(null);
     const [searchParams] = useSearchParams();
-    const [numeroOT, setNumeroOT] = useState(searchParams.get("ot") || "");
+    const [numeroOT, setNumeroOT] = useState(searchParams.get("ot") || PREFIJO_OT);
     const [orden, setOrden] = useState(null);
     const [datos, setDatos] = useState(vacio);
     const [sucursales, setSucursales] = useState([]);
@@ -250,14 +251,15 @@ export default function RecepcionPage() {
                             value={numeroOT}
                             autoComplete="off"
                             autoFocus
-                            onChange={(e) => setNumeroOT(e.target.value)}
-                            placeholder="Solo el número, por ejemplo 65"
-                            title="Número de orden o código de la etiqueta"
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => setNumeroOT(codigoConPrefijo(e.target.value, PREFIJO_OT))}
+                            placeholder="OT-000065 o el código de la etiqueta"
+                            title="Ya incluye OT-. La pistola puede leer el código completo."
                             maxLength={40}
                         />
                     </div>
                     <div className="mx-form-actions">
-                        <button className="button-primary" type="submit" disabled={cargando}>
+                        <button className="button-primary" type="submit" disabled={cargando || numeroOT === PREFIJO_OT}>
                             {cargando ? "Buscando..." : "Buscar / escanear"}
                         </button>
                     </div>

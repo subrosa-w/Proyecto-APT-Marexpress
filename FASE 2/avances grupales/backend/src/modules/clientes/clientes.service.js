@@ -102,10 +102,27 @@ const crearCuentaSiCorresponde = async (tx, idCliente, datosCliente) => {
     });
 };
 
-export const asegurarClienteConCuenta = async (tx, datosCliente) => {
-    let cliente = await tx.cliente.findUnique({
-        where: { rut: datosCliente.rut }
+const clientePorRut = async (db, rut) => {
+    const limpio = String(rut || "").replace(/\./g, "").replace(/-/g, "").toUpperCase();
+    if (!limpio) {
+        return null;
+    }
+    const filas = await db.$queryRaw`
+        SELECT idCliente
+        FROM cliente
+        WHERE REPLACE(REPLACE(UPPER(rut), '.', ''), '-', '') = ${limpio}
+        LIMIT 1
+    `;
+    if (!filas.length) {
+        return null;
+    }
+    return db.cliente.findUnique({
+        where: { idCliente: Number(filas[0].idCliente) }
     });
+};
+
+export const asegurarClienteConCuenta = async (tx, datosCliente) => {
+    let cliente = await clientePorRut(tx, datosCliente.rut);
 
     if (!cliente) {
         cliente = await tx.cliente.create({
@@ -165,6 +182,12 @@ export const buscarClientes = async (termino) => {
 
 export const crearCliente = async (datosCliente) => {
     return prisma.$transaction(async (tx) => {
+        const yaExiste = await clientePorRut(tx, datosCliente.rut);
+        if (yaExiste) {
+            const error = new Error("Ya existe un cliente con ese RUT");
+            error.status = 409;
+            throw error;
+        }
         const cliente = await tx.cliente.create({
             data: {
                 rut: datosCliente.rut,
@@ -189,13 +212,7 @@ export const crearCliente = async (datosCliente) => {
     });
 };
 
-export const obtenerClientePorRut = async (rut) => {
-    return await prisma.cliente.findUnique({
-        where: {
-            rut: rut
-        }
-    });
-};
+export const obtenerClientePorRut = async (rut) => clientePorRut(prisma, rut);
 
 export const asignarTarifaCliente = async (idCliente, idTarifa) => {
     const tarifa = await prisma.tarifa.findUnique({
@@ -341,4 +358,147 @@ export const obtenerResumenCuentas = async ({ periodo = "mes", fecha } = {}) => 
         frecuentes: filas.filter((item) => item.ordenes >= minimo).sort((a, b) => b.ordenes - a.ordenes),
         posiblesBaja: filas.filter((item) => item.motivos.length > 0).sort(porNombre)
     };
+};
+
+const rangoDelMes = (mes) => {
+    const coincidencia = String(mes || "").match(/^(\d{4})-(\d{2})$/);
+    const anio = Number(coincidencia?.[1]);
+    const numero = Number(coincidencia?.[2]);
+    if (!coincidencia || numero < 1 || numero > 12) {
+        const error = new Error("Indica un mes válido");
+        error.status = 400;
+        throw error;
+    }
+    return {
+        desde: new Date(anio, numero - 1, 1),
+        hasta: new Date(anio, numero, 1),
+        mes: `${anio}-${String(numero).padStart(2, "0")}`
+    };
+};
+
+const numero = (valor) => Number(valor) || 0;
+
+const filaPlanilla = (pago) => {
+    const orden = pago.orden_transporte;
+    const recargo = (orden.recargo || []).reduce((suma, item) => suma + numero(item.monto), 0);
+    const flete = numero(orden.valorCargaAplicado);
+    const retiro = numero(orden.valorRetiroAplicado);
+    const neto = numero(orden.valorNeto);
+    const iva = numero(orden.valorIva);
+    const total = numero(orden.valorTotal);
+    const estado = String(pago.estadoPago || "").toUpperCase();
+    return {
+        idPago: pago.idPago,
+        idCuenta: pago.idCuenta,
+        cliente: orden.cliente?.razonSocial || "Sin nombre",
+        numeroOT: orden.numeroOT,
+        fecha: pago.fechaPago,
+        estado: estado === "PAGADO" ? "Pagada" : "Pendiente",
+        metodo: estado === "PAGADO" ? (pago.metodoPago || "Cuenta corriente") : "Cuenta corriente",
+        flete,
+        retiro,
+        recargo,
+        neto,
+        iva,
+        total
+    };
+};
+
+const pagosDelMes = (mes) => {
+    const rango = rangoDelMes(mes);
+    return prisma.pago.findMany({
+        where: {
+            tipoPago: "CUENTA_CORRIENTE",
+            fechaPago: { gte: rango.desde, lt: rango.hasta }
+        },
+        include: {
+            orden_transporte: {
+                include: {
+                    cliente: { select: { razonSocial: true } },
+                    recargo: { select: { monto: true } }
+                }
+            }
+        },
+        orderBy: { fechaPago: "asc" }
+    });
+};
+
+export const obtenerPlanillaMes = async (mes) => {
+    const rango = rangoDelMes(mes);
+    const pagos = await pagosDelMes(mes);
+    const filas = pagos.map(filaPlanilla);
+    const suma = (campo) => filas.reduce((total, fila) => total + fila[campo], 0);
+    return {
+        mes: rango.mes,
+        desde: rango.desde,
+        hasta: new Date(rango.hasta.getTime() - 1),
+        filas,
+        totales: {
+            flete: suma("flete"),
+            retiro: suma("retiro"),
+            recargo: suma("recargo"),
+            neto: suma("neto"),
+            iva: suma("iva"),
+            total: suma("total")
+        }
+    };
+};
+
+export const cerrarPlanillaMes = async (mes, idUsuario) => {
+    const rango = rangoDelMes(mes);
+    const pagos = (await pagosDelMes(mes)).filter((pago) => String(pago.estadoPago || "").toUpperCase() !== "PAGADO");
+    if (!pagos.length) {
+        return obtenerPlanillaMes(mes);
+    }
+    const porCuenta = new Map();
+    for (const pago of pagos) {
+        const idCuenta = Number(pago.idCuenta);
+        if (!porCuenta.has(idCuenta)) {
+            porCuenta.set(idCuenta, []);
+        }
+        porCuenta.get(idCuenta).push(pago);
+    }
+    await prisma.$transaction(async (tx) => {
+        for (const [idCuenta, lista] of porCuenta) {
+            let cuenta = null;
+            if (Number.isInteger(idCuenta) && idCuenta > 0) {
+                await tx.$queryRaw`SELECT idCuenta FROM cuenta_corriente WHERE idCuenta = ${idCuenta} FOR UPDATE`;
+                cuenta = await tx.cuenta_corriente.findUnique({ where: { idCuenta } });
+            }
+            let abonado = 0;
+            for (const pago of lista) {
+                const monto = numero(pago.monto);
+                abonado += monto;
+                await tx.pago.update({
+                    where: { idPago: pago.idPago },
+                    data: {
+                        estadoPago: "PAGADO",
+                        fechaPago: new Date(),
+                        metodoPago: pago.metodoPago || "TRANSFERENCIA",
+                        observacion: `Cierre ${rango.mes}`.slice(0, 200)
+                    }
+                });
+                if (cuenta) {
+                    await tx.movimiento_cuenta.create({
+                        data: {
+                            tipoMovimiento: "ABONO",
+                            monto,
+                            descripcion: `Cierre ${rango.mes} ${pago.orden_transporte.numeroOT}`.slice(0, 200),
+                            idCuenta,
+                            idOrden: pago.idOrden,
+                            idUsuario: Number(idUsuario)
+                        }
+                    });
+                }
+            }
+            if (cuenta) {
+                const saldo = numero(cuenta.saldoActual);
+                await tx.cuenta_corriente.update({
+                    where: { idCuenta },
+                    data: { saldoActual: Math.max(0, Number((saldo - abonado).toFixed(2))) }
+                });
+            }
+        }
+    });
+    return obtenerPlanillaMes(mes);
 };

@@ -250,7 +250,7 @@ export const bandejaSeguimiento = (orden) => {
     if (esRechazoEntrega(estado)) {
         return "rechazadas";
     }
-    if (["EN_TRANSITO", "EN_RUTA", "DESPACHADA"].includes(estado)) {
+    if (["EN_TRANSITO", "EN_RUTA", "DESPACHADA", "EN_REPARTO", "EN_DESTINO", "EN_ENTREGA"].includes(estado)) {
         return "enCurso";
     }
     if (["EN_BODEGA", "RECEPCIONADA", "EN_ORIGEN"].includes(estado)) {

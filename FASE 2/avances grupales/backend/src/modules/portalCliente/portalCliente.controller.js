@@ -9,7 +9,7 @@ import {
     obtenerContextoCliente,
     obtenerOrdenCliente
 } from "./portalCliente.service.js";
-import { ErrorPago, iniciarWebpayCliente } from "../pagos/pagos.service.js";
+import { solicitarDevolucionOrden } from "../ordenes/ordenesTransporte.service.js";
 
 /*
  * ============================================================
@@ -62,6 +62,27 @@ export const listarOrdenes = conContexto("obtener tus órdenes", async (_req, re
 export const obtenerOrden = conContexto("obtener la orden", async (req, res, contexto) => {
     const orden = await obtenerOrdenCliente(contexto, req.params.id);
     return res.json({ ok: true, orden });
+});
+
+export const pedirDevolucion = conContexto("pedir la devolución", async (req, res, contexto) => {
+    if (!contexto.cliente) {
+        throw new ErrorPortal("No hay una empresa asociada a tu usuario", 403);
+    }
+    try {
+        const orden = await solicitarDevolucionOrden({
+            idOrden: req.params.id,
+            idCliente: contexto.cliente.idCliente,
+            idUsuario: contexto.usuario.idUsuario,
+            motivo: cuerpo(req).motivo
+        });
+        return res.json({
+            ok: true,
+            mensaje: "Pediste la devolución. La carga vuelve a la oficina para entregártela.",
+            orden
+        });
+    } catch (error) {
+        throw new ErrorPortal(error.message || "No fue posible pedir la devolución", error.status || 400);
+    }
 });
 
 export const listarPendientes = conContexto("obtener tus pendientes de pago", async (_req, res, contexto) => {

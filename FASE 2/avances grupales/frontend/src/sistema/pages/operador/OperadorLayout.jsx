@@ -19,6 +19,7 @@ const titulos = {
     "/operador/despacho": ["OPERACIÓN", "Pronto despacho"],
     "/operador/seguimiento": ["OPERACIÓN", "Seguimiento"],
     "/operador/pagos": ["OPERACIÓN", "Pago de OT"],
+    "/operador/caja": ["OPERACIÓN", "Caja y retiro"],
     "/operador/comprobantes": ["OPERACIÓN", "Pago de OT"]
 };
 
@@ -33,7 +34,8 @@ const items = [
     { to: "/operador/manifiestos", label: "Manifiestos" },
     { to: "/operador/despacho", label: "Pronto despacho" },
     { to: "/operador/seguimiento", label: "Seguimiento" },
-    { to: "/operador/pagos", label: "Pago de OT" }
+    { to: "/operador/pagos", label: "Pago de OT" },
+    { to: "/operador/caja", label: "Caja y retiro" }
 ];
 
 export default function OperadorLayout() {

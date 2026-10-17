@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.js";
 import { candidatosCodigo } from "../../common/utils/codigoOt.js";
+import { registrarEventoOt } from "../ordenes/ordenesTransporte.service.js";
 
 const incluirManifiesto = {
     vehiculo: true,
@@ -38,10 +39,17 @@ const incluirManifiesto = {
             orden_transporte: {
                 include: {
                     cliente: {
-                        select: { razonSocial: true, rut: true }
+                        select: { razonSocial: true, rut: true, telefono: true }
                     },
                     destinatario: {
-                        select: { nombreRazonSocial: true }
+                        select: { nombreRazonSocial: true, telefono: true }
+                    },
+                    pago: {
+                        orderBy: { idPago: "desc" },
+                        take: 1
+                    },
+                    recargo: {
+                        select: { monto: true }
                     },
                     estado_ot: true,
                     comuna_orden_transporte_idComunaDestinoTocomuna: {
@@ -144,6 +152,10 @@ export const crearManifiesto = async (datos) => {
     const idVehiculo = idEntero(datos.idVehiculo, "Camión");
     const idConductor = idEntero(datos.idConductor, "Conductor");
     const idComuna = idEntero(datos.idComuna, "Ciudad");
+    const tipo = String(datos.tipo || "REPARTO").trim().toUpperCase();
+    if (!["REPARTO", "TRASPASO"].includes(tipo)) {
+        throw errorHttp("El manifiesto debe ser de reparto o de traspaso");
+    }
     const fechaSalidaProgramada = parseFecha(datos.fechaSalidaProgramada, "fecha de salida a ruta");
 
     const [vehiculo, conductor, comuna] = await Promise.all([
@@ -170,6 +182,7 @@ export const crearManifiesto = async (datos) => {
             data: {
                 numeroManifiesto: `TMP-${Date.now()}`,
                 estado: "PREPARACION",
+                tipo,
                 observacion: datos.observacion?.trim() || null,
                 idVehiculo,
                 idConductor,
@@ -635,13 +648,15 @@ export const sacarManifiestoARuta = async (idManifiesto, idUsuario) => {
                 data: { idEstado: estadoTransito.idEstado }
             });
             for (const idOrden of idsOrden) {
-                await tx.historial_ot.create({
-                    data: {
-                        descripcion: `OT despachada en manifiesto ${manifiesto.numeroManifiesto}`,
-                        idOrden,
-                        idEstado: estadoTransito.idEstado,
-                        idUsuario: Number(idUsuario)
-                    }
+                await registrarEventoOt({
+                    db: tx,
+                    idOrden,
+                    idEstado: estadoTransito.idEstado,
+                    idUsuario,
+                    descripcion: manifiesto.tipo === "TRASPASO"
+                        ? `Manifiesto ${manifiesto.numeroManifiesto} cerrado. La carga va en tránsito entre bodegas.`
+                        : `Manifiesto ${manifiesto.numeroManifiesto} cerrado. La carga va en tránsito.`,
+                    ubicacion: "En tránsito"
                 });
             }
         }
@@ -664,6 +679,133 @@ export const sacarManifiestoARuta = async (idManifiesto, idUsuario) => {
 
         return tx.manifiesto.findUnique({
             where: { idManifiesto: manifiesto.idManifiesto },
+            include: incluirManifiesto
+        });
+    });
+};
+
+const estadoBodega = async (db) => {
+    const existente = await db.estado_ot.findFirst({ where: { nombreEstado: "EN_BODEGA" } });
+    if (existente) {
+        return existente;
+    }
+    return db.estado_ot.create({
+        data: {
+            nombreEstado: "EN_BODEGA",
+            descripcion: "La carga está en bodega, en la oficina"
+        }
+    });
+};
+
+export const recepcionarTraspaso = async (idManifiesto, idUsuario) => {
+    const manifiesto = await obtenerManifiestoPorId(idManifiesto);
+    if (manifiesto.tipo !== "TRASPASO") {
+        throw errorHttp("Solo un traspaso se recepciona en la bodega de destino");
+    }
+    if (manifiesto.estado !== "EN_RUTA") {
+        throw errorHttp("El traspaso todavía no está en ruta o ya fue recepcionado");
+    }
+    const sucursal = await prisma.sucursal.findFirst({
+        where: { idComuna: manifiesto.idComuna, estado: true },
+        orderBy: { idSucursal: "asc" }
+    });
+    if (!sucursal) {
+        throw errorHttp("La ciudad de destino no tiene una sucursal activa");
+    }
+    const bultos = manifiesto.manifiesto_ot.flatMap((ot) =>
+        ot.manifiesto_carga.flatMap((carga) => carga.manifiesto_bulto)
+    );
+    const estado = await estadoBodega(prisma);
+    return prisma.$transaction(async (tx) => {
+        if (bultos.length) {
+            await tx.bulto.updateMany({
+                where: { idBulto: { in: bultos.map((item) => item.idBulto) } },
+                data: { estado: "EN_BODEGA", idSucursalActual: sucursal.idSucursal }
+            });
+        }
+        await tx.orden_transporte.updateMany({
+            where: { idOrden: { in: manifiesto.manifiesto_ot.map((item) => item.idOrden) } },
+            data: { idEstado: estado.idEstado }
+        });
+        for (const item of manifiesto.manifiesto_ot) {
+            await registrarEventoOt({
+                db: tx,
+                idOrden: item.idOrden,
+                idEstado: estado.idEstado,
+                idUsuario,
+                descripcion: `Carga recepcionada en ${sucursal.nombreSucursal}.`,
+                ubicacion: sucursal.nombreSucursal
+            });
+        }
+        return tx.manifiesto.update({
+            where: { idManifiesto: manifiesto.idManifiesto },
+            data: { estado: "FINALIZADO" },
+            include: incluirManifiesto
+        });
+    });
+};
+
+export const cuadrarManifiesto = async (idManifiesto, idUsuario, idsOrden, metodoPago) => {
+    const metodo = String(metodoPago || "").trim().toUpperCase();
+    if (!["EFECTIVO", "TARJETA", "TRANSFERENCIA"].includes(metodo)) {
+        throw errorHttp("Selecciona el método: efectivo, tarjeta o transferencia");
+    }
+    const manifiesto = await obtenerManifiestoPorId(idManifiesto);
+    if ((manifiesto.tipo || "REPARTO") === "TRASPASO") {
+        throw errorHttp("Un traspaso no cuadra pagos");
+    }
+    if (manifiesto.estado !== "EN_RUTA") {
+        throw errorHttp("El cuadre se hace cuando el manifiesto está en ruta");
+    }
+    const elegidos = [...new Set((idsOrden || []).map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))];
+    if (elegidos.length !== 1) {
+        throw errorHttp("Da de baja una orden a la vez");
+    }
+    const delViaje = new Set(manifiesto.manifiesto_ot.map((item) => item.idOrden));
+    if (!delViaje.has(elegidos[0])) {
+        throw errorHttp("Esa orden no va en este manifiesto");
+    }
+
+    return prisma.$transaction(async (tx) => {
+        const idOrden = elegidos[0];
+        const orden = manifiesto.manifiesto_ot.find((item) => item.idOrden === idOrden)?.orden_transporte;
+        const pago = await tx.pago.findFirst({
+            where: { idOrden },
+            orderBy: { idPago: "desc" }
+        });
+        const tipo = String(pago?.tipoPago || "").toUpperCase();
+        const estado = String(pago?.estadoPago || "").toUpperCase();
+        if (!pago || tipo === "CUENTA_CORRIENTE" || estado === "PAGADO" || !["POR_CUADRAR", "PENDIENTE"].includes(estado)) {
+            throw errorHttp("Esta orden no se da de baja en el manifiesto");
+        }
+        const nombreMetodo = { EFECTIVO: "efectivo", TARJETA: "tarjeta", TRANSFERENCIA: "transferencia" }[metodo];
+        await tx.pago.update({
+            where: { idPago: pago.idPago },
+            data: {
+                estadoPago: "PAGADO",
+                metodoPago: metodo,
+                fechaPago: new Date(),
+                observacion: `Cuadrado en ${manifiesto.numeroManifiesto}: ${nombreMetodo}`.slice(0, 200)
+            }
+        });
+        await registrarEventoOt({
+            db: tx,
+            idOrden,
+            idEstado: orden?.idEstado,
+            idUsuario,
+            descripcion: `Pago cuadrado en el manifiesto ${manifiesto.numeroManifiesto} por ${nombreMetodo}.`,
+            ubicacion: "Oficina"
+        });
+        const restantes = await tx.pago.count({
+            where: {
+                idOrden: { in: [...delViaje] },
+                tipoPago: { not: "CUENTA_CORRIENTE" },
+                estadoPago: { not: "PAGADO" }
+            }
+        });
+        return tx.manifiesto.update({
+            where: { idManifiesto: manifiesto.idManifiesto },
+            data: { estado: restantes === 0 ? "FINALIZADO" : "EN_RUTA" },
             include: incluirManifiesto
         });
     });

@@ -5,17 +5,18 @@
 import { useEffect, useState } from "react";
 
 export const ACTUALIZACION = {
-    id: "2026.10.16-1",
+    id: "2026.10.17-1",
     titulo: "Actualización del sistema",
-    fecha: "16 de octubre de 2026",
+    fecha: "17 de octubre de 2026",
     puntos: [
-        "En informes, el campo de la izquierda cambia según el filtro: día, semana, mes o año.",
-        "El informe de camiones se puede hacer de un camión o del total, y el Excel trae vueltas, manifiestos, órdenes, kilos, m³ y el peoneta de cada manifiesto.",
-        "En ese informe solo entran manifiestos cerrados: cada orden entregada o con su rechazo. No entran los que están en creación ni pendientes.",
-        "En el tarifario el retiro se ve como S, M y L. El precio base de un tramo es opcional y queda visible el historial de precios.",
-        "Cuenta corriente muestra clientes con deuda, al día, frecuentes y posibles dadas de baja.",
-        "Se quitó Facturación. El administrador puede crear órdenes de transporte desde su menú.",
-        "El inicio y los informes muestran el mes completo, con gráficos y el movimiento de cada día."
+        "Al crear un manifiesto se elige reparto o traspaso. El traspaso mueve la carga a otra bodega y no cobra.",
+        "Al cerrar el manifiesto se descarga el PDF: órdenes, destino, teléfono, dirección, bultos, kilos, m³, valor y pago.",
+        "El peoneta declara el cobro en la entrega. La orden queda por cuadrar, no pagada. En transferencia y tarjeta puede adjuntar el voucher.",
+        "En Caja y retiro, el operador o el administrador abre la orden y ve si está impaga, pagada, por cuadrar o en cuenta corriente antes de soltar la caja. Si está impaga, cobra en efectivo, tarjeta o transferencia.",
+        "El administrador recepciona el reparto en ruta, orden por orden, con el detalle del manifiesto. En cada una elige el método y la da de baja.",
+        "Al terminar ese cuadre se descarga otro PDF, con el total por método de pago.",
+        "La planilla del mes, solo del administrador, se descarga en Excel: cliente, orden, fecha, estado, método, flete, retiro, recargo, neto, IVA y total.",
+        "Manifiestos queda en tres pasos: el listado de la bodega, crear un viaje nuevo y recepcionar el que ya está en ruta."
     ]
 };
 

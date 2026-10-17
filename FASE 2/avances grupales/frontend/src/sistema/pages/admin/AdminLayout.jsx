@@ -20,6 +20,7 @@ const titulos = {
     "/administrador/bodega": ["OPERACIONES", "Bodega"],
     "/administrador/seguimiento": ["OPERACIONES", "Seguimiento"],
     "/administrador/cuentas": ["COMERCIAL", "Cuentas corrientes"],
+    "/administrador/caja": ["OPERACIONES", "Caja y retiro"],
     "/administrador/reportes": ["GESTIÓN", "Reportes"]
 };
 
@@ -36,6 +37,7 @@ const items = [
     { to: "/administrador/bodega", label: "Bodega" },
     { to: "/administrador/seguimiento", label: "Seguimiento" },
     { to: "/administrador/cuentas", label: "Cuenta corriente" },
+    { to: "/administrador/caja", label: "Caja y retiro" },
     { to: "/administrador/reportes", label: "Reportes" }
 ];
 

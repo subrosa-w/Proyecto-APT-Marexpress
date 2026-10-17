@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.js";
-import { validarRut } from "../../common/utils/rut.js";
+import { formatearRut, validarRut } from "../../common/utils/rut.js";
+import { normalizarTelefono } from "../../common/utils/contacto.js";
 import {
     crearTarifa as crearTarifario,
     obtenerTarifas as listarTarifarios
@@ -148,10 +149,7 @@ export const cambiarRolUsuario = async (idUsuario, idRol) => {
     });
 };
 
-const rutGuardado = (rut) => {
-    const limpio = String(rut || "").replace(/\./g, "").replace(/-/g, "").toUpperCase();
-    return `${limpio.slice(0, -1)}-${limpio.slice(-1)}`;
-};
+const rutGuardado = (rut) => formatearRut(rut);
 
 export const crearConductor = async (datos) => {
     const rut = String(datos?.rut || "").trim();
@@ -167,6 +165,21 @@ export const crearConductor = async (datos) => {
     if (!licencia) {
         throw errorDatos("La licencia es obligatoria");
     }
+    const telefono = normalizarTelefono(datos?.telefono);
+    if (String(datos?.telefono || "").trim() && telefono === "") {
+        throw errorDatos("El teléfono debe incluir un código conocido, por ejemplo +569");
+    }
+
+    const limpio = rut.replace(/\./g, "").replace(/-/g, "").toUpperCase();
+    const repetidos = await prisma.$queryRaw`
+        SELECT idConductor
+        FROM conductor
+        WHERE REPLACE(REPLACE(UPPER(rut), '.', ''), '-', '') = ${limpio}
+        LIMIT 1
+    `;
+    if (repetidos.length) {
+        throw errorDatos("Ya existe un conductor con ese RUT");
+    }
 
     try {
         return await prisma.conductor.create({
@@ -175,7 +188,7 @@ export const crearConductor = async (datos) => {
                 nombre,
                 apellido,
                 licencia: licencia.slice(0, 20),
-                telefono: String(datos?.telefono || "").trim() || null,
+                telefono,
                 vencimientoLicencia: datos?.vencimientoLicencia
                     ? new Date(datos.vencimientoLicencia)
                     : null

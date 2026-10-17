@@ -1,6 +1,7 @@
 import prisma from "../../config/prisma.js";
 import { candidatosCodigo } from "../../common/utils/codigoOt.js";
 import { registrarEventoOt } from "../ordenes/ordenesTransporte.service.js";
+import { guardarComprobante, leerComprobante } from "../../common/utils/comprobante.js";
 
 const validarUsuario = (valor) => {
     const idUsuario = Number(valor);
@@ -57,7 +58,9 @@ const mapearEntrega = (manifiestoOt) => {
                 resultadoEntrega: entrega.resultadoEntrega,
                 nombreReceptor: entrega.nombreReceptor,
                 observacion: entrega.observacion,
-                motivoResultado: entrega.motivoResultado
+                motivoResultado: entrega.motivoResultado,
+                idEntrega: entrega.idEntrega,
+                tieneComprobante: Boolean(entrega.evidencia)
             }
             : null
     };
@@ -69,6 +72,7 @@ const mapearManifiesto = (asignacion) => {
     return {
         idManifiesto: manifiesto.idManifiesto,
         numeroManifiesto: manifiesto.numeroManifiesto,
+        tipo: manifiesto.tipo || "REPARTO",
         estado: manifiesto.estado,
         observacion: manifiesto.observacion,
         fechaSalidaProgramada: manifiesto.fechaSalidaProgramada,
@@ -94,6 +98,7 @@ export const obtenerManifiestosPeoneta = async (idUsuario) => {
                 select: {
                     idManifiesto: true,
                     numeroManifiesto: true,
+                    tipo: true,
                     fechaSalidaProgramada: true,
                     fechaSalida: true,
                     estado: true,
@@ -115,11 +120,13 @@ export const obtenerManifiestosPeoneta = async (idUsuario) => {
                             idManifiestoOT: true,
                             entrega_ot: {
                                 select: {
+                                    idEntrega: true,
                                     fechaEntrega: true,
                                     resultadoEntrega: true,
                                     nombreReceptor: true,
                                     observacion: true,
-                                    motivoResultado: true
+                                    motivoResultado: true,
+                                    evidencia: true
                                 }
                             },
                             manifiesto_carga: {
@@ -212,7 +219,8 @@ export const registrarEntregaPeoneta = async ({
     resultado,
     observacion,
     nombreReceptor,
-    metodoPago
+    metodoPago,
+    comprobante
 }) => {
     const usuarioId = validarUsuario(idUsuario);
     const numero = String(numeroOT || "").trim();
@@ -245,6 +253,7 @@ export const registrarEntregaPeoneta = async ({
             }
         },
         include: {
+            manifiesto: { select: { tipo: true } },
             entrega_ot: true,
             manifiesto_carga: {
                 include: {
@@ -259,7 +268,8 @@ export const registrarEntregaPeoneta = async ({
             orden_transporte: {
                 include: {
                     pago: { orderBy: { idPago: "desc" }, take: 1 },
-                    estado_ot: true
+                    estado_ot: true,
+                    comuna_orden_transporte_idComunaDestinoTocomuna: { select: { nombreComuna: true } }
                 }
             }
         }
@@ -268,8 +278,20 @@ export const registrarEntregaPeoneta = async ({
     if (!asignacion) {
         throw errorDatos("Esa orden no está en un manifiesto tuyo", 404);
     }
+    if (asignacion.manifiesto?.tipo === "TRASPASO") {
+        throw errorDatos("Este viaje es un traspaso entre bodegas. No se entrega ni se cobra en la puerta.");
+    }
     if (asignacion.entrega_ot && asignacion.entrega_ot.resultadoEntrega !== "EN_PROCESO") {
         throw errorDatos("Esta orden ya tiene un resultado de entrega");
+    }
+    const estadoActual = String(asignacion.orden_transporte.estado_ot?.nombreEstado || "").toUpperCase();
+    if (estadoActual === "DEVOLUCION_SOLICITADA" || estadoActual === "DEVUELTA") {
+        throw errorDatos("El cliente pidió la devolución. Regresa la carga a la oficina, no la entregues.");
+    }
+    const enReparto = ["EN_REPARTO", "EN_DESTINO", "EN_ENTREGA"].includes(estadoActual)
+        || asignacion.entrega_ot?.resultadoEntrega === "EN_PROCESO";
+    if (!enReparto) {
+        throw errorDatos("Primero indica que la carga está en el camión para iniciar el reparto");
     }
 
     const piezas = [...new Map(
@@ -289,10 +311,11 @@ export const registrarEntregaPeoneta = async ({
     }
 
     const estado = await estadoDeResultado(prisma, resultadoLimpio);
+    const ciudad = asignacion.orden_transporte.comuna_orden_transporte_idComunaDestinoTocomuna?.nombreComuna || "Destino";
     const texto = (
         resultadoLimpio === "ENTREGADA"
-            ? `Entregada a ${receptor}. Pago ${metodo}.${nota ? ` ${nota}` : ""}`
-            : `Rechazada. ${nota}`
+            ? `Entrega realizada a ${receptor}`
+            : `Entrega rechazada. Motivo: ${nota}`
     ).slice(0, 250);
     const estadoBulto = resultadoLimpio === "ENTREGADA" ? "ENTREGADO" : "RECHAZADO";
 
@@ -357,15 +380,24 @@ export const registrarEntregaPeoneta = async ({
         if (resultadoLimpio === "ENTREGADA") {
             const pago = asignacion.orden_transporte.pago?.[0];
             if (pago && String(pago.estadoPago || "").toUpperCase() !== "PAGADO" && pago.tipoPago !== "CUENTA_CORRIENTE") {
+                const evidencia = comprobante?.datos
+                    ? guardarComprobante(comprobante)
+                    : null;
                 await tx.pago.update({
                     where: { idPago: pago.idPago },
                     data: {
                         metodoPago: metodo,
-                        estadoPago: "PAGADO",
-                        tipoPago: pago.tipoPago || "CONTADO",
-                        observacion: `Cobrado en destino: ${metodo}`.slice(0, 200)
+                        estadoPago: "POR_CUADRAR",
+                        tipoPago: pago.tipoPago || "POR_PAGAR",
+                        observacion: `Declarado en destino: ${metodo}`.slice(0, 200)
                     }
                 });
+                if (evidencia) {
+                    await tx.entrega_ot.update({
+                        where: { idEntrega: entrega.idEntrega },
+                        data: { evidencia }
+                    });
+                }
             }
         }
 
@@ -375,7 +407,7 @@ export const registrarEntregaPeoneta = async ({
             idEstado: estado.idEstado,
             idUsuario: usuarioId,
             descripcion: texto,
-            ubicacion: "Entrega en destino"
+            ubicacion: ciudad
         });
     });
     } catch (error) {
@@ -388,4 +420,142 @@ export const registrarEntregaPeoneta = async ({
     }
 
     return obtenerManifiestosPeoneta(usuarioId);
+};
+
+const estadoReparto = async (db) => {
+    const existente = await db.estado_ot.findFirst({
+        where: { nombreEstado: "EN_REPARTO" }
+    });
+    if (existente) {
+        return existente;
+    }
+    return db.estado_ot.create({
+        data: {
+            nombreEstado: "EN_REPARTO",
+            descripcion: "La carga está en el camión y va en reparto"
+        }
+    });
+};
+
+// El peoneta confirma que la carga ya va en el camión. Hasta ese momento la orden sigue en tránsito.
+export const iniciarRepartoPeoneta = async ({ idUsuario, numeroOT, idManifiesto }) => {
+    const usuarioId = validarUsuario(idUsuario);
+    const numero = String(numeroOT || "").trim();
+    const manifiestoId = Number(idManifiesto);
+    if (!numero && !Number.isInteger(manifiestoId)) {
+        throw errorDatos("Indica la orden o el manifiesto");
+    }
+
+    const asignaciones = await prisma.manifiesto_ot.findMany({
+        where: {
+            ...(numero ? { orden_transporte: { numeroOT: { in: candidatosCodigo(numero) } } } : {}),
+            ...(Number.isInteger(manifiestoId) && manifiestoId > 0 ? { idManifiesto: manifiestoId } : {}),
+            manifiesto: {
+                estado: { in: ["EN_RUTA", "EN_TRANSITO"] },
+                manifiesto_usuario: { some: { idUsuario: usuarioId } }
+            }
+        },
+        include: {
+            entrega_ot: true,
+            manifiesto_carga: {
+                include: {
+                    manifiesto_bulto: { select: { idBulto: true } }
+                }
+            },
+            orden_transporte: {
+                include: {
+                    estado_ot: true,
+                    comuna_orden_transporte_idComunaDestinoTocomuna: { select: { nombreComuna: true } }
+                }
+            }
+        }
+    });
+
+    if (!asignaciones.length) {
+        throw errorDatos("Esa orden no está en un manifiesto cerrado tuyo", 404);
+    }
+    const tipos = await prisma.manifiesto.findMany({
+        where: { idManifiesto: { in: [...new Set(asignaciones.map((item) => item.idManifiesto))] } },
+        select: { tipo: true }
+    });
+    if (tipos.some((item) => item.tipo === "TRASPASO")) {
+        throw errorDatos("Este viaje es un traspaso entre bodegas. No se inicia reparto.");
+    }
+
+    if (numero && asignaciones.some((item) => String(item.orden_transporte.estado_ot?.nombreEstado || "").toUpperCase() === "DEVOLUCION_SOLICITADA")) {
+        throw errorDatos("El cliente pidió la devolución. Regresa la carga a la oficina.");
+    }
+
+    const terminadas = ["ENTREGADA", "ENTREGADO", "RECHAZADA", "RECHAZADO", "ANULADA", "CANCELADA", "DEVOLUCION_SOLICITADA", "DEVUELTA"];
+    const pendientes = asignaciones.filter((item) => {
+        const nombre = String(item.orden_transporte.estado_ot?.nombreEstado || "").toUpperCase();
+        if (terminadas.includes(nombre) || nombre === "EN_REPARTO") {
+            return false;
+        }
+        return !item.entrega_ot || item.entrega_ot.resultadoEntrega === "EN_PROCESO";
+    });
+    if (!pendientes.length) {
+        throw errorDatos("Esas órdenes ya están en reparto o tienen un resultado");
+    }
+
+    const estado = await estadoReparto(prisma);
+    await prisma.$transaction(async (tx) => {
+        for (const asignacion of pendientes) {
+            await tx.orden_transporte.update({
+                where: { idOrden: asignacion.idOrden },
+                data: { idEstado: estado.idEstado }
+            });
+            const idsBulto = asignacion.manifiesto_carga.flatMap((carga) =>
+                carga.manifiesto_bulto.map((item) => item.idBulto)
+            );
+            if (idsBulto.length) {
+                await tx.bulto.updateMany({
+                    where: { idBulto: { in: idsBulto } },
+                    data: { estado: "EN_REPARTO" }
+                });
+            }
+            if (!asignacion.entrega_ot) {
+                await tx.entrega_ot.create({
+                    data: {
+                        resultadoEntrega: "EN_PROCESO",
+                        idOrden: asignacion.idOrden,
+                        idManifiestoOT: asignacion.idManifiestoOT,
+                        idUsuario: usuarioId
+                    }
+                });
+            }
+            const ciudad = asignacion.orden_transporte.comuna_orden_transporte_idComunaDestinoTocomuna?.nombreComuna || "Camión";
+            await registrarEventoOt({
+                db: tx,
+                idOrden: asignacion.idOrden,
+                idEstado: estado.idEstado,
+                idUsuario: usuarioId,
+                descripcion: "En reparto. La carga va en el camión.",
+                ubicacion: ciudad
+            });
+        }
+    });
+
+    return obtenerManifiestosPeoneta(usuarioId);
+};
+
+export const obtenerComprobanteEntrega = async ({ idUsuario, rol, idEntrega }) => {
+    const id = Number(idEntrega);
+    if (!Number.isInteger(id) || id <= 0) {
+        throw errorDatos("El comprobante no es válido", 404);
+    }
+    const entrega = await prisma.entrega_ot.findUnique({
+        where: { idEntrega: id },
+        select: { evidencia: true, idUsuario: true }
+    });
+    if (!entrega?.evidencia) {
+        throw errorDatos("Esta entrega no tiene comprobante", 404);
+    }
+    if (rol === "PEONETA" && Number(entrega.idUsuario) !== Number(idUsuario)) {
+        throw errorDatos("No puedes ver este comprobante", 403);
+    }
+    if (!["ADMINISTRADOR", "OPERADOR", "PEONETA"].includes(rol)) {
+        throw errorDatos("No puedes ver este comprobante", 403);
+    }
+    return leerComprobante(entrega.evidencia);
 };

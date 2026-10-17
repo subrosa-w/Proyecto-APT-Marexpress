@@ -13,6 +13,7 @@ import Message from "../../components/Message.jsx";
 import DocumentosEmision from "../../components/DocumentosEmision.jsx";
 import { useAuth } from "../../auth.jsx";
 import { formatos } from "../../formatos.js";
+import { CampoTelefono } from "../../entrada.jsx";
 
 // Deja la respuesta del API como arreglo, venga suelta o dentro de una clave.
 const extraerLista = (datos, clave) => {
@@ -236,7 +237,21 @@ export default function OrdenesListadoPage() {
         }
     };
 
-    // Pide confirmación. Anular no borra la OT: la deja cancelada y conserva el registro.
+    const confirmarDevolucion = async (orden) => {
+        setGuardando(true);
+        try {
+            const resultado = await api("/ordenes-transporte/devolver-cliente", {
+                method: "POST",
+                body: JSON.stringify({ idOrden: orden.idOrden })
+            });
+            aviso(resultado.mensaje, "success");
+            await cargar();
+        } catch (error) {
+            aviso(error.message, "error");
+        } finally {
+            setGuardando(false);
+        }
+    };
     const abrirAnular = (orden) => {
         if (ordenAnulada(orden)) {
             aviso("La orden ya está anulada.", "error");
@@ -442,6 +457,20 @@ export default function OrdenesListadoPage() {
                                                 >
                                                     Anular
                                                 </button>
+                                                {String(orden.estado_ot?.nombreEstado || "").toUpperCase() === "DEVOLUCION_SOLICITADA" ? (
+                                                    <button
+                                                        type="button"
+                                                        className="button-primary"
+                                                        disabled={guardando}
+                                                        onClick={(event) => {
+                                                            event.preventDefault();
+                                                            event.stopPropagation();
+                                                            confirmarDevolucion(orden);
+                                                        }}
+                                                    >
+                                                        Devolver al cliente
+                                                    </button>
+                                                ) : null}
                                             </div>
                                         </td>
                                     </tr>
@@ -556,11 +585,7 @@ export default function OrdenesListadoPage() {
                                     </div>
                                     <div className="field">
                                         <label>Teléfono origen</label>
-                                        <input
-                                            {...formatos.telefono}
-                                            value={formulario.telefonoOrigen}
-                                            onChange={(event) => setCampo("telefonoOrigen", event.target.value)}
-                                        />
+                                        <CampoTelefono value={formulario.telefonoOrigen} onChange={(valor) => setCampo("telefonoOrigen", valor)} />
                                     </div>
                                     <div className="field">
                                         <label>Destinatario</label>
@@ -610,11 +635,7 @@ export default function OrdenesListadoPage() {
                                     </div>
                                     <div className="field">
                                         <label>Teléfono destino</label>
-                                        <input
-                                            {...formatos.telefono}
-                                            value={formulario.telefonoDestino}
-                                            onChange={(event) => setCampo("telefonoDestino", event.target.value)}
-                                        />
+                                        <CampoTelefono value={formulario.telefonoDestino} onChange={(valor) => setCampo("telefonoDestino", valor)} />
                                     </div>
                                     <div className="field">
                                         <label>Referencia</label>

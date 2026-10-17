@@ -27,6 +27,9 @@ env/
 __pycache__/
 *.py[cod]
 
+# Comprobantes cifrados de transferencia y tarjeta
+backend/storage/
+
 # Archivos generados
 backend/generated/prisma/
 dist/

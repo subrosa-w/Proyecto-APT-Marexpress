@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { enviarCorreo } from "../../config/correo.js";
@@ -21,6 +22,7 @@ const rutaLogo = path.resolve(
     __dirname,
     "../../assets/logo-marexpress.png"
 );
+const hayLogo = fs.existsSync(rutaLogo);
 
 // Colores corporativos MAREXPRESS
 const AZUL = "#087DBD";
@@ -130,7 +132,7 @@ Por favor, no respondas a este mensaje.
     "
 >
 
-<img
+${hayLogo ? `<img
     src="cid:logo-marexpress"
     width="280"
     alt="MAREXPRESS - Logística & Distribución"
@@ -142,7 +144,7 @@ Por favor, no respondas a este mensaje.
         margin:0 auto;
         border:0;
     "
->
+>` : `<p style="margin:0;color:${AZUL_OSCURO};font-size:22px;font-weight:800;letter-spacing:0.04em;">MAREXPRESS</p>`}
 
 </td>
 </tr>
@@ -518,12 +520,12 @@ Por favor, no respondas a este mensaje.
         texto,
         html,
 
-        attachments: [
-            {
+        attachments: hayLogo
+            ? [{
                 filename: "logo-marexpress.png",
                 path: rutaLogo,
                 cid: "logo-marexpress"
-            }
-        ]
+            }]
+            : []
     });
 };

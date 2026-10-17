@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { etiquetaComuna } from "../utils.js";
 import { formatos } from "../formatos.js";
+import { CampoCorreo, CampoRut, CampoTelefono } from "../entrada.jsx";
 
 const vacio = {
     rut: "",
@@ -71,12 +72,7 @@ export default function AltaClienteForm({ comunas, onCreado, onCancelar, ocultar
             <div className="ot-grid">
                 <div className="field">
                     <label>RUT *</label>
-                    <input
-                        {...formatos.rut}
-                        value={formulario.rut}
-                        onChange={(e) => setCampo("rut", e.target.value)}
-                        required
-                    />
+                    <CampoRut value={formulario.rut} onChange={(valor) => setCampo("rut", valor)} required />
                 </div>
                 <div className="field">
                     <label>Razón social *</label>
@@ -129,19 +125,11 @@ export default function AltaClienteForm({ comunas, onCreado, onCancelar, ocultar
                 </div>
                 <div className="field">
                     <label>Teléfono</label>
-                    <input
-                        {...formatos.telefono}
-                        value={formulario.telefono}
-                        onChange={(e) => setCampo("telefono", e.target.value)}
-                    />
+                    <CampoTelefono value={formulario.telefono} onChange={(valor) => setCampo("telefono", valor)} />
                 </div>
                 <div className="field">
                     <label>Correo</label>
-                    <input
-                        {...formatos.correo}
-                        value={formulario.correo}
-                        onChange={(e) => setCampo("correo", e.target.value)}
-                    />
+                    <CampoCorreo value={formulario.correo} onChange={(valor) => setCampo("correo", valor)} />
                 </div>
                 <div className="field">
                     <label>Tarifario</label>

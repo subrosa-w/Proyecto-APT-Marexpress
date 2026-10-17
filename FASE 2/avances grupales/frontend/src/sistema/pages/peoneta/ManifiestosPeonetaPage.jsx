@@ -3,7 +3,7 @@
   RUTAS: /peoneta, /peoneta/manifiestos, /peoneta/entregas, /peoneta/historial
   CSS: admin-card, mx-table
   API: /api/peoneta
-  FUNCIONES: muestra los manifiestos asignados y registra entrega o rechazo.
+  FUNCIONES: muestra los manifiestos asignados. El peoneta inicia el reparto cuando la carga va en el camión y registra la entrega o el rechazo con su motivo.
   La misma vista cambia de lista según la dirección.
 */
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -44,6 +44,37 @@ const manifiestoEntregado = (item) => {
 
 // En preparación todavía no salió a ruta, así que el peoneta no debe verlo.
 const manifiestoEnPreparacion = (item) => String(item?.estado || "").toUpperCase() === "PREPARACION";
+
+// La etapa visible sigue el recorrido real: bodega, manifiesto cerrado, camión y entrega.
+const faseEntrega = (entrega) => {
+    const resultado = String(entrega?.resultado?.resultadoEntrega || "").toUpperCase();
+    if (resultado === "RECHAZADA") {
+        return "rechazada";
+    }
+    if (resultado === "ENTREGADA") {
+        return "entregada";
+    }
+    const estado = String(entrega?.estado || "").toUpperCase();
+    if (["EN_REPARTO", "EN_DESTINO", "EN_ENTREGA", "ENTREGA_PARCIAL"].includes(estado)) {
+        return "reparto";
+    }
+    if (estado === "DEVOLUCION_SOLICITADA") {
+        return "devolucion";
+    }
+    if (["EN_TRANSITO", "EN_RUTA", "DESPACHADA"].includes(estado)) {
+        return "transito";
+    }
+    return "oficina";
+};
+
+const textoFase = {
+    oficina: "En oficina, en bodega",
+    transito: "En tránsito, manifiesto cerrado",
+    reparto: "En reparto, en el camión",
+    devolucion: "Devolución pedida por el cliente",
+    entregada: "Entregada",
+    rechazada: "Rechazada"
+};
 
 // Traduce el código de pago a un texto para la ficha de la entrega.
 const etiquetaPago = (valor) => {
@@ -141,7 +172,8 @@ export default function ManifiestosPeonetaPage() {
         return lista;
     }, [activo, modo]);
 
-    const pendientes = (activo?.entregas || []).filter((item) => !item.resultado).length;
+    const titulo = modo === "historial" ? "Entregados" : modo === "entregas" ? "Completadas" : "Mi ruta";
+    const listasParaReparto = (activo?.entregas || []).filter((item) => ["oficina", "transito"].includes(faseEntrega(item)));
 
     // Cada OT tiene su propio formulario para no mezclar receptor ni observación.
     const setCampo = (numeroOT, campo, valor) => {
@@ -164,7 +196,8 @@ export default function ManifiestosPeonetaPage() {
                     resultado: formulario.resultado,
                     nombreReceptor: formulario.nombreReceptor,
                     observacion: formulario.observacion,
-                    metodoPago: formulario.resultado === "ENTREGADA" ? formulario.metodoPago : null
+                    metodoPago: formulario.resultado === "ENTREGADA" ? formulario.metodoPago : null,
+                    comprobante: formulario.comprobante || null
                 })
             });
             setManifiestos(resultado?.data || []);
@@ -178,7 +211,26 @@ export default function ManifiestosPeonetaPage() {
         }
     };
 
-    const titulo = modo === "historial" ? "Entregados" : modo === "entregas" ? "Completadas" : "Mi ruta";
+    // Confirma que la carga va en el camión. Puede ser una orden o todo el manifiesto.
+    const iniciarReparto = async (numeroOT) => {
+        setGuardando(numeroOT || "manifiesto");
+        try {
+            const resultado = await api("/peoneta/reparto", {
+                method: "POST",
+                body: JSON.stringify(numeroOT ? { numeroOT } : { idManifiesto: activo.idManifiesto })
+            });
+            setManifiestos(resultado?.data || []);
+            setMensaje(resultado.mensaje || "Reparto iniciado.");
+            setTipo("success");
+        } catch (error) {
+            setMensaje(error.message);
+            setTipo("error");
+        } finally {
+            setGuardando("");
+        }
+    };
+
+    const pendientes = (activo?.entregas || []).filter((item) => !item.resultado).length;
 
     return (
         <>
@@ -195,7 +247,7 @@ export default function ManifiestosPeonetaPage() {
                         ? "Aquí aparecen los manifiestos en los que todas las órdenes ya fueron entregadas."
                         : modo === "entregas"
                             ? "Aquí aparecen los manifiestos terminados y las órdenes que ya fueron entregadas o rechazadas."
-                            : "Solo ves los manifiestos que te asignaron: la carga, el destino y el resultado de cada entrega."}
+                            : "En oficina la carga está en bodega. Al cerrar el manifiesto pasa a tránsito. Cuando confirmas que va en el camión queda en reparto, y al entregarla o rechazarla se cierra con el resultado."}
                 </p>
                 <div className="mx-table-wrap">
                     <table className="mx-table">
@@ -265,6 +317,21 @@ export default function ManifiestosPeonetaPage() {
                         <p><span>Pendientes</span><strong>{pendientes} de {activo.entregas?.length || 0}</strong></p>
                     </div>
                     {activo.observacion ? <p className="mx-note">{activo.observacion}</p> : null}
+                    {activo.tipo === "TRASPASO" ? (
+                        <p className="mx-note">Este viaje es un traspaso entre bodegas. No se cobra ni se entrega en la puerta. La bodega de destino recepciona la carga.</p>
+                    ) : null}
+                    {modo === "ruta" && activo.tipo !== "TRASPASO" && listasParaReparto.length > 0 ? (
+                        <div className="mx-form-actions">
+                            <button
+                                type="button"
+                                className="button-primary"
+                                disabled={guardando === "manifiesto"}
+                                onClick={() => iniciarReparto()}
+                            >
+                                {guardando === "manifiesto" ? "Guardando..." : "Iniciar reparto del manifiesto"}
+                            </button>
+                        </div>
+                    ) : null}
 
                     {entregas.length === 0 ? (
                         <p className="mx-note">
@@ -275,6 +342,8 @@ export default function ManifiestosPeonetaPage() {
                     ) : entregas.map((entrega) => {
                         const formulario = { ...vacio, ...forms[entrega.numeroOT] };
                         const abierta = otAbierta === entrega.numeroOT;
+                        const fase = faseEntrega(entrega);
+                        const motivo = entrega.resultado?.motivoResultado || entrega.resultado?.observacion || "";
                         return (
                             <article key={entrega.numeroOT} className="admin-card" style={{ marginTop: 12 }}>
                                 <button
@@ -283,7 +352,7 @@ export default function ManifiestosPeonetaPage() {
                                     onClick={() => setOtAbierta(abierta ? null : entrega.numeroOT)}
                                 >
                                     <div>
-                                        <span>{entrega.resultado?.resultadoEntrega || "PENDIENTE"}</span>
+                                        <span>{textoFase[fase]}</span>
                                         <h2>{entrega.numeroOT}</h2>
                                     </div>
                                     <span>{abierta ? "Ocultar" : "Ver detalle"}</span>
@@ -324,14 +393,19 @@ export default function ManifiestosPeonetaPage() {
                                         </tbody>
                                     </table>
                                 </div>
-                                {entrega.resultado ? (
+                                {fase === "devolucion" ? (
+                                    <p className="mx-note">El cliente pidió la devolución. No la entregues. Regresa la carga a la oficina.</p>
+                                ) : entrega.resultado ? (
                                     <div className="mx-ciudad-info">
-                                        <p><span>Resultado</span><strong>{entrega.resultado.resultadoEntrega}</strong></p>
+                                        <p><span>Resultado</span><strong>{textoFase[fase]}</strong></p>
                                         <p><span>Receptor</span><strong>{entrega.resultado.nombreReceptor || "—"}</strong></p>
                                         <p><span>Fecha</span><strong>{formatearFechaHora(entrega.resultado.fechaEntrega)}</strong></p>
-                                        <p><span>Comentario</span><strong>{entrega.resultado.observacion || entrega.resultado.motivoResultado || "—"}</strong></p>
+                                        <p>
+                                            <span>{fase === "rechazada" ? "Motivo del rechazo" : "Comentario"}</span>
+                                            <strong>{motivo || "—"}</strong>
+                                        </p>
                                     </div>
-                                ) : (
+                                ) : activo.tipo === "TRASPASO" ? null : fase === "reparto" ? (
                                     <form className="admin-grid-2" onSubmit={(event) => registrar(event, entrega)}>
                                         <div className="field">
                                             <label>Resultado *</label>
@@ -354,7 +428,7 @@ export default function ManifiestosPeonetaPage() {
                                         </div>
                                         {formulario.resultado === "ENTREGADA" ? (
                                             <div className="field">
-                                                <label>Método de pago *</label>
+                                                <label>Método declarado *</label>
                                                 <select
                                                     value={formulario.metodoPago}
                                                     onChange={(event) => setCampo(entrega.numeroOT, "metodoPago", event.target.value)}
@@ -364,6 +438,30 @@ export default function ManifiestosPeonetaPage() {
                                                     <option value="TRANSBANK">Transbank</option>
                                                     <option value="CHEQUE">Cheque</option>
                                                 </select>
+                                                <p className="mx-note">Esto no deja la orden pagada. Queda por cuadrar hasta que el administrador revise el manifiesto.</p>
+                                            </div>
+                                        ) : null}
+                                        {formulario.resultado === "ENTREGADA" && ["TRANSFERENCIA", "TRANSBANK"].includes(formulario.metodoPago) ? (
+                                            <div className="field">
+                                                <label>Voucher</label>
+                                                <input
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                                                    onChange={(event) => {
+                                                        const archivo = event.target.files?.[0];
+                                                        if (!archivo) {
+                                                            setCampo(entrega.numeroOT, "comprobante", null);
+                                                            return;
+                                                        }
+                                                        const lector = new FileReader();
+                                                        lector.onload = () => setCampo(entrega.numeroOT, "comprobante", {
+                                                            tipo: archivo.type,
+                                                            datos: lector.result
+                                                        });
+                                                        lector.readAsDataURL(archivo);
+                                                    }}
+                                                />
+                                                <p className="mx-note">Foto o PDF de hasta 2 MB. Queda cifrado. En efectivo no se pide.</p>
                                             </div>
                                         ) : null}
                                         <div className="field">
@@ -382,6 +480,18 @@ export default function ManifiestosPeonetaPage() {
                                             </button>
                                         </div>
                                     </form>
+                                ) : (
+                                    <div className="mx-form-actions">
+                                        <p className="mx-note">Confirma que la carga va en el camión. Después puedes registrar la entrega o el rechazo con su motivo.</p>
+                                        <button
+                                            type="button"
+                                            className="button-primary"
+                                            disabled={guardando === entrega.numeroOT}
+                                            onClick={() => iniciarReparto(entrega.numeroOT)}
+                                        >
+                                            {guardando === entrega.numeroOT ? "Guardando..." : "La carga está en el camión"}
+                                        </button>
+                                    </div>
                                 )}
                                 </>
                                 ) : null}

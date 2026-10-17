@@ -101,6 +101,7 @@
   /* ---------- Botones ---------- */
   .button-primary,
   .button-secondary,
+  .button-marino,
   .button-danger {
     @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0;
   }
@@ -109,6 +110,9 @@
   }
   .button-secondary {
     @apply border border-borde bg-white text-marino shadow-sm hover:border-azul/40 hover:bg-celeste-suave;
+  }
+  .button-marino {
+    @apply bg-marino text-white shadow-sm hover:bg-marino-oscuro;
   }
   .button-danger {
     @apply border border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:bg-red-100;
@@ -122,6 +126,7 @@
   }
   .mx-table .button-primary,
   .mx-table .button-secondary,
+  .mx-table .button-marino,
   .mx-table .button-danger {
     @apply min-h-8 whitespace-nowrap px-2.5 text-xs;
   }
@@ -419,6 +424,15 @@
   }
   .ot-etiqueta-destino {
     @apply text-center text-sm font-extrabold uppercase tracking-wide;
+  }
+  .mx-telefono {
+    @apply flex items-center gap-2;
+  }
+  .mx-contenido .mx-telefono select {
+    @apply w-40 shrink-0;
+  }
+  .mx-telefono input {
+    @apply min-w-0 flex-1;
   }
   .ot-etiqueta-cuerpo {
     @apply grid grid-cols-2 gap-x-2 gap-y-0.5;

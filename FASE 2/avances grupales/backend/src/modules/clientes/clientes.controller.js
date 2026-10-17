@@ -1,4 +1,4 @@
-import { obtenerClientes, buscarClientes, crearCliente , obtenerCuentaCorrientePorCliente, asignarTarifaCliente, obtenerResumenCuentas } from "./clientes.service.js";
+import { obtenerClientes, buscarClientes, crearCliente , obtenerCuentaCorrientePorCliente, asignarTarifaCliente, obtenerResumenCuentas, obtenerPlanillaMes, cerrarPlanillaMes } from "./clientes.service.js";
 
 export const listarClientes = async (req, res) => {
     try {
@@ -60,6 +60,28 @@ export const listarResumenCuentas = async (req, res) => {
         console.error("Error al resumir cuentas corrientes:", error);
         res.status(500).json({
             mensaje: "No fue posible cargar las cuentas corrientes"
+        });
+    }
+};
+
+export const verPlanillaMes = async (req, res) => {
+    try {
+        const planilla = await obtenerPlanillaMes(req.query.mes);
+        res.json({ ok: true, planilla });
+    } catch (error) {
+        res.status(error.status || 500).json({
+            mensaje: error.message || "No fue posible armar la planilla"
+        });
+    }
+};
+
+export const cerrarMesCuenta = async (req, res) => {
+    try {
+        const planilla = await cerrarPlanillaMes(req.body?.mes, req.user?.idUsuario);
+        res.json({ ok: true, mensaje: "Cierre del mes registrado.", planilla });
+    } catch (error) {
+        res.status(error.status || 500).json({
+            mensaje: error.message || "No fue posible cerrar el mes"
         });
     }
 };

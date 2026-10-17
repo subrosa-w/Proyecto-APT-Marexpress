@@ -9,6 +9,13 @@ const PROPOSITOS_PERMITIDOS = [
     "ACCESO_SENSIBLE"
 ];
 
+// El registro público guarda CLIENTE NORMAL. Las cuentas antiguas pueden decir CLIENTE.
+export const ROLES_REGISTRO_CLIENTE = [
+    "CLIENTE",
+    "CLIENTE NORMAL",
+    "CLIENTE CUENTA CORRIENTE"
+];
+
 const DURACION_OTP_MS = 5 * 60 * 1000;
 const MAX_INTENTOS = 5;
 
@@ -73,7 +80,7 @@ const usuarioPuedeVerificar = (usuario, proposito) => {
             usuario.estado === false &&
             usuario.registroPendiente === true &&
             usuario.correoVerificadoEn === null &&
-            usuario.rol?.nombreRol === "CLIENTE"
+            ROLES_REGISTRO_CLIENTE.includes(usuario.rol?.nombreRol)
         );
     }
 
@@ -192,7 +199,11 @@ export const generarCodigoAcceso = async (
             codigo,
             nombre: resultado.nombre
         });
-    } catch {
+    } catch (error) {
+        console.error(
+            "No se pudo enviar el correo de verificación:",
+            error?.message || error
+        );
         // En desarrollo el código ya está en consola: el desafío sigue válido.
         if (otpEnConsola()) {
             console.warn(
@@ -418,7 +429,7 @@ export const validarCodigoAcceso = async (
                     registroPendiente: true,
                     correoVerificadoEn: null,
                     rol: {
-                        nombreRol: "CLIENTE"
+                        nombreRol: { in: ROLES_REGISTRO_CLIENTE }
                     }
                 },
                 data: {

@@ -186,6 +186,7 @@ model manifiesto {
   fechaSalidaProgramada   DateTime?            @db.DateTime(0)
   observacion             String?              @db.VarChar(250)
   estado                  String               @default("PREPARACION") @db.VarChar(50)
+  tipo                    String               @default("REPARTO") @db.VarChar(20)
   idVehiculo              Int?
   idConductor             Int?
   idComuna                Int?

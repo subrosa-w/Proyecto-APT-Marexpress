@@ -5,7 +5,10 @@ import {
     finalizarRetornoWebpay,
     finalizarRetornoWebpayCliente,
     iniciarWebpayOt,
-    listarOtsPendientesPago
+    listarOtsPendientesPago,
+    consultarCaja,
+    cobrarEnCaja,
+    listarCajaBodega
 } from "./pagos.service.js";
 
 const cuerpo = (req) =>
@@ -98,5 +101,36 @@ export const retornoWebpayCliente = async (req, res) => {
         console.error("Error al confirmar Webpay del cliente:", error);
         const frontend = String(process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
         return res.redirect(302, `${frontend}/cliente/pagos?estado=error`);
+    }
+};
+
+export const listarCaja = async (req, res) => {
+    try {
+        const ordenes = await listarCajaBodega(req.query.idComuna);
+        return res.json({ ok: true, ordenes });
+    } catch (error) {
+        return responderError(res, error);
+    }
+};
+
+export const verCaja = async (req, res) => {
+    try {
+        const orden = await consultarCaja(req.params.codigo);
+        return res.json({ ok: true, orden });
+    } catch (error) {
+        return responderError(res, error);
+    }
+};
+
+export const cobrarCaja = async (req, res) => {
+    try {
+        const orden = await cobrarEnCaja({
+            codigo: cuerpo(req).numeroOT,
+            metodoPago: cuerpo(req).metodoPago,
+            idUsuario: req.user?.idUsuario
+        });
+        return res.json({ ok: true, mensaje: `${orden.numeroOT} quedó pagada en caja.`, orden });
+    } catch (error) {
+        return responderError(res, error);
     }
 };

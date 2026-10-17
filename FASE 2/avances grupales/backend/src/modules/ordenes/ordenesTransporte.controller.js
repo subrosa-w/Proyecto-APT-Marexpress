@@ -2,11 +2,13 @@ import {
     obtenerOrdenesTransporte,
     obtenerOrdenTransportePorId,
     obtenerOrdenTransportePorNumero,
+    consultaPublicaSeguimiento,
     crearOrdenTransporte,
     calcularOrdenTransporte,
     actualizarOrdenTransporte,
     anularOrdenTransporte,
     reingresarOtRechazadaEnBodega,
+    confirmarDevolucionCliente,
     listarEstadosOt,
     cambiarEstadoOrdenTransporte
 } from "./ordenesTransporte.service.js";
@@ -73,6 +75,23 @@ export const obtenerDetalleOrdenTransporte = async (req, res) => {
 
         res.status(500).json({
             mensaje: "Error interno al obtener la orden de transporte"
+        });
+    }
+};
+
+export const consultaPublicaSeguimientoController = async (req, res) => {
+    try {
+        const consulta = await consultaPublicaSeguimiento(req.params.codigo);
+        if (!consulta) {
+            return res.status(404).json({
+                mensaje: "No encontramos esa orden de transporte"
+            });
+        }
+        res.json(consulta);
+    } catch (error) {
+        console.error("Error en seguimiento público:", error.message);
+        res.status(500).json({
+            mensaje: "No se pudo consultar el seguimiento"
         });
     }
 };
@@ -289,6 +308,30 @@ export const anularOrdenTransporteController = async (req, res) => {
         console.error("Error al anular la orden de transporte:", error);
         res.status(error.status || 400).json({
             mensaje: error.message || "Error interno al anular la orden de transporte"
+        });
+    }
+};
+
+export const confirmarDevolucionController = async (req, res) => {
+    try {
+        const orden = await confirmarDevolucionCliente({
+            codigo: req.body?.codigo || req.body?.numeroOT,
+            idOrden: req.body?.idOrden,
+            idUsuario: req.user?.idUsuario
+        });
+        res.json({
+            ok: true,
+            mensaje: `La carga de ${orden.numeroOT} fue devuelta al cliente.`,
+            orden: prepararOrden(orden)
+        });
+    } catch (error) {
+        const status = error.status || 400;
+        if (status >= 500) {
+            console.error("Error al devolver la carga al cliente:", error.message);
+        }
+        res.status(status).json({
+            ok: false,
+            mensaje: error.message || "No fue posible registrar la devolución"
         });
     }
 };

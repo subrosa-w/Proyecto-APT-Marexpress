@@ -15,6 +15,7 @@ import AltaClienteForm from "../../components/AltaClienteForm.jsx";
 import AltaDestinatarioForm from "../../components/AltaDestinatarioForm.jsx";
 import DocumentosEmision from "../../components/DocumentosEmision.jsx";
 import { formatos } from "../../formatos.js";
+import { CampoTelefono } from "../../entrada.jsx";
 
 // Línea de bulto en blanco. Cada bulto nuevo parte de aquí para no arrastrar medidas de la línea anterior.
 const cargaVacia = () => ({
@@ -706,11 +707,7 @@ export default function NuevaOrdenPage() {
                             </div>
                             <div className="field">
                                 <label>Teléfono origen</label>
-                                <input
-                                    {...formatos.telefono}
-                                    value={formulario.telefonoOrigen}
-                                    onChange={(e) => setCampo("telefonoOrigen", e.target.value)}
-                                />
+                                <CampoTelefono value={formulario.telefonoOrigen} onChange={(valor) => setCampo("telefonoOrigen", valor)} />
                             </div>
                             <div className="field">
                                 <label>Dirección origen</label>
@@ -801,11 +798,7 @@ export default function NuevaOrdenPage() {
                             </div>
                             <div className="field">
                                 <label>Teléfono destino</label>
-                                <input
-                                    {...formatos.telefono}
-                                    value={formulario.telefonoDestino}
-                                    onChange={(e) => setCampo("telefonoDestino", e.target.value)}
-                                />
+                                <CampoTelefono value={formulario.telefonoDestino} onChange={(valor) => setCampo("telefonoDestino", valor)} />
                             </div>
                             <div className="field">
                                 <label>Dirección destino</label>
