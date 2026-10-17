@@ -1,6 +1,14 @@
+/*
+  VISTA: recepción de carga
+  RUTA: /operador/recepcion
+  CSS: admin-card, mx-table
+  API: órdenes pendientes de recepción en la bodega activa
+  FUNCIONES: marca la llegada de los bultos a bodega
+*/
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { api } from "../../api.js";
+import { PREFIJO_OT, codigoConPrefijo } from "../../entrada.jsx";
 import { useBodegaTrabajo } from "../../bodegaTrabajo.jsx";
 import Message from "../../components/Message.jsx";
 import {
@@ -17,6 +25,7 @@ import {
     lineaTiempoOt
 } from "../../utils.js";
 
+// Deja la respuesta del API como arreglo.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -27,6 +36,7 @@ const extraerLista = (datos, clave) => {
     return [];
 };
 
+// Ficha vacía mientras no hay una OT cargada.
 const vacio = {
     cliente: "",
     rutRemitente: "",
@@ -40,6 +50,7 @@ const vacio = {
     numeroDocumento: ""
 };
 
+// Detecta un rechazo en el estado o en la entrega, para ingresarla de nuevo a bodega.
 const ordenRechazada = (orden) => {
     if (!orden) {
         return false;
@@ -58,7 +69,7 @@ export default function RecepcionPage() {
     const { idSucursal: idBodegaTrabajo, nombreBodega } = useBodegaTrabajo();
     const scanRef = useRef(null);
     const [searchParams] = useSearchParams();
-    const [numeroOT, setNumeroOT] = useState(searchParams.get("ot") || "");
+    const [numeroOT, setNumeroOT] = useState(searchParams.get("ot") || PREFIJO_OT);
     const [orden, setOrden] = useState(null);
     const [datos, setDatos] = useState(vacio);
     const [sucursales, setSucursales] = useState([]);
@@ -67,6 +78,7 @@ export default function RecepcionPage() {
     const [tipo, setTipo] = useState("info");
     const [cargando, setCargando] = useState(false);
 
+    // Pasa la OT a los campos de solo lectura de la ficha.
     const mapearOrden = (resultado) => {
         setOrden(resultado);
         setDatos({
@@ -99,6 +111,7 @@ export default function RecepcionPage() {
         }
     }, [idBodegaTrabajo]);
 
+    // Busca por número de OT y, si no aparece, por código de bulto. Una anulada no se recepciona.
     const cargarOrden = async (valor) => {
         const codigo = String(valor || "").trim();
         if (!codigo) {
@@ -155,11 +168,13 @@ export default function RecepcionPage() {
         }
     }, [searchParams]);
 
+    // El escáner o el formulario disparan la misma búsqueda.
     const buscar = (event) => {
         event.preventDefault();
         cargarOrden(numeroOT);
     };
 
+    // Deja la carga en la sucursal elegida y anota el reingreso.
     const ingresar = async () => {
         if (!orden || !idSucursal) {
             setMensaje("Selecciona la sucursal de ingreso.");
@@ -236,12 +251,15 @@ export default function RecepcionPage() {
                             value={numeroOT}
                             autoComplete="off"
                             autoFocus
-                            onChange={(e) => setNumeroOT(e.target.value)}
-                            placeholder="Escanea la OT o la etiqueta y presiona Enter"
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => setNumeroOT(codigoConPrefijo(e.target.value, PREFIJO_OT))}
+                            placeholder="OT-000065 o el código de la etiqueta"
+                            title="Ya incluye OT-. La pistola puede leer el código completo."
+                            maxLength={40}
                         />
                     </div>
                     <div className="mx-form-actions">
-                        <button className="button-primary" type="submit" disabled={cargando}>
+                        <button className="button-primary" type="submit" disabled={cargando || numeroOT === PREFIJO_OT}>
                             {cargando ? "Buscando..." : "Buscar / escanear"}
                         </button>
                     </div>

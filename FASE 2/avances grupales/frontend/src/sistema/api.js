@@ -1,3 +1,9 @@
+/*
+  FUNCIÓN api
+  Todas las vistas llaman al backend por aquí.
+  Agrega el token de la sesión, lee JSON y, si el servidor responde 401,
+  cierra la sesión.
+*/
 const API_BASE = "/api";
 
 export async function api(ruta, opciones = {}) {
@@ -13,7 +19,11 @@ export async function api(ruta, opciones = {}) {
 
     const respuesta = await fetch(`${API_BASE}${ruta}`, {
         ...opciones,
-        headers: encabezados
+        cache: "no-store",
+        headers: {
+            ...encabezados,
+            "Cache-Control": "no-cache"
+        }
     });
 
     let datos = null;
@@ -40,6 +50,9 @@ export async function api(ruta, opciones = {}) {
         }
 
         let mensaje = datos?.mensaje || "No fue posible completar la solicitud";
+        if (datos?.ruta) {
+            mensaje = `${mensaje} Ruta: ${datos.ruta}${datos.codigo ? `. Código: ${datos.codigo}` : ""}.`;
+        }
         if (typeof mensaje === "string" && mensaje.includes("<pre>")) {
             const coincidencia = mensaje.match(/Cannot\s+\w+\s+[^<]+/i);
             mensaje = coincidencia

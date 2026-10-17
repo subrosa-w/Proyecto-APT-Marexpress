@@ -1,11 +1,19 @@
-import { useState } from 'react'
+/*
+  VISTA: seguimiento público
+  RUTA: /seguimiento
+  CSS: index.css
+  API: GET /api/ordenes-transporte/seguimiento/:codigo
+  FUNCIONES: el visitante ve el estado real de una orden de transporte
+*/
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import Contenedor from '../components/Contenedor.jsx'
 import Aparecer from '../components/Aparecer.jsx'
 import Icono from '../components/Icono.jsx'
 import EncabezadoPagina from '../components/EncabezadoPagina.jsx'
 import BotonWhatsapp from '../components/BotonWhatsapp.jsx'
-import { buscarEnvio, ETAPAS } from '../data/envios.js'
+import { ETAPAS } from '../data/envios.js'
+import { PREFIJO_OT, codigoConPrefijo } from '../sistema/entrada.jsx'
 
 // Línea de progreso: En oficina → En tránsito → En reparto → Entregado
 function LineaProgreso({ etapaActual }) {
@@ -48,6 +56,7 @@ function LineaProgreso({ etapaActual }) {
   )
 }
 
+// Ficha del envío encontrado: destino, bultos, kilos y fecha estimada.
 function DatosEnvio({ envio }) {
   const filas = [
     ['Destino', envio.destino],
@@ -73,6 +82,7 @@ function DatosEnvio({ envio }) {
   )
 }
 
+// Movimientos de más nuevo a más antiguo. El primero va en verde porque es el estado actual.
 function Historial({ movimientos }) {
   return (
     <div className="tarjeta p-6 sm:p-8">
@@ -81,7 +91,7 @@ function Historial({ movimientos }) {
       </h2>
       <ol className="relative space-y-6 pl-6 before:absolute before:bottom-2 before:left-2 before:top-2 before:w-px before:bg-gray-200">
         {movimientos.map((mov, indice) => (
-          <li key={mov.fecha} className="relative">
+          <li key={`${mov.fecha}-${indice}`} className="relative">
             <span
               className={`absolute -left-[19px] top-1.5 h-2 w-2 rounded-full ${
                 indice === 0 ? 'bg-verde' : 'bg-marino'
@@ -103,13 +113,60 @@ function Seguimiento() {
   const ordenConsultada = parametros.get('orden') ?? ''
 
   // Lo que el usuario está escribiendo (todavía no consultado)
-  const [texto, setTexto] = useState(ordenConsultada)
+  const [texto, setTexto] = useState(ordenConsultada || PREFIJO_OT)
+  const [envio, setEnvio] = useState(null)
+  const [buscando, setBuscando] = useState(false)
+  const [fallo, setFallo] = useState(false)
 
-  const envio = ordenConsultada ? buscarEnvio(ordenConsultada) : null
+  // Cada número de la URL se consulta en las órdenes reales, no en datos de ejemplo.
+  useEffect(() => {
+    if (!ordenConsultada || ordenConsultada === PREFIJO_OT) {
+      setEnvio(null)
+      setFallo(false)
+      setBuscando(false)
+      return
+    }
 
+    let vigente = true
+    setEnvio(null)
+    setBuscando(true)
+    setFallo(false)
+    fetch(`/api/ordenes-transporte/seguimiento/${encodeURIComponent(ordenConsultada)}`)
+      .then(async (respuesta) => {
+        if (respuesta.status === 404) {
+          return null
+        }
+        if (!respuesta.ok) {
+          throw new Error('No se pudo consultar')
+        }
+        return respuesta.json()
+      })
+      .then((datos) => {
+        if (vigente) {
+          setEnvio(datos)
+        }
+      })
+      .catch(() => {
+        if (vigente) {
+          setEnvio(null)
+          setFallo(true)
+        }
+      })
+      .finally(() => {
+        if (vigente) {
+          setBuscando(false)
+        }
+      })
+
+    return () => {
+      vigente = false
+    }
+  }, [ordenConsultada])
+
+  // Escribe el número en la URL para poder compartir el seguimiento sin perderlo al recargar.
   function consultar(evento) {
     evento.preventDefault()
-    if (texto.trim()) setParametros({ orden: texto.trim().toUpperCase() })
+    if (texto.trim() && texto.trim() !== PREFIJO_OT) setParametros({ orden: texto.trim().toUpperCase() })
   }
 
   return (
@@ -132,9 +189,10 @@ function Seguimiento() {
               <input
                 id="orden"
                 type="text"
-                placeholder="Ej. OT-10482"
+                placeholder="Ej. OT-000066"
                 value={texto}
-                onChange={(evento) => setTexto(evento.target.value)}
+                onFocus={(evento) => evento.target.select()}
+                onChange={(evento) => setTexto(codigoConPrefijo(evento.target.value, PREFIJO_OT))}
                 className="w-full rounded-xl border border-borde py-3 pl-12 pr-4 text-lg font-medium focus:border-verde focus:outline-none focus:ring-4 focus:ring-verde/15"
               />
             </div>
@@ -148,17 +206,25 @@ function Seguimiento() {
         {/* Tres casos posibles: aún no consulta, no se encontró, o sí se encontró */}
         {!ordenConsultada && (
           <p className="mt-10 text-sm text-gray-500">
-            Prueba con <span className="font-mono font-semibold">OT-10482</span> o{' '}
-            <span className="font-mono font-semibold">OT-74921</span> (datos de ejemplo).
+            Escribe el número de la orden, por ejemplo <span className="font-mono font-semibold">OT-000066</span>.
           </p>
         )}
 
-        {ordenConsultada && !envio && (
+        {buscando && <p className="mt-10 text-sm text-gray-500">Consultando la orden...</p>}
+
+        {fallo && (
+          <div className="mt-10 flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-5">
+            <Icono nombre="search_off" className="text-2xl text-amber-600" />
+            <p className="font-semibold">No pudimos consultar el seguimiento. Inténtalo de nuevo.</p>
+          </div>
+        )}
+
+        {ordenConsultada && !buscando && !fallo && !envio && (
           <div className="mt-10 flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-5">
             <Icono nombre="search_off" className="text-2xl text-amber-600" />
             <div>
               <p className="font-semibold">No encontramos la orden {ordenConsultada}.</p>
-              <p className="mt-1 text-sm text-gray-600">Revisa que el número esté igual que en tu comprobante, por ejemplo OT-10482.</p>
+              <p className="mt-1 text-sm text-gray-600">Revisa que el número esté igual que en tu comprobante, por ejemplo OT-000066.</p>
             </div>
           </div>
         )}
@@ -166,6 +232,8 @@ function Seguimiento() {
         {envio && (
           <>
             <Aparecer desde="abajo" className="tarjeta mt-10 px-6 pb-6 pt-8 sm:px-8">
+              <p className="mb-6 font-mono text-sm font-bold text-marino">{envio.numeroOT}</p>
+              {envio.aviso ? <p className="mb-6 text-sm font-semibold text-amber-700">{envio.aviso}</p> : null}
               <LineaProgreso etapaActual={envio.etapa} />
             </Aparecer>
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">

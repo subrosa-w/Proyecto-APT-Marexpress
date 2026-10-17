@@ -1,3 +1,9 @@
+/*
+  VISTA: servicios públicos
+  RUTA: /servicios
+  CSS: index.css y componentes públicos
+  FUNCIONES: describe los servicios de transporte
+*/
 import Contenedor from '../components/Contenedor.jsx'
 import Aparecer from '../components/Aparecer.jsx'
 import Icono from '../components/Icono.jsx'
@@ -40,6 +46,7 @@ function BloqueServicio({ servicio, invertido }) {
   )
 }
 
+// Recorre los servicios de sitio.js y alterna la foto a izquierda y derecha.
 function Servicios() {
   return (
     <>

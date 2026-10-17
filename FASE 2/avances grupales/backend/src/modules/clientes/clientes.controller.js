@@ -1,4 +1,4 @@
-import { obtenerClientes, buscarClientes, crearCliente , obtenerCuentaCorrientePorCliente, asignarTarifaCliente } from "./clientes.service.js";
+import { obtenerClientes, buscarClientes, crearCliente , obtenerCuentaCorrientePorCliente, asignarTarifaCliente, obtenerResumenCuentas, obtenerPlanillaMes, cerrarPlanillaMes } from "./clientes.service.js";
 
 export const listarClientes = async (req, res) => {
     try {
@@ -45,6 +45,43 @@ export const registrarCliente = async (req, res) => {
 
         res.status(500).json({
             mensaje: "Error interno al crear el cliente"
+        });
+    }
+};
+
+export const listarResumenCuentas = async (req, res) => {
+    try {
+        const resumen = await obtenerResumenCuentas({
+            periodo: req.query.periodo,
+            fecha: req.query.fecha
+        });
+        res.json(resumen);
+    } catch (error) {
+        console.error("Error al resumir cuentas corrientes:", error);
+        res.status(500).json({
+            mensaje: "No fue posible cargar las cuentas corrientes"
+        });
+    }
+};
+
+export const verPlanillaMes = async (req, res) => {
+    try {
+        const planilla = await obtenerPlanillaMes(req.query.mes);
+        res.json({ ok: true, planilla });
+    } catch (error) {
+        res.status(error.status || 500).json({
+            mensaje: error.message || "No fue posible armar la planilla"
+        });
+    }
+};
+
+export const cerrarMesCuenta = async (req, res) => {
+    try {
+        const planilla = await cerrarPlanillaMes(req.body?.mes, req.user?.idUsuario);
+        res.json({ ok: true, mensaje: "Cierre del mes registrado.", planilla });
+    } catch (error) {
+        res.status(error.status || 500).json({
+            mensaje: error.message || "No fue posible cerrar el mes"
         });
     }
 };

@@ -4,18 +4,19 @@ import { useNavigate } from "react-router";
 const AuthContext = createContext(null);
 
 const rutaPorRol = (rol) => {
-    switch (rol) {
-        case "ADMINISTRADOR":
-            return "/administrador";
-        case "OPERADOR":
-            return "/operador";
-        case "PEONETA":
-            return "/peoneta";
-        case "CLIENTE":
-            return "/cliente";
-        default:
-            return "/acceso";
+    if (rol === "ADMINISTRADOR") {
+        return "/administrador";
     }
+    if (rol === "OPERADOR") {
+        return "/operador";
+    }
+    if (rol === "PEONETA") {
+        return "/peoneta";
+    }
+    if (["CLIENTE", "CLIENTE NORMAL", "CLIENTE CUENTA CORRIENTE"].includes(rol)) {
+        return "/cliente";
+    }
+    return "/acceso";
 };
 
 const leerUsuario = () => {

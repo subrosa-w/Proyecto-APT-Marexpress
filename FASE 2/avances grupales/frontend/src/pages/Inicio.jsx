@@ -1,3 +1,9 @@
+/*
+  VISTA: inicio público
+  RUTA: /
+  CSS: index.css (colores de marca) y componentes públicos
+  FUNCIONES: presenta la empresa, servicios y el acceso al seguimiento
+*/
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import Contenedor from '../components/Contenedor.jsx'
@@ -6,15 +12,16 @@ import Icono from '../components/Icono.jsx'
 import BotonWhatsapp from '../components/BotonWhatsapp.jsx'
 import FranjaContacto from '../components/FranjaContacto.jsx'
 import { estadisticas, servicios, pasos, imagenes } from '../data/sitio.js'
+import { PREFIJO_OT, codigoConPrefijo } from '../sistema/entrada.jsx'
 
 // Tarjeta de vidrio para consultar un envío (va sobre la foto del hero)
 function TarjetaSeguimiento() {
-  const [orden, setOrden] = useState('')
+  const [orden, setOrden] = useState(PREFIJO_OT)
   const navigate = useNavigate()
 
   function consultar(evento) {
     evento.preventDefault() // evita que el navegador recargue la página
-    if (!orden.trim()) return
+    if (!orden.trim() || orden.trim() === PREFIJO_OT) return
     // Lleva a la página de seguimiento con el número en la URL: /seguimiento?orden=OT-10482
     navigate(`/seguimiento?orden=${encodeURIComponent(orden.trim())}`)
   }
@@ -39,9 +46,10 @@ function TarjetaSeguimiento() {
           <input
             id="orden-inicio"
             type="text"
-            placeholder="Ej. OT-10482"
+            placeholder="Ej. OT-000066"
             value={orden}
-            onChange={(evento) => setOrden(evento.target.value)}
+            onFocus={(evento) => evento.target.select()}
+            onChange={(evento) => setOrden(codigoConPrefijo(evento.target.value, PREFIJO_OT))}
             className="w-full rounded-xl border border-white/30 bg-white/90 px-4 py-3 text-marino placeholder:text-gray-400 focus:border-verde-claro focus:outline-none focus:ring-4 focus:ring-verde-claro/30"
           />
         </div>
@@ -54,6 +62,7 @@ function TarjetaSeguimiento() {
   )
 }
 
+// Portada: el texto a la izquierda y la consulta de seguimiento sobre la foto.
 function Hero() {
   return (
     <section className="relative overflow-hidden bg-marino-oscuro">
@@ -93,6 +102,7 @@ function Hero() {
   )
 }
 
+// Números de la empresa, montados sobre el borde de la portada.
 function Estadisticas() {
   // -mt-24: las tarjetas suben y quedan "flotando" sobre el borde del hero
   return (
@@ -114,6 +124,7 @@ function Estadisticas() {
   )
 }
 
+// Tres servicios resumidos. Cada tarjeta abre la página de servicios.
 function QueHacemos() {
   return (
     <section className="py-24">
@@ -192,6 +203,7 @@ function NuestraFlota() {
   )
 }
 
+// Los cuatro pasos del despacho, unidos por una línea en pantallas grandes.
 function ComoFunciona() {
   return (
     <section className="py-24">
@@ -218,6 +230,7 @@ function ComoFunciona() {
   )
 }
 
+// Orden de la portada: foto, cifras, servicios, flota, pasos y contacto.
 function Inicio() {
   return (
     <>

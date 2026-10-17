@@ -1,6 +1,13 @@
+/*
+  COMPONENTE: formulario de destinatario
+  CSS: campos de sistema.css
+  FUNCIONES: datos de quien recibe la carga
+*/
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { etiquetaComuna } from "../utils.js";
+import { formatos } from "../formatos.js";
+import { CampoCorreo, CampoRut, CampoTelefono } from "../entrada.jsx";
 
 const vacio = {
     rut: "",
@@ -65,15 +72,16 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                     <label>
                         RUT {formulario.crearCuentaCorriente ? "*" : ""}
                     </label>
-                    <input
+                    <CampoRut
                         value={formulario.rut}
-                        onChange={(e) => setCampo("rut", e.target.value)}
+                        onChange={(valor) => setCampo("rut", valor)}
                         required={formulario.crearCuentaCorriente}
                     />
                 </div>
                 <div className="field">
                     <label>Nombre o razón social *</label>
                     <input
+                        {...formatos.razon}
                         value={formulario.nombreRazonSocial}
                         onChange={(e) => setCampo("nombreRazonSocial", e.target.value)}
                         required
@@ -82,6 +90,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                 <div className="field">
                     <label>Dirección *</label>
                     <input
+                        {...formatos.direccion}
                         value={formulario.direccion}
                         onChange={(e) => setCampo("direccion", e.target.value)}
                         required
@@ -104,22 +113,16 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                 </div>
                 <div className="field">
                     <label>Teléfono</label>
-                    <input
-                        value={formulario.telefono}
-                        onChange={(e) => setCampo("telefono", e.target.value)}
-                    />
+                    <CampoTelefono value={formulario.telefono} onChange={(valor) => setCampo("telefono", valor)} />
                 </div>
                 <div className="field">
                     <label>Correo</label>
-                    <input
-                        type="email"
-                        value={formulario.correo}
-                        onChange={(e) => setCampo("correo", e.target.value)}
-                    />
+                    <CampoCorreo value={formulario.correo} onChange={(valor) => setCampo("correo", valor)} />
                 </div>
                 <div className="field">
                     <label>Referencia de entrega</label>
                     <input
+                        {...formatos.referencia}
                         value={formulario.referencia}
                         onChange={(e) => setCampo("referencia", e.target.value)}
                     />
@@ -154,9 +157,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                         <div className="field">
                             <label>Límite de crédito</label>
                         <input
-                            type="number"
-                            min="0"
-                            step="1"
+                            {...formatos.dinero}
                             value={formulario.limiteCredito}
                             onChange={(e) => setCampo("limiteCredito", e.target.value)}
                         />

@@ -1,5 +1,7 @@
 ﻿import { randomUUID } from "node:crypto";
 import prisma from "../../config/prisma.js";
+import { candidatosCodigo } from "../../common/utils/codigoOt.js";
+import { normalizarTelefono } from "../../common/utils/contacto.js";
 import { asegurarTarifaCliente } from "../clientes/clientes.service.js";
 import {
     cobroPorTramoPeso,
@@ -7,6 +9,14 @@ import {
     valorRetiroOficial,
     zonaTarifaria
 } from "../tarifas/tarifaOficial.js";
+
+const telefonoOrden = (valor) => {
+    const normal = normalizarTelefono(valor);
+    if (String(valor || "").trim() && normal === "") {
+        throw errorHttp("El teléfono debe incluir un código conocido, por ejemplo +569", 400);
+    }
+    return normal;
+};
 
 const incluirOrdenCompleta = {
     cliente: {
@@ -377,9 +387,241 @@ export const obtenerOrdenTransportePorId = async (idOrden, opciones = {}) => {
     });
 };
 
-export const obtenerOrdenTransportePorNumero = async (numeroOT, opciones = {}) => {
+const fechaSeguimientoPublico = (fecha) => {
+    if (!fecha) {
+        return "";
+    }
+    const partes = new Intl.DateTimeFormat("es-CL", {
+        timeZone: "America/Santiago",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    }).formatToParts(new Date(fecha));
+    const valores = {};
+    for (const parte of partes) {
+        if (parte.type !== "literal") {
+            valores[parte.type] = parte.value;
+        }
+    }
+    return `${valores.day}/${valores.month}/${valores.year} · ${valores.hour}:${valores.minute} hrs`;
+};
+
+const fechaCortaPublica = (fecha) => {
+    if (!fecha) {
+        return "Por confirmar";
+    }
+    return new Intl.DateTimeFormat("es-CL", {
+        timeZone: "America/Santiago",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    }).format(new Date(fecha));
+};
+
+const detallePublico = (descripcion, estado) => {
+    const texto = String(descripcion || "");
+    const nombre = String(estado || "").toUpperCase();
+    if (/anulad|cancelad/i.test(texto) || ["ANULADA", "CANCELADA"].includes(nombre)) {
+        return "Orden anulada";
+    }
+    if (/reingresad/i.test(texto)) {
+        return texto;
+    }
+    if (/rechazad/i.test(texto) || ["RECHAZADA", "RECHAZADO"].includes(nombre)) {
+        const motivo = texto.split(/motivo:\s*/i)[1]?.trim();
+        return motivo ? `Entrega rechazada. Motivo: ${motivo}` : "Entrega rechazada";
+    }
+    if (/c[aá]lculo aplicado|orden de transporte creada/i.test(texto)) {
+        return "Orden recibida en oficina";
+    }
+    if (/^estado actualizado de /i.test(texto)) {
+        if (["ENTREGADA", "ENTREGADO"].includes(nombre)) return "Entrega realizada";
+        if (["EN_REPARTO", "EN_DESTINO", "EN_ENTREGA"].includes(nombre)) return "En reparto";
+        if (["EN_TRANSITO", "EN_RUTA", "DESPACHADA", "EN_TRASLADO"].includes(nombre)) return "En tránsito hacia el destino";
+        return "Orden en oficina";
+    }
+    return texto || "Actualización de la orden";
+};
+
+const lugarPublico = (item, destino) => {
+    const ubicacion = String(item.ubicacion || "").trim();
+    if (ubicacion && !/^(CREADA|PROGRAMADA|CANCELADA|ANULADA|RECHAZADA|ENTREGADA|EN_TRANSITO|EN_REPARTO)$/i.test(ubicacion)) {
+        return ubicacion;
+    }
+    const nombre = String(item.estado_ot?.nombreEstado || "").toUpperCase();
+    if (["ENTREGADA", "ENTREGADO", "EN_REPARTO", "EN_DESTINO", "EN_ENTREGA", "RECHAZADA", "RECHAZADO"].includes(nombre) && destino) {
+        return destino;
+    }
+    if (["EN_TRANSITO", "EN_RUTA", "DESPACHADA", "EN_TRASLADO"].includes(nombre)) {
+        return "En tránsito";
+    }
+    if (["ANULADA", "CANCELADA"].includes(nombre)) {
+        return "Marexpress";
+    }
+    return "Oficina";
+};
+
+const etapaPublica = (nombre) => {
+    const estado = String(nombre || "").toUpperCase();
+    if (["ENTREGADA", "ENTREGADO"].includes(estado)) {
+        return 3;
+    }
+    if (["EN_REPARTO", "EN_DESTINO", "EN_ENTREGA", "ENTREGA_PARCIAL", "RECHAZADA", "RECHAZADO"].includes(estado)) {
+        return 2;
+    }
+    if (["EN_TRANSITO", "EN_RUTA", "DESPACHADA", "EN_TRASLADO"].includes(estado)) {
+        return 1;
+    }
+    return 0;
+};
+
+const codigosConsultaPublica = (codigo) => {
+    const lista = [...candidatosCodigo(codigo)];
+    const texto = String(codigo || "").trim().toUpperCase().replace(/\s+/g, "");
+    const padre = texto.match(/^(OT-\d+)-\d{1,3}$/);
+    if (padre && /^\d+$/.test(padre[1].slice(3))) {
+        lista.push(`OT-${padre[1].slice(3).padStart(6, "0")}`);
+    }
+    return [...new Set(lista)];
+};
+
+// Consulta pública: ciudad, bultos, kilos y la línea de tiempo. Sin cliente, dirección ni precios.
+export const consultaPublicaSeguimiento = async (codigo) => {
+    const codigos = codigosConsultaPublica(codigo);
+    if (!codigos.length) {
+        return null;
+    }
+
+    let idOrden = null;
+    const ordenDirecta = await prisma.orden_transporte.findFirst({
+        where: { numeroOT: { in: codigos } },
+        select: { idOrden: true }
+    });
+    idOrden = ordenDirecta?.idOrden || null;
+
+    if (!idOrden) {
+        const bulto = await prisma.bulto.findFirst({
+            where: { codigoBulto: { in: codigos } },
+            select: { detalle_carga: { select: { idOrden: true } } }
+        });
+        idOrden = bulto?.detalle_carga?.idOrden || null;
+    }
+
+    if (!idOrden) {
+        return null;
+    }
+
     const orden = await prisma.orden_transporte.findUnique({
-        where: { numeroOT: numeroOT.trim() },
+        where: { idOrden },
+        select: {
+            numeroOT: true,
+            fechaCreacion: true,
+            fechaEntregaEstimada: true,
+            pesoTotal: true,
+            estado_ot: { select: { nombreEstado: true } },
+            comuna_orden_transporte_idComunaDestinoTocomuna: { select: { nombreComuna: true } },
+            detalle_carga: {
+                select: {
+                    cantidad: true,
+                    bulto: { select: { estado: true } }
+                }
+            },
+            entrega_ot: {
+                orderBy: { fechaEntrega: "desc" },
+                take: 1,
+                select: { resultadoEntrega: true, motivoResultado: true, observacion: true }
+            },
+            seguimiento_ot: {
+                orderBy: { fechaHora: "desc" },
+                select: {
+                    fechaHora: true,
+                    ubicacion: true,
+                    descripcion: true,
+                    estado_ot: { select: { nombreEstado: true } }
+                }
+            },
+            historial_ot: {
+                orderBy: { fechaHora: "desc" },
+                select: {
+                    fechaHora: true,
+                    descripcion: true,
+                    estado_ot: { select: { nombreEstado: true } }
+                }
+            }
+        }
+    });
+
+    if (!orden) {
+        return null;
+    }
+
+    const estado = orden.estado_ot?.nombreEstado || "";
+    const destino = orden.comuna_orden_transporte_idComunaDestinoTocomuna?.nombreComuna || "";
+    const eventos = (orden.seguimiento_ot.length ? orden.seguimiento_ot : orden.historial_ot)
+        .map((item) => ({ ...item, ubicacion: item.ubicacion || null }));
+    const historial = eventos.map((item) => ({
+        fecha: fechaSeguimientoPublico(item.fechaHora),
+        lugar: lugarPublico(item, destino),
+        detalle: detallePublico(item.descripcion, item.estado_ot?.nombreEstado)
+    }));
+    if (!historial.length) {
+        historial.push({
+            fecha: fechaSeguimientoPublico(orden.fechaCreacion),
+            lugar: "Marexpress",
+            detalle: "Orden de transporte registrada"
+        });
+    }
+
+    const bultos = orden.detalle_carga.reduce((total, item) => total + (Number(item.cantidad) || 0), 0);
+    const kilos = Number(orden.pesoTotal);
+    const entrega = orden.entrega_ot?.[0];
+    const motivoRechazo = String(entrega?.motivoResultado || entrega?.observacion || "").trim();
+    const rechazada = ["RECHAZADA", "RECHAZADO"].includes(estado.toUpperCase());
+    const nombreActual = estado.toUpperCase();
+    const etapaDevolucion = () => {
+        const piezas = orden.detalle_carga.flatMap((detalle) => detalle.bulto || []);
+        const lugares = piezas.map((bulto) => String(bulto.estado || "").toUpperCase());
+        if (lugares.some((item) => item === "EN_REPARTO")) {
+            return 2;
+        }
+        if (lugares.some((item) => ["EN_TRANSITO", "EN_RUTA"].includes(item))) {
+            return 1;
+        }
+        return 0;
+    };
+    const aviso = ["ANULADA", "CANCELADA"].includes(nombreActual)
+        ? "Esta orden fue anulada."
+        : nombreActual === "DEVUELTA"
+            ? "La carga fue devuelta al cliente."
+            : nombreActual === "DEVOLUCION_SOLICITADA"
+                ? "El cliente pidió la devolución de su carga."
+                : rechazada
+                    ? (motivoRechazo ? `La entrega fue rechazada. Motivo: ${motivoRechazo}` : "La entrega fue rechazada.")
+                    : "";
+
+    return {
+        numeroOT: orden.numeroOT,
+        etapa: nombreActual === "DEVUELTA"
+            ? 0
+            : nombreActual === "DEVOLUCION_SOLICITADA"
+                ? etapaDevolucion()
+                : rechazada ? 2 : etapaPublica(estado),
+        destino: orden.comuna_orden_transporte_idComunaDestinoTocomuna?.nombreComuna || "Por confirmar",
+        bultos,
+        kilos: Number.isFinite(kilos) ? kilos.toLocaleString("es-CL", { maximumFractionDigits: 1 }) : "—",
+        fechaEstimada: fechaCortaPublica(orden.fechaEntregaEstimada),
+        estado,
+        aviso,
+        historial
+    };
+};
+
+export const obtenerOrdenTransportePorNumero = async (numeroOT, opciones = {}) => {
+    const orden = await prisma.orden_transporte.findFirst({
+        where: { numeroOT: { in: candidatosCodigo(numeroOT) } },
         select: { idOrden: true, numeroOT: true }
     });
 
@@ -703,10 +945,7 @@ const calcularValoresOrden = async (datos, db) => {
                 datos.valorBaseAplicado,
                 "valorBaseAplicado"
             )
-            : Number(
-                tarifa.valorBase ??
-                0
-            );
+            : 0;
 
 
     const valorKg =
@@ -1098,9 +1337,7 @@ export const crearOrdenTransporte = async (datos, idUsuario) => {
                         null,
 
 
-                    telefonoOrigen:
-                        datos.telefonoOrigen?.trim() ||
-                        null,
+                    telefonoOrigen: telefonoOrden(datos.telefonoOrigen),
 
 
 
@@ -1117,9 +1354,7 @@ export const crearOrdenTransporte = async (datos, idUsuario) => {
                         null,
 
 
-                    telefonoDestino:
-                        datos.telefonoDestino?.trim() ||
-                        null,
+                    telefonoDestino: telefonoOrden(datos.telefonoDestino),
 
 
                     referenciaEntrega:
@@ -1849,6 +2084,82 @@ const obtenerEstadoAnulacion = async () => {
     });
 };
 
+export const listarEstadosOt = async () =>
+    prisma.estado_ot.findMany({
+        orderBy: { idEstado: "asc" },
+        select: {
+            idEstado: true,
+            nombreEstado: true,
+            descripcion: true
+        }
+    });
+
+export const cambiarEstadoOrdenTransporte = async (idOrden, datos, idUsuario) => {
+    const ordenId = Number(idOrden);
+    const usuarioId = Number(idUsuario);
+
+    if (!Number.isInteger(ordenId) || ordenId <= 0) {
+        throw errorHttp("El ID de la orden no es válido", 400);
+    }
+    if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+        throw errorHttp("Usuario no autenticado", 401);
+    }
+
+    const orden = await prisma.orden_transporte.findUnique({
+        where: { idOrden: ordenId },
+        include: { estado_ot: true }
+    });
+
+    if (!orden) {
+        throw errorHttp("Orden de transporte no encontrada", 404);
+    }
+
+    const idEstado = Number(datos?.idEstado);
+    let estado = null;
+    if (Number.isInteger(idEstado) && idEstado > 0) {
+        estado = await prisma.estado_ot.findUnique({ where: { idEstado } });
+    } else if (datos?.nombreEstado) {
+        estado = await prisma.estado_ot.findFirst({
+            where: { nombreEstado: String(datos.nombreEstado).trim() }
+        });
+    }
+
+    if (!estado) {
+        throw errorHttp("Ese estado no existe en la base de datos", 400);
+    }
+
+    if (estado.idEstado === orden.idEstado) {
+        throw errorHttp(`La orden ya está en estado ${estado.nombreEstado}`, 400);
+    }
+
+    const nota = String(datos?.observacion || "").trim();
+    const anterior = orden.estado_ot?.nombreEstado || "sin estado";
+    const descripcion = (
+        nota
+            ? `Estado actualizado de ${anterior} a ${estado.nombreEstado}. ${nota}`
+            : `Estado actualizado de ${anterior} a ${estado.nombreEstado}`
+    ).slice(0, 250);
+
+    await prisma.$transaction(async (tx) => {
+        await tx.orden_transporte.update({
+            where: { idOrden: orden.idOrden },
+            data: { idEstado: estado.idEstado }
+        });
+        await registrarEventoOt({
+            db: tx,
+            idOrden: orden.idOrden,
+            idEstado: estado.idEstado,
+            idUsuario: usuarioId,
+            descripcion
+        });
+    });
+
+    return prisma.orden_transporte.findUnique({
+        where: { idOrden: orden.idOrden },
+        include: incluirOrdenCompleta
+    });
+};
+
 export const actualizarOrdenTransporte = async (idOrden, datos, idUsuario) => {
     const orden = await prisma.orden_transporte.findUnique({
         where: { idOrden: Number(idOrden) },
@@ -1876,10 +2187,10 @@ export const actualizarOrdenTransporte = async (idOrden, datos, idUsuario) => {
         data: {
             direccionOrigen: datos.direccionOrigen.trim(),
             contactoOrigen: datos.contactoOrigen?.trim() || null,
-            telefonoOrigen: datos.telefonoOrigen?.trim() || null,
+            telefonoOrigen: telefonoOrden(datos.telefonoOrigen),
             direccionDestino: datos.direccionDestino.trim(),
             contactoDestino: datos.contactoDestino?.trim() || null,
-            telefonoDestino: datos.telefonoDestino?.trim() || null,
+            telefonoDestino: telefonoOrden(datos.telefonoDestino),
             referenciaEntrega: datos.referenciaEntrega?.trim() || null,
             idComunaOrigen: Number(datos.idComunaOrigen),
             idComunaDestino: Number(datos.idComunaDestino),
@@ -1956,6 +2267,140 @@ export const anularOrdenTransporte = async (idOrden, idUsuario) => {
     return actualizada;
 };
 
+const asegurarEstadoOt = async (nombre, descripcion) => {
+    const existente = await prisma.estado_ot.findFirst({
+        where: { nombreEstado: nombre }
+    });
+    if (existente) {
+        return existente;
+    }
+    return prisma.estado_ot.create({
+        data: { nombreEstado: nombre, descripcion }
+    });
+};
+
+const estadosSinDevolucion = ["ENTREGADA", "ENTREGADO", "ENTREGA_PARCIAL", "ANULADA", "CANCELADA", "DEVUELTA", "DEVOLUCION_SOLICITADA"];
+
+// El cliente ya no quiere el envío. La carga queda marcada para volverle.
+export const solicitarDevolucionOrden = async ({ idOrden, idCliente, idUsuario, motivo }) => {
+    const nota = String(motivo || "").trim();
+    if (nota.length < 3) {
+        throw errorHttp("Indica por qué quieres la devolución", 400);
+    }
+
+    const orden = await prisma.orden_transporte.findFirst({
+        where: { idOrden: Number(idOrden), idCliente: Number(idCliente) },
+        include: {
+            estado_ot: true,
+            detalle_carga: { include: { bulto: true } }
+        }
+    });
+    if (!orden) {
+        throw errorHttp("Orden de transporte no encontrada", 404);
+    }
+
+    const nombre = nombreEstado(orden);
+    if (nombre === "DEVOLUCION_SOLICITADA") {
+        throw errorHttp("Esta orden ya tiene una devolución pedida", 400);
+    }
+    if (nombre === "DEVUELTA") {
+        throw errorHttp("Esta carga ya fue devuelta", 400);
+    }
+    if (estadosSinDevolucion.includes(nombre)) {
+        throw errorHttp("Esta orden ya no se puede devolver", 400);
+    }
+
+    const bultos = orden.detalle_carga.flatMap((detalle) => detalle.bulto || []);
+    if (bultos.some((bulto) => String(bulto.estado || "").toUpperCase() === "ENTREGADO")) {
+        throw errorHttp("Parte de la carga ya fue entregada y no se puede devolver", 400);
+    }
+
+    const estado = await asegurarEstadoOt(
+        "DEVOLUCION_SOLICITADA",
+        "El cliente pidió que le devuelvan la carga"
+    );
+
+    await prisma.$transaction(async (tx) => {
+        await tx.orden_transporte.update({
+            where: { idOrden: orden.idOrden },
+            data: { idEstado: estado.idEstado }
+        });
+        await registrarEventoOt({
+            db: tx,
+            idOrden: orden.idOrden,
+            idEstado: estado.idEstado,
+            idUsuario,
+            descripcion: `El cliente pidió la devolución de su carga. Motivo: ${nota}`.slice(0, 250),
+            ubicacion: "Oficina"
+        });
+    });
+
+    return prisma.orden_transporte.findUnique({
+        where: { idOrden: orden.idOrden },
+        include: { estado_ot: true }
+    });
+};
+
+// La carga ya está en oficina. El operador se la entrega al cliente y cierra la orden.
+export const confirmarDevolucionCliente = async ({ codigo, idOrden, idUsuario }) => {
+    const usuarioId = Number(idUsuario);
+    const id = Number(idOrden);
+    if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+        throw errorHttp("Usuario no autenticado", 401);
+    }
+    if (!(Number.isInteger(id) && id > 0) && !String(codigo || "").trim()) {
+        throw errorHttp("Indica la orden", 400);
+    }
+    const orden = await prisma.orden_transporte.findFirst({
+        where: Number.isInteger(id) && id > 0
+            ? { idOrden: id }
+            : { numeroOT: { in: candidatosCodigo(codigo) } },
+        include: {
+            estado_ot: true,
+            detalle_carga: { include: { bulto: true } }
+        }
+    });
+    if (!orden) {
+        throw errorHttp("Orden de transporte no encontrada", 404);
+    }
+    if (nombreEstado(orden) !== "DEVOLUCION_SOLICITADA") {
+        throw errorHttp("Esta orden no tiene una devolución pedida por el cliente", 400);
+    }
+
+    const fuera = ["EN_TRANSITO", "EN_REPARTO", "EN_RUTA", "ASIGNADO_MANIFIESTO", "RECHAZADO"];
+    const bultos = orden.detalle_carga.flatMap((detalle) => detalle.bulto || []);
+    if (bultos.some((bulto) => fuera.includes(String(bulto.estado || "").toUpperCase()))) {
+        throw errorHttp("La carga todavía no está en oficina. Reingrésala a bodega antes de devolverla.", 400);
+    }
+
+    const estado = await asegurarEstadoOt("DEVUELTA", "La carga fue devuelta al cliente");
+    await prisma.$transaction(async (tx) => {
+        await tx.orden_transporte.update({
+            where: { idOrden: orden.idOrden },
+            data: { idEstado: estado.idEstado }
+        });
+        if (bultos.length) {
+            await tx.bulto.updateMany({
+                where: { idBulto: { in: bultos.map((bulto) => bulto.idBulto) } },
+                data: { estado: "DEVUELTO", observacion: "Devuelto al cliente" }
+            });
+        }
+        await registrarEventoOt({
+            db: tx,
+            idOrden: orden.idOrden,
+            idEstado: estado.idEstado,
+            idUsuario: usuarioId,
+            descripcion: "Carga devuelta al cliente.",
+            ubicacion: "Oficina"
+        });
+    });
+
+    return prisma.orden_transporte.findUnique({
+        where: { idOrden: orden.idOrden },
+        include: incluirOrdenCompleta
+    });
+};
+
 const ordenFueRechazada = (orden) => {
     if (esRechazoTexto(orden?.estado_ot?.nombreEstado)) {
         return true;
@@ -1989,10 +2434,17 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
         throw errorHttp("La sucursal no existe o está inactiva", 400);
     }
 
-    const bultoEscaneado = await prisma.bulto.findUnique({
-        where: { codigoBulto: codigoLimpio },
-        select: { idBulto: true, idDetalleCarga: true }
-    });
+    const candidatos = candidatosCodigo(codigoLimpio);
+    let bultoEscaneado = null;
+    for (const item of candidatos) {
+        bultoEscaneado = await prisma.bulto.findUnique({
+            where: { codigoBulto: item },
+            select: { idBulto: true, idDetalleCarga: true }
+        });
+        if (bultoEscaneado) {
+            break;
+        }
+    }
 
     let idOrden = null;
     if (bultoEscaneado) {
@@ -2002,8 +2454,8 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
         });
         idOrden = detalle?.idOrden || null;
     } else {
-        const ordenPorNumero = await prisma.orden_transporte.findUnique({
-            where: { numeroOT: codigoLimpio },
+        const ordenPorNumero = await prisma.orden_transporte.findFirst({
+            where: { numeroOT: { in: candidatos } },
             select: { idOrden: true }
         });
         idOrden = ordenPorNumero?.idOrden || null;
@@ -2031,8 +2483,9 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
         }
     });
 
-    if (!ordenFueRechazada(orden)) {
-        throw errorHttp("Esta OT no está marcada como rechazada. El reingreso aplica solo a rechazos.", 400);
+    const pideDevolucion = nombreEstado(orden) === "DEVOLUCION_SOLICITADA";
+    if (!ordenFueRechazada(orden) && !pideDevolucion) {
+        throw errorHttp("El reingreso aplica a una orden rechazada o con devolución pedida por el cliente.", 400);
     }
 
     if (estaAnulada(orden)) {
@@ -2049,12 +2502,15 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
     }
 
     const estadoBodega = await prisma.estado_ot.findFirst({
-        where: {
-            nombreEstado: { in: ["EN_BODEGA", "RECEPCIONADA", "EN_ORIGEN"] }
+        where: { nombreEstado: "EN_BODEGA" }
+    }) || await prisma.estado_ot.create({
+        data: {
+            nombreEstado: "EN_BODEGA",
+            descripcion: "La carga está en bodega, en la oficina"
         }
     });
 
-    const motivo = motivoDeRechazo(orden).slice(0, 180);
+    const motivo = (pideDevolucion ? "Devolución pedida por el cliente" : motivoDeRechazo(orden)).slice(0, 180);
     const ingresados = [];
 
     await prisma.$transaction(async (tx) => {
@@ -2068,7 +2524,9 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
                 data: {
                     estado: "EN_BODEGA",
                     idSucursalActual: sucursalId,
-                    observacion: `Reingreso por rechazo: ${motivo}`.slice(0, 200)
+                    observacion: (pideDevolucion
+                        ? "Reingreso para devolver la carga al cliente"
+                        : `Reingreso por rechazo: ${motivo}`).slice(0, 200)
                 }
             });
 
@@ -2079,7 +2537,9 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
                         idSucursal: sucursalId,
                         tipoMovimiento: "ENTRADA_BODEGA",
                         idUsuario: usuarioId,
-                        observacion: `Reingreso OT ${orden.numeroOT} por rechazo`.slice(0, 200)
+                        observacion: (pideDevolucion
+                            ? `Reingreso OT ${orden.numeroOT} para devolución al cliente`
+                            : `Reingreso OT ${orden.numeroOT} por rechazo`).slice(0, 200)
                     }
                 });
             } catch (error) {
@@ -2096,8 +2556,12 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
             }
         });
 
-        const descripcionReingreso = `OT ${orden.numeroOT} reingresada a bodega por rechazo. Motivo: ${motivo}`.slice(0, 250);
-        if (estadoBodega && quedanFuera === 0) {
+        const descripcionReingreso = (pideDevolucion
+            ? `Carga de vuelta en bodega para devolverla al cliente.`
+            : `OT ${orden.numeroOT} reingresada a bodega por rechazo. Motivo: ${motivo}`
+        ).slice(0, 250);
+        const estadoEvento = !pideDevolucion && quedanFuera === 0 ? estadoBodega.idEstado : orden.idEstado;
+        if (!pideDevolucion && quedanFuera === 0) {
             await tx.orden_transporte.update({
                 where: { idOrden: orden.idOrden },
                 data: { idEstado: estadoBodega.idEstado }
@@ -2106,7 +2570,7 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
         await registrarEventoOt({
             db: tx,
             idOrden: orden.idOrden,
-            idEstado: estadoBodega?.idEstado || orden.idEstado,
+            idEstado: estadoEvento,
             idUsuario: usuarioId,
             descripcion: descripcionReingreso,
             ubicacion: sucursal.nombreSucursal
@@ -2114,7 +2578,12 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
     });
 
     if (!ingresados.length) {
-        throw errorHttp("Los bultos de esta OT ya están en la sucursal seleccionada", 400);
+        throw errorHttp(
+            pideDevolucion
+                ? "La carga ya está en esta bodega. Confirma la devolución al cliente en las órdenes."
+                : "Los bultos de esta OT ya están en la sucursal seleccionada",
+            400
+        );
     }
 
     const actualizada = await prisma.orden_transporte.findUnique({

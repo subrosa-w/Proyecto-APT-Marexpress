@@ -1,4 +1,5 @@
-import { validarRut } from "../../common/utils/rut.js";
+import { formatearRut, validarRut } from "../../common/utils/rut.js";
+import { correoValido, normalizarTelefono } from "../../common/utils/contacto.js";
 
 const texto = (valor, maximo) => {
     if (valor === undefined || valor === null) {
@@ -45,6 +46,22 @@ export const validarCliente = (req, res, next) => {
         });
     }
 
+    const correo = texto(cuerpo.correo, 150).toLowerCase();
+    if (correo && !correoValido(correo)) {
+        return res.status(400).json({
+            ok: false,
+            mensaje: "El correo no tiene un formato válido"
+        });
+    }
+
+    const telefono = normalizarTelefono(cuerpo.telefono);
+    if (telefono === "") {
+        return res.status(400).json({
+            ok: false,
+            mensaje: "El teléfono debe incluir un código conocido, por ejemplo +569"
+        });
+    }
+
     const crearCuentaCorriente = [true, "true", "SI", "si", "1", 1].includes(
         cuerpo.crearCuentaCorriente
     );
@@ -55,13 +72,13 @@ export const validarCliente = (req, res, next) => {
     }
 
     req.body = {
-        rut: rut.replace(/\./g, "").toUpperCase(),
+        rut: formatearRut(rut),
         razonSocial,
         nombreFantasia: texto(cuerpo.nombreFantasia, 150) || null,
         giro: texto(cuerpo.giro, 150) || null,
         direccion,
-        telefono: texto(cuerpo.telefono, 20) || null,
-        correo: texto(cuerpo.correo, 150) || null,
+        telefono,
+        correo: correo || null,
         idComuna,
         idTarifa: Number.isInteger(idTarifa) && idTarifa > 0 ? idTarifa : null,
         crearCuentaCorriente,

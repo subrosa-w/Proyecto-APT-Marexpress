@@ -1,7 +1,10 @@
 import { Router } from "express";
 
 import {
-    listarMisManifiestos
+    listarMisManifiestos,
+    registrarEntrega,
+    iniciarReparto,
+    verComprobante
 } from "./peoneta.controller.js";
 
 import {
@@ -55,6 +58,30 @@ router.get(
         "ADMINISTRADOR"
     ),
     listarMisManifiestos
+);
+
+router.post(
+    "/reparto",
+    autorizarRoles(
+        "PEONETA",
+        "ADMINISTRADOR"
+    ),
+    iniciarReparto
+);
+
+router.get(
+    "/comprobantes/:idEntrega",
+    autorizarRoles("PEONETA", "ADMINISTRADOR", "OPERADOR"),
+    verComprobante
+);
+
+router.post(
+    "/entregas",
+    autorizarRoles(
+        "PEONETA",
+        "ADMINISTRADOR"
+    ),
+    registrarEntrega
 );
 
 

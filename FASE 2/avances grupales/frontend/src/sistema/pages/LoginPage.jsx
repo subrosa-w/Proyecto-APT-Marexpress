@@ -1,3 +1,10 @@
+/*
+  VISTA: acceso
+  RUTA: /acceso
+  CSS: sistema.css (formulario centrado)
+  API: /api/auth (clave y código por correo)
+  FUNCIONES: inicia sesión y guarda el token
+*/
 import { useState } from "react";
 import { Link } from "react-router";
 import { api } from "../api.js";
@@ -17,6 +24,7 @@ export default function LoginPage() {
     const [mensaje, setMensaje] = useState("");
     const [tipoMensaje, setTipoMensaje] = useState("info");
 
+    // Aviso del formulario: éxito del código o error de clave.
     const aviso = (texto, tipo = "info") => {
         setMensaje(texto);
         setTipoMensaje(tipo);
@@ -76,6 +84,7 @@ export default function LoginPage() {
 
     return (
         <main className="mx-contenido flex min-h-screen w-full flex-col lg:flex-row">
+            {/* Lado de marca. No pide datos; presenta la empresa. */}
             <PanelMarca
                 eyebrow="TRANSPORTE Y LOGÍSTICA"
                 titulo="Conectamos más que destinos."
@@ -116,6 +125,7 @@ export default function LoginPage() {
 
                     <Message texto={mensaje} tipo={tipoMensaje} />
 
+                    {/* Sin código: usuario y clave. Con código: el segundo paso del correo. */}
                     {!challengeId ? (
                         <form onSubmit={iniciarSesion} className="flex flex-col gap-4">
                             <div className="field">
@@ -124,6 +134,9 @@ export default function LoginPage() {
                                 </label>
                                 <input
                                     id="identificador"
+                                    placeholder="usuario o correo@empresa.cl"
+                                    title="Nombre de usuario o correo electrónico"
+                                    maxLength={150}
                                     value={identificador}
                                     onChange={(e) => setIdentificador(e.target.value)}
                                     autoComplete="username"
@@ -141,6 +154,8 @@ export default function LoginPage() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         autoComplete="current-password"
+                                        title="Contraseña de la cuenta"
+                                        minLength={8}
                                         required
                                     />
                                     <button
@@ -176,6 +191,10 @@ export default function LoginPage() {
                                     value={codigo}
                                     onChange={(e) => setCodigo(e.target.value)}
                                     inputMode="numeric"
+                                    placeholder="000000"
+                                    title="Código numérico enviado al correo"
+                                    maxLength={8}
+                                    pattern="[0-9]{4,8}"
                                     autoComplete="one-time-code"
                                     autoFocus
                                     required

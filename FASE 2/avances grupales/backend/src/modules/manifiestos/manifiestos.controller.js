@@ -5,7 +5,9 @@ import {
     actualizarManifiesto,
     escanearCodigoManifiesto,
     quitarBultoDelManifiesto,
-    sacarManifiestoARuta
+    sacarManifiestoARuta,
+    recepcionarTraspaso,
+    cuadrarManifiesto
 } from "./manifiestos.service.js";
 
 const responder = (res, error) => {
@@ -94,12 +96,40 @@ export const quitarBultoManifiesto = async (req, res) => {
     }
 };
 
+export const recepcionarEnDestino = async (req, res) => {
+    try {
+        const manifiesto = await recepcionarTraspaso(req.params.id, req.user.idUsuario);
+        res.json({
+            ok: true,
+            mensaje: `Manifiesto ${manifiesto.numeroManifiesto} recepcionado en bodega.`,
+            manifiesto
+        });
+    } catch (error) {
+        responder(res, error);
+    }
+};
+
+export const cuadrarPagos = async (req, res) => {
+    try {
+        const manifiesto = await cuadrarManifiesto(req.params.id, req.user.idUsuario, req.body?.idsOrden, req.body?.metodoPago);
+        res.json({
+            ok: true,
+            mensaje: manifiesto.estado === "FINALIZADO"
+                ? `Manifiesto ${manifiesto.numeroManifiesto} cuadrado. No quedan órdenes por dar de baja.`
+                : "La orden quedó pagada con el método elegido. Sigue con la siguiente.",
+            manifiesto
+        });
+    } catch (error) {
+        responder(res, error);
+    }
+};
+
 export const salirARuta = async (req, res) => {
     try {
         const manifiesto = await sacarManifiestoARuta(req.params.id, req.user.idUsuario);
         res.json({
             ok: true,
-            mensaje: `Manifiesto ${manifiesto.numeroManifiesto} salió a ruta`,
+            mensaje: `Manifiesto ${manifiesto.numeroManifiesto} cerrado. Las órdenes quedaron en tránsito.`,
             manifiesto
         });
     } catch (error) {

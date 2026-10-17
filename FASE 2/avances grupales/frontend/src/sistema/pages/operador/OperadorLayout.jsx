@@ -1,6 +1,13 @@
+/*
+  VISTA: menú del operador
+  RUTA: /operador y todas sus pantallas hijas
+  CSS: sistema.css y RoleLayout
+  FUNCIONES: arma el menú de recepción, OT, bodega, manifiestos y pagos
+*/
 import { Outlet, useLocation } from "react-router";
 import RoleLayout from "../../components/RoleLayout.jsx";
 
+// Título de la barra según la ruta.
 const titulos = {
     "/operador": ["PANEL OPERACIONAL", "Resumen de operaciones"],
     "/operador/recepcion": ["INGRESO DE CARGA", "Recepción"],
@@ -12,9 +19,11 @@ const titulos = {
     "/operador/despacho": ["OPERACIÓN", "Pronto despacho"],
     "/operador/seguimiento": ["OPERACIÓN", "Seguimiento"],
     "/operador/pagos": ["OPERACIÓN", "Pago de OT"],
+    "/operador/caja": ["OPERACIÓN", "Caja y retiro"],
     "/operador/comprobantes": ["OPERACIÓN", "Pago de OT"]
 };
 
+// Menú del operador, del ingreso de carga al cobro.
 const items = [
     { to: "/operador", label: "Inicio", end: true },
     { to: "/operador/recepcion", label: "Recepción" },
@@ -25,7 +34,8 @@ const items = [
     { to: "/operador/manifiestos", label: "Manifiestos" },
     { to: "/operador/despacho", label: "Pronto despacho" },
     { to: "/operador/seguimiento", label: "Seguimiento" },
-    { to: "/operador/pagos", label: "Pago de OT" }
+    { to: "/operador/pagos", label: "Pago de OT" },
+    { to: "/operador/caja", label: "Caja y retiro" }
 ];
 
 export default function OperadorLayout() {

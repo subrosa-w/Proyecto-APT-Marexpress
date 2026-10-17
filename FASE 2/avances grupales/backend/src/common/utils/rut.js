@@ -1,7 +1,22 @@
+export const limpiarRut = (rut) =>
+    String(rut || "").replace(/\./g, "").replace(/-/g, "").toUpperCase();
+
+// 213103075 queda 21.310.307-5. Así se muestra y así se guarda.
+export const formatearRut = (rut) => {
+    const limpio = limpiarRut(rut).replace(/[^0-9K]/g, "").slice(0, 9);
+    if (limpio.length <= 1) {
+        return limpio;
+    }
+    const dv = limpio.slice(-1);
+    const cuerpo = limpio.slice(0, -1);
+    const conPuntos = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return `${conPuntos}-${dv}`;
+};
+
 export const validarRut = (rut) => {
     if (typeof rut !== "string") return false;
 
-    const rutLimpio = rut.replace(/\./g, "").replace(/-/g, "").toUpperCase();
+    const rutLimpio = limpiarRut(rut);
 
     if (!/^\d{7,8}[0-9K]$/.test(rutLimpio)) {
         return false;

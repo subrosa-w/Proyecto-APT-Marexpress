@@ -1,10 +1,19 @@
+/*
+  VISTA: registro de cliente
+  RUTA: /registro
+  CSS: sistema.css
+  API: POST /api/auth/registro
+  FUNCIONES: crea la cuenta de un cliente nuevo
+*/
 import { useState } from "react";
 import { Link } from "react-router";
 import { api } from "../api.js";
 import Message from "../components/Message.jsx";
 import PanelMarca from "../components/PanelMarca.jsx";
 import Icono from "../../components/Icono.jsx";
+import { CampoCorreo, CampoRut, CampoTelefono } from "../entrada.jsx";
 
+// Campos del alta. Se limpian solo si se vuelve a entrar a la pantalla.
 const estadoInicial = {
     nombre: "",
     apellido: "",
@@ -19,21 +28,25 @@ const estadoInicial = {
 export default function RegistroPage() {
     const [formulario, setFormulario] = useState(estadoInicial);
     const [challengeId, setChallengeId] = useState(null);
+    const [mostrarCodigo, setMostrarCodigo] = useState(false);
     const [codigo, setCodigo] = useState("");
     const [cargando, setCargando] = useState(false);
     const [mensaje, setMensaje] = useState("");
     const [tipoMensaje, setTipoMensaje] = useState("info");
     const [verificado, setVerificado] = useState(false);
 
+    // Cambia un campo sin perder el resto del formulario.
     const actualizar = (campo, valor) => {
         setFormulario((prev) => ({ ...prev, [campo]: valor }));
     };
 
+    // Aviso del registro: contraseñas distintas, correo enviado o error del servidor.
     const aviso = (texto, tipo = "info") => {
         setMensaje(texto);
         setTipoMensaje(tipo);
     };
 
+    // Crea la cuenta solo si las dos contraseñas coinciden y pide el código al correo.
     const registrar = async (event) => {
         event.preventDefault();
         aviso("");
@@ -60,7 +73,36 @@ export default function RegistroPage() {
             });
 
             setChallengeId(datos.challengeId);
-            aviso(datos.mensaje || "Revisa tu correo para verificar la cuenta", "success");
+            setMostrarCodigo(true);
+            aviso(`Enviamos el código a ${formulario.correo}. Revisa también el correo no deseado.`, "success");
+        } catch (error) {
+            if (error.datos?.pendienteVerificacion) {
+                setChallengeId(error.datos.challengeId || null);
+                setMostrarCodigo(true);
+                aviso(error.datos.mensaje || "La cuenta está pendiente. Reenvía el código.", "info");
+                return;
+            }
+            aviso(error.message, "error");
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    // Confirma el código. Recién ahí la cuenta queda lista para iniciar sesión.
+    const reenviar = async () => {
+        setCargando(true);
+        aviso("");
+        try {
+            const datos = await api("/auth/registro/reenviar-otp", {
+                method: "POST",
+                body: JSON.stringify({
+                    identificador: formulario.correo.trim(),
+                    password: formulario.password
+                })
+            });
+            setChallengeId(datos.challengeId);
+            setMostrarCodigo(true);
+            aviso(`Enviamos otro código a ${formulario.correo}. Revisa también el correo no deseado.`, "success");
         } catch (error) {
             aviso(error.message, "error");
         } finally {
@@ -123,13 +165,17 @@ export default function RegistroPage() {
                         <p className="text-sm text-gray-600">
                             <Link to="/acceso" className="font-bold text-verde hover:underline">Inicia sesión</Link> con tu usuario y contraseña.
                         </p>
-                    ) : !challengeId ? (
+                    ) : !mostrarCodigo ? (
                         <form onSubmit={registrar} className="flex flex-col gap-4">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="field">
                                     <label htmlFor="nombre">Nombre *</label>
                                     <input
                                         id="nombre"
+                                        placeholder="Nombre"
+                                        title="Solo el nombre, sin números"
+                                        maxLength={100}
+                                        autoComplete="given-name"
                                         value={formulario.nombre}
                                         onChange={(e) => actualizar("nombre", e.target.value)}
                                         required
@@ -139,6 +185,9 @@ export default function RegistroPage() {
                                     <label htmlFor="apellido">Apellido *</label>
                                     <input
                                         id="apellido"
+                                        placeholder="Apellido"
+                                        maxLength={100}
+                                        autoComplete="family-name"
                                         value={formulario.apellido}
                                         onChange={(e) => actualizar("apellido", e.target.value)}
                                         required
@@ -146,36 +195,25 @@ export default function RegistroPage() {
                                 </div>
                                 <div className="field">
                                     <label htmlFor="rut">RUT personal *</label>
-                                    <input
-                                        id="rut"
-                                        value={formulario.rut}
-                                        onChange={(e) => actualizar("rut", e.target.value)}
-                                        placeholder="12345678-9"
-                                        required
-                                    />
+                                    <CampoRut id="rut" value={formulario.rut} onChange={(valor) => actualizar("rut", valor)} required />
                                 </div>
                                 <div className="field">
                                     <label htmlFor="telefono">Teléfono</label>
-                                    <input
-                                        id="telefono"
-                                        value={formulario.telefono}
-                                        onChange={(e) => actualizar("telefono", e.target.value)}
-                                    />
+                                    <CampoTelefono id="telefono" value={formulario.telefono} onChange={(valor) => actualizar("telefono", valor)} />
                                 </div>
                                 <div className="field sm:col-span-2">
                                     <label htmlFor="correo">Correo electrónico *</label>
-                                    <input
-                                        id="correo"
-                                        type="email"
-                                        value={formulario.correo}
-                                        onChange={(e) => actualizar("correo", e.target.value)}
-                                        required
-                                    />
+                                    <CampoCorreo id="correo" value={formulario.correo} onChange={(valor) => actualizar("correo", valor)} required />
                                 </div>
                                 <div className="field sm:col-span-2">
                                     <label htmlFor="nombreUsuario">Nombre de usuario *</label>
                                     <input
                                         id="nombreUsuario"
+                                        placeholder="usuario.marexpress"
+                                        title="Sin espacios. Letras, números, punto o guion"
+                                        maxLength={50}
+                                        pattern="[A-Za-z0-9._-]{3,50}"
+                                        autoComplete="username"
                                         value={formulario.nombreUsuario}
                                         onChange={(e) => actualizar("nombreUsuario", e.target.value)}
                                         required
@@ -189,6 +227,8 @@ export default function RegistroPage() {
                                         value={formulario.password}
                                         onChange={(e) => actualizar("password", e.target.value)}
                                         minLength={10}
+                                        title="Mínimo 10 caracteres, con mayúscula, minúscula, número y símbolo"
+                                        autoComplete="new-password"
                                         required
                                     />
                                 </div>
@@ -197,6 +237,9 @@ export default function RegistroPage() {
                                     <input
                                         id="confirmarPassword"
                                         type="password"
+                                        title="Debe coincidir con la contraseña"
+                                        autoComplete="new-password"
+                                        minLength={10}
                                         value={formulario.confirmarPassword}
                                         onChange={(e) => actualizar("confirmarPassword", e.target.value)}
                                         required
@@ -215,6 +258,9 @@ export default function RegistroPage() {
                             <button className="button-primary h-12 w-full text-base" type="submit" disabled={cargando}>
                                 {cargando ? "Creando cuenta..." : "Crear cuenta y verificar correo"}
                             </button>
+                            <button className="button-secondary w-full" type="button" disabled={cargando} onClick={reenviar}>
+                                Ya me registré: reenviar código
+                            </button>
                         </form>
                     ) : (
                         <form onSubmit={verificar} className="flex flex-col gap-4">
@@ -223,15 +269,25 @@ export default function RegistroPage() {
                                 <input
                                     id="codigo"
                                     className="font-mono text-lg tracking-[0.3em]"
+                                    placeholder="000000"
+                                    title="Código numérico enviado al correo"
+                                    inputMode="numeric"
+                                    maxLength={8}
+                                    pattern="[0-9]{4,8}"
+                                    autoComplete="one-time-code"
                                     value={codigo}
                                     onChange={(e) => setCodigo(e.target.value)}
                                     autoFocus
                                     required
                                 />
                             </div>
-                            <button className="button-primary h-12 w-full text-base" type="submit" disabled={cargando}>
+                            <button className="button-primary h-12 w-full text-base" type="submit" disabled={cargando || !challengeId}>
                                 {cargando ? "Verificando..." : "Verificar correo"}
                             </button>
+                            <button className="button-secondary w-full" type="button" disabled={cargando} onClick={reenviar}>
+                                Reenviar código
+                            </button>
+                            <p className="form-note">El código dura 5 minutos y llega a {formulario.correo}.</p>
                         </form>
                     )}
                 </div>

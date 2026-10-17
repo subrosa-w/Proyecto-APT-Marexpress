@@ -1,3 +1,10 @@
+/*
+  VISTA: seguimiento interno
+  RUTAS: /administrador/seguimiento y /operador/seguimiento
+  CSS: admin-card
+  API: GET /api/ordenes-transporte (seguimiento)
+  FUNCIONES: línea de tiempo de una OT
+*/
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { api } from "../../api.js";
@@ -18,6 +25,7 @@ import {
     lineaTiempoOt
 } from "../../utils.js";
 
+// Deja la respuesta del API como arreglo.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -28,6 +36,7 @@ const extraerLista = (datos, clave) => {
     return [];
 };
 
+// Bandejas del tablero. Cada OT cae en una según su estado.
 const columnas = [
     { id: "enCurso", titulo: "En curso", texto: "OT en tránsito o con manifiesto en ruta." },
     { id: "entregadas", titulo: "Entregadas", texto: "Órdenes ya cerradas en destino." },
@@ -35,6 +44,7 @@ const columnas = [
     { id: "rechazadas", titulo: "Rechazadas", texto: "Entregas rechazadas, con motivo y datos de la OT." }
 ];
 
+// La entrega puede venir directa o colgando del manifiesto. Toma la primera que exista.
 const entregaDeOrden = (orden) => {
     const directas = orden?.entrega_ot || [];
     const deManifiesto = (orden?.manifiesto_ot || []).map((item) => item.entrega_ot).filter(Boolean);
@@ -45,16 +55,83 @@ export default function SeguimientoPage() {
     const { ordenDeBodega, nombreBodega } = useBodegaTrabajo();
     const { usuario } = useAuth();
     const [ordenes, setOrdenes] = useState([]);
+    const [estados, setEstados] = useState([]);
     const [mensaje, setMensaje] = useState("");
+    const [tipoMensaje, setTipoMensaje] = useState("error");
     const [pestana, setPestana] = useState("enCurso");
     const [detalle, setDetalle] = useState(null);
+    const [actualizando, setActualizando] = useState(false);
+    const [guardando, setGuardando] = useState(false);
+
+    // Aviso único de la pantalla.
+    const aviso = (texto, tipo = "info") => {
+        setMensaje(texto);
+        setTipoMensaje(tipo);
+    };
+
+    // Trae todas las OT y los estados posibles para armar las bandejas.
+    const cargar = async () => {
+        const [lista, listaEstados] = await Promise.all([
+            api("/ordenes-transporte"),
+            api("/ordenes-transporte/estados").catch(() => ({ estados: [] }))
+        ]);
+        const ordenesNuevas = extraerLista(lista, "ordenes");
+        setOrdenes(ordenesNuevas);
+        setEstados(extraerLista(listaEstados, "estados"));
+        return ordenesNuevas;
+    };
 
     useEffect(() => {
-        api("/ordenes-transporte")
-            .then((lista) => setOrdenes(extraerLista(lista, "ordenes")))
-            .catch((error) => setMensaje(error.message));
+        cargar().catch((error) => aviso(error.message, "error"));
     }, []);
 
+    // Actualiza el tablero y, si hay una OT abierta, también su detalle.
+    const recargar = async () => {
+        setActualizando(true);
+        try {
+            const ordenesNuevas = await cargar();
+            if (detalle?.idOrden) {
+                const fresca = ordenesNuevas.find((item) => item.idOrden === detalle.idOrden);
+                if (fresca) {
+                    const completa = await api(`/ordenes-transporte/${fresca.idOrden}`).catch(() => fresca);
+                    setDetalle(completa);
+                }
+            }
+            aviso("Seguimiento actualizado desde la base de datos.", "success");
+        } catch (error) {
+            aviso(error.message, "error");
+        } finally {
+            setActualizando(false);
+        }
+    };
+
+    // Cambia el estado y mueve la OT a la bandeja que le corresponde.
+    const aplicarEstado = async (estado) => {
+        if (!detalle?.idOrden || !estado?.idEstado) {
+            return;
+        }
+        setGuardando(true);
+        try {
+            const resultado = await api(`/ordenes-transporte/${detalle.idOrden}/estado`, {
+                method: "PATCH",
+                body: JSON.stringify({ idEstado: estado.idEstado })
+            });
+            const actualizada = resultado.orden || resultado;
+            setDetalle(actualizada);
+            await cargar();
+            const bandeja = bandejaSeguimiento(actualizada);
+            if (["enCurso", "entregadas", "bodega", "rechazadas"].includes(bandeja)) {
+                setPestana(bandeja);
+            }
+            aviso(resultado.mensaje || `Estado de ${actualizada.numeroOT} actualizado.`, "success");
+        } catch (error) {
+            aviso(error.message, "error");
+        } finally {
+            setGuardando(false);
+        }
+    };
+
+    // Reparte las OT de la bodega activa. Las anuladas no se siguen.
     const grupos = useMemo(() => {
         const base = { enCurso: [], entregadas: [], bodega: [], rechazadas: [] };
         for (const orden of ordenes) {
@@ -80,8 +157,16 @@ export default function SeguimientoPage() {
                     <span>OPERACIÓN</span>
                     <h2>Seguimiento</h2>
                 </div>
+                <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={recargar}
+                    disabled={actualizando}
+                >
+                    {actualizando ? "Actualizando..." : "Actualizar"}
+                </button>
             </header>
-            <Message texto={mensaje} tipo="error" />
+            <Message texto={mensaje} tipo={tipoMensaje} />
             <div className="mx-ciudad-info">
                 <p><span>En curso</span><strong>{grupos.enCurso.length}</strong></p>
                 <p><span>Entregadas</span><strong>{grupos.entregadas.length}</strong></p>
@@ -169,7 +254,7 @@ export default function SeguimientoPage() {
             {detalle ? (
                 <div className="mx-ciudad-info" style={{ marginTop: 18 }}>
                     <p><span>OT</span><strong>{detalle.numeroOT}</strong></p>
-                    <p><span>Estado</span><strong>{detalle.estado_ot?.nombreEstado || "—"}</strong></p>
+                    <p><span>Estado en base de datos</span><strong>{detalle.estado_ot?.nombreEstado || "—"}</strong></p>
                     {esRechazo || motivoRechazoOrden(detalle) ? (
                         <p><span>Motivo rechazo</span><strong>{motivoRechazoOrden(detalle) || "—"}</strong></p>
                     ) : null}
@@ -197,6 +282,35 @@ export default function SeguimientoPage() {
                             </strong>
                         </p>
                     ) : null}
+                </div>
+            ) : null}
+            {detalle ? (
+                <div style={{ marginTop: 16 }}>
+                    <p className="mx-note">
+                        Cambia el estado con un botón. La lista sale de la tabla de estados y se guarda en la orden.
+                    </p>
+                    {estados.length === 0 ? (
+                        <p className="mx-empty">No hay estados cargados en la base de datos.</p>
+                    ) : (
+                        <div className="mx-acciones">
+                            {estados.map((estado) => {
+                                const actual = estado.idEstado === detalle.idEstado
+                                    || estado.nombreEstado === detalle.estado_ot?.nombreEstado;
+                                return (
+                                    <button
+                                        key={estado.idEstado}
+                                        type="button"
+                                        className={actual ? "button-primary" : "button-secondary"}
+                                        title={estado.descripcion || estado.nombreEstado}
+                                        disabled={guardando || actual}
+                                        onClick={() => aplicarEstado(estado)}
+                                    >
+                                        {String(estado.nombreEstado || "").replaceAll("_", " ")}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             ) : null}
             {detalle ? (

@@ -1,5 +1,8 @@
 import {
-    obtenerManifiestosPeoneta
+    obtenerManifiestosPeoneta,
+    registrarEntregaPeoneta,
+    iniciarRepartoPeoneta,
+    obtenerComprobanteEntrega
 } from "./peoneta.service.js";
 
 /*
@@ -60,6 +63,76 @@ export const listarMisManifiestos = async (req, res) => {
             ok: false,
             mensaje:
                 "No fue posible obtener los manifiestos asignados"
+        });
+    }
+};
+
+export const registrarEntrega = async (req, res) => {
+    try {
+        const manifiestos = await registrarEntregaPeoneta({
+            idUsuario: req.user?.idUsuario,
+            numeroOT: req.body?.numeroOT,
+            resultado: req.body?.resultado,
+            observacion: req.body?.observacion,
+            nombreReceptor: req.body?.nombreReceptor,
+            metodoPago: req.body?.metodoPago,
+            comprobante: req.body?.comprobante
+        });
+        return res.json({
+            ok: true,
+            mensaje: "Resultado de entrega guardado",
+            data: manifiestos
+        });
+    } catch (error) {
+        const status = error.status || 400;
+        if (status >= 500) {
+            console.error("Error al registrar la entrega del peoneta:", error);
+        }
+        return res.status(status).json({
+            ok: false,
+            mensaje: error.message || "No fue posible registrar la entrega"
+        });
+    }
+};
+
+export const verComprobante = async (req, res) => {
+    try {
+        const archivo = await obtenerComprobanteEntrega({
+            idUsuario: req.user?.idUsuario,
+            rol: req.user?.rol,
+            idEntrega: req.params.idEntrega
+        });
+        res.setHeader("Content-Type", archivo.mime);
+        res.setHeader("Cache-Control", "private, no-store");
+        return res.send(archivo.buffer);
+    } catch (error) {
+        return res.status(error.status || 400).json({
+            ok: false,
+            mensaje: error.message || "No fue posible abrir el comprobante"
+        });
+    }
+};
+
+export const iniciarReparto = async (req, res) => {
+    try {
+        const manifiestos = await iniciarRepartoPeoneta({
+            idUsuario: req.user?.idUsuario,
+            numeroOT: req.body?.numeroOT,
+            idManifiesto: req.body?.idManifiesto
+        });
+        return res.json({
+            ok: true,
+            mensaje: "Reparto iniciado. La carga figura en el camión.",
+            data: manifiestos
+        });
+    } catch (error) {
+        const status = error.status || 400;
+        if (status >= 500) {
+            console.error("Error al iniciar el reparto:", error.message);
+        }
+        return res.status(status).json({
+            ok: false,
+            mensaje: error.message || "No fue posible iniciar el reparto"
         });
     }
 };

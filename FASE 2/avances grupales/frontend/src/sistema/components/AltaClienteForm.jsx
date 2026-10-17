@@ -1,6 +1,13 @@
+/*
+  COMPONENTE: formulario de cliente
+  CSS: campos de sistema.css
+  FUNCIONES: datos para crear o editar un cliente
+*/
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { etiquetaComuna } from "../utils.js";
+import { formatos } from "../formatos.js";
+import { CampoCorreo, CampoRut, CampoTelefono } from "../entrada.jsx";
 
 const vacio = {
     rut: "",
@@ -65,15 +72,12 @@ export default function AltaClienteForm({ comunas, onCreado, onCancelar, ocultar
             <div className="ot-grid">
                 <div className="field">
                     <label>RUT *</label>
-                    <input
-                        value={formulario.rut}
-                        onChange={(e) => setCampo("rut", e.target.value)}
-                        required
-                    />
+                    <CampoRut value={formulario.rut} onChange={(valor) => setCampo("rut", valor)} required />
                 </div>
                 <div className="field">
                     <label>Razón social *</label>
                     <input
+                        {...formatos.razon}
                         value={formulario.razonSocial}
                         onChange={(e) => setCampo("razonSocial", e.target.value)}
                         required
@@ -82,6 +86,7 @@ export default function AltaClienteForm({ comunas, onCreado, onCancelar, ocultar
                 <div className="field">
                     <label>Nombre de fantasía</label>
                     <input
+                        {...formatos.fantasia}
                         value={formulario.nombreFantasia}
                         onChange={(e) => setCampo("nombreFantasia", e.target.value)}
                     />
@@ -89,6 +94,7 @@ export default function AltaClienteForm({ comunas, onCreado, onCancelar, ocultar
                 <div className="field">
                     <label>Giro</label>
                     <input
+                        {...formatos.giro}
                         value={formulario.giro}
                         onChange={(e) => setCampo("giro", e.target.value)}
                     />
@@ -96,6 +102,7 @@ export default function AltaClienteForm({ comunas, onCreado, onCancelar, ocultar
                 <div className="field">
                     <label>Dirección *</label>
                     <input
+                        {...formatos.direccion}
                         value={formulario.direccion}
                         onChange={(e) => setCampo("direccion", e.target.value)}
                         required
@@ -118,18 +125,11 @@ export default function AltaClienteForm({ comunas, onCreado, onCancelar, ocultar
                 </div>
                 <div className="field">
                     <label>Teléfono</label>
-                    <input
-                        value={formulario.telefono}
-                        onChange={(e) => setCampo("telefono", e.target.value)}
-                    />
+                    <CampoTelefono value={formulario.telefono} onChange={(valor) => setCampo("telefono", valor)} />
                 </div>
                 <div className="field">
                     <label>Correo</label>
-                    <input
-                        type="email"
-                        value={formulario.correo}
-                        onChange={(e) => setCampo("correo", e.target.value)}
-                    />
+                    <CampoCorreo value={formulario.correo} onChange={(valor) => setCampo("correo", valor)} />
                 </div>
                 <div className="field">
                     <label>Tarifario</label>
@@ -159,9 +159,7 @@ export default function AltaClienteForm({ comunas, onCreado, onCancelar, ocultar
                     <div className="field">
                         <label>Límite de crédito</label>
                         <input
-                            type="number"
-                            min="0"
-                            step="1"
+                            {...formatos.dinero}
                             value={formulario.limiteCredito}
                             onChange={(e) => setCampo("limiteCredito", e.target.value)}
                         />

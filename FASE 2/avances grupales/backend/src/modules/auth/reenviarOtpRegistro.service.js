@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import prisma from "../../config/prisma.js";
-import { generarCodigoAcceso } from "./verificacionAcceso.service.js";
+import { generarCodigoAcceso, ROLES_REGISTRO_CLIENTE } from "./verificacionAcceso.service.js";
 
 const MENSAJE_NO_DISPONIBLE =
     "No fue posible reenviar el código con los datos proporcionados";
@@ -69,7 +69,7 @@ export const reenviarOtpRegistro = async ({
         usuario.estado ||
         !usuario.registroPendiente ||
         usuario.correoVerificadoEn !== null ||
-        usuario.rol?.nombreRol !== "CLIENTE"
+        !ROLES_REGISTRO_CLIENTE.includes(usuario.rol?.nombreRol)
     ) {
         throw new Error(MENSAJE_NO_DISPONIBLE);
     }

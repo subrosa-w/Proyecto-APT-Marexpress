@@ -5,6 +5,9 @@ import {
     buscarCliente,
     registrarCliente,
     obtenerCuentaCorrienteCliente,
+    listarResumenCuentas,
+    verPlanillaMes,
+    cerrarMesCuenta,
     actualizarTarifaCliente
 } from "./clientes.controller.js";
 
@@ -65,6 +68,27 @@ router.get(
         "OPERADOR"
     ),
     buscarCliente
+);
+
+router.get(
+    "/cuentas-corrientes/planilla",
+    autenticar,
+    autorizarRoles("ADMINISTRADOR"),
+    verPlanillaMes
+);
+
+router.post(
+    "/cuentas-corrientes/planilla/cierre",
+    autenticar,
+    autorizarRoles("ADMINISTRADOR"),
+    cerrarMesCuenta
+);
+
+router.get(
+    "/cuentas-corrientes",
+    autenticar,
+    autorizarRoles("ADMINISTRADOR"),
+    listarResumenCuentas
 );
 
 router.get(

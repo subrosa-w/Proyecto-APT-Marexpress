@@ -124,21 +124,37 @@ export const obtenerTarifaPorId = async (idTarifa) => {
     return tarifa;
 };
 
+const incluirHistorial = {
+    usuario: {
+        select: {
+            idUsuario: true,
+            nombre: true,
+            apellido: true,
+            nombreUsuario: true
+        }
+    },
+    tarifa: {
+        select: {
+            idTarifa: true,
+            nombreTarifa: true
+        }
+    }
+};
+
 export const obtenerHistorialTarifa = async (idTarifa) => {
     await obtenerTarifaPorId(idTarifa);
     return prisma.historial_tarifa.findMany({
         where: { idTarifa: Number(idTarifa) },
-        include: {
-            usuario: {
-                select: {
-                    idUsuario: true,
-                    nombre: true,
-                    apellido: true,
-                    nombreUsuario: true
-                }
-            }
-        },
+        include: incluirHistorial,
         orderBy: { fechaCambio: "desc" }
+    });
+};
+
+export const obtenerHistorialPrecios = async () => {
+    return prisma.historial_tarifa.findMany({
+        include: incluirHistorial,
+        orderBy: { fechaCambio: "desc" },
+        take: 40
     });
 };
 

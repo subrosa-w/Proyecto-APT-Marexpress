@@ -8,7 +8,9 @@ import {
     editarManifiesto,
     escanearManifiesto,
     quitarBultoManifiesto,
-    salirARuta
+    salirARuta,
+    recepcionarEnDestino,
+    cuadrarPagos
 } from "./manifiestos.controller.js";
 
 const router = Router();
@@ -20,6 +22,8 @@ router.get("/", autorizarRoles(...roles), listarManifiestos);
 router.post("/", autorizarRoles(...roles), registrarManifiesto);
 router.post("/:id/escanear", autorizarRoles(...roles), escanearManifiesto);
 router.post("/:id/salir", autorizarRoles(...roles), salirARuta);
+router.post("/:id/recepcionar", autorizarRoles(...roles), recepcionarEnDestino);
+router.post("/:id/cuadrar", autorizarRoles("ADMINISTRADOR"), cuadrarPagos);
 router.delete("/:id/bultos/:idBulto", autorizarRoles(...roles), quitarBultoManifiesto);
 router.put("/:id", autorizarRoles(...roles), editarManifiesto);
 router.get("/:id", autorizarRoles(...roles), detalleManifiesto);

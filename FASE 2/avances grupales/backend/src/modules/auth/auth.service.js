@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
 import prisma from "../../config/prisma.js";
+import { formatearRut } from "../../common/utils/rut.js";
+import { correoValido, normalizarTelefono } from "../../common/utils/contacto.js";
 
 export const registrarCliente = async (datos = {}) => {
     const {
@@ -39,7 +41,10 @@ export const registrarCliente = async (datos = {}) => {
     const apellidoNormalizado = apellido.trim();
     const correoNormalizado = correo.trim().toLowerCase();
     const usuarioNormalizado = nombreUsuario.trim().toLowerCase();
-    const telefonoNormalizado = telefono?.trim() || null;
+    const telefonoNormalizado = normalizarTelefono(telefono);
+    if (telefono?.trim() && telefonoNormalizado === "") {
+        throw new Error("El teléfono debe incluir un código conocido, por ejemplo +569");
+    }
 
     const rutLimpio = rut
         .trim()
@@ -73,7 +78,7 @@ export const registrarCliente = async (datos = {}) => {
         throw new Error("El RUT no es válido");
     }
 
-    const rutNormalizado = `${cuerpo}-${dvIngresado}`;
+    const rutNormalizado = formatearRut(rutLimpio);
 
     if (
         nombreNormalizado.length > 100 ||
@@ -86,7 +91,7 @@ export const registrarCliente = async (datos = {}) => {
 
     if (
         correoNormalizado.length > 150 ||
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoNormalizado)
+        !correoValido(correoNormalizado)
     ) {
         throw new Error("El correo electrónico no es válido");
     }
@@ -124,14 +129,17 @@ export const registrarCliente = async (datos = {}) => {
         throw new Error("La contraseña supera el máximo de 72 bytes");
     }
 
-    const rolCliente = await prisma.rol.findUnique({
+    const rolesCliente = await prisma.rol.findMany({
         where: {
-            nombreRol: "CLIENTE"
+            nombreRol: { in: ["CLIENTE NORMAL", "CLIENTE"] }
         },
         select: {
-            idRol: true
+            idRol: true,
+            nombreRol: true
         }
     });
+    const rolCliente = rolesCliente.find((rol) => rol.nombreRol === "CLIENTE NORMAL")
+        || rolesCliente[0];
 
     if (!rolCliente) {
         throw new Error("No fue posible preparar el registro");

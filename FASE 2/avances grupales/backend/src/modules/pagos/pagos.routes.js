@@ -7,7 +7,10 @@ import {
     listarPendientesPago,
     obtenerAmbienteWebpay,
     retornoWebpay,
-    retornoWebpayCliente
+    retornoWebpayCliente,
+    verCaja,
+    listarCaja,
+    cobrarCaja
 } from "./pagos.controller.js";
 
 const router = Router();
@@ -21,6 +24,9 @@ router.use(autenticar, autorizarRoles("ADMINISTRADOR", "OPERADOR"));
 
 router.get("/webpay/ambiente", obtenerAmbienteWebpay);
 router.get("/pendientes", listarPendientesPago);
+router.get("/caja", listarCaja);
+router.get("/caja/:codigo", verCaja);
+router.post("/caja", cobrarCaja);
 router.get("/ot/:numeroOT", consultarPago);
 router.post("/webpay/iniciar", iniciarWebpay);
 

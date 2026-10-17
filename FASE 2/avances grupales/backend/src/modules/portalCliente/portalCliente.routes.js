@@ -7,6 +7,7 @@ import {
     listarOrdenes,
     listarPendientes,
     obtenerOrden,
+    pedirDevolucion,
     obtenerPerfil,
     obtenerTiposBulto
 } from "./portalCliente.controller.js";
@@ -42,6 +43,7 @@ router.use(autenticar, autorizarRoles("CLIENTE"));
 router.get("/perfil", obtenerPerfil);
 router.get("/ordenes", listarOrdenes);
 router.get("/ordenes/:id", obtenerOrden);
+router.post("/ordenes/:id/devolucion", pedirDevolucion);
 router.get("/tipos-bulto", obtenerTiposBulto);
 
 router.get("/pagos/pendientes", listarPendientes);

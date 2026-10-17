@@ -4,11 +4,15 @@ import {
     listarOrdenesTransporte,
     obtenerDetalleOrdenTransporte,
     obtenerDetalleOrdenTransportePorNumero,
+    consultaPublicaSeguimientoController,
     registrarOrdenTransporte,
     calcularOrdenTransporteController,
     actualizarOrdenTransporteController,
     anularOrdenTransporteController,
-    reingresarOtBodegaController
+    reingresarOtBodegaController,
+    confirmarDevolucionController,
+    listarEstadosOtController,
+    cambiarEstadoOrdenController
 } from "./ordenesTransporte.controller.js";
 
 import {
@@ -67,6 +71,16 @@ router.get(
     listarOrdenesTransporte
 );
 
+router.get(
+    "/estados",
+    autenticar,
+    autorizarRoles(
+        "ADMINISTRADOR",
+        "OPERADOR"
+    ),
+    listarEstadosOtController
+);
+
 router.post(
     "/anular",
     autenticar,
@@ -88,6 +102,16 @@ router.post(
 );
 
 router.post(
+    "/devolver-cliente",
+    autenticar,
+    autorizarRoles(
+        "ADMINISTRADOR",
+        "OPERADOR"
+    ),
+    confirmarDevolucionController
+);
+
+router.post(
     "/anular/:id",
     autenticar,
     autorizarRoles(
@@ -106,6 +130,15 @@ router.post(
     ),
     validarNuevaOrdenTransporte,
     calcularOrdenTransporteController
+);
+
+/*
+ * Consulta pública del seguimiento. No pide sesión y no entrega datos del cliente.
+ * Ejemplo: /api/ordenes-transporte/seguimiento/OT-000029
+ */
+router.get(
+    "/seguimiento/:codigo",
+    consultaPublicaSeguimientoController
 );
 
 /*
@@ -154,6 +187,16 @@ router.patch(
         "OPERADOR"
     ),
     actualizarOrdenTransporteController
+);
+
+router.patch(
+    "/:id/estado",
+    autenticar,
+    autorizarRoles(
+        "ADMINISTRADOR",
+        "OPERADOR"
+    ),
+    cambiarEstadoOrdenController
 );
 
 router.post(

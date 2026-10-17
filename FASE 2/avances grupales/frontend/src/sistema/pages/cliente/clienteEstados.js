@@ -11,6 +11,8 @@ const textos = {
     DESPACHADA: "Despachada",
     ENTREGADA: "Entregada",
     ENTREGADO: "Entregada",
+    DEVOLUCION_SOLICITADA: "Devolución pedida",
+    DEVUELTA: "Devuelta al cliente",
     RECHAZADA: "Rechazada",
     ANULADA: "Anulada",
     CANCELADA: "Anulada"
@@ -27,8 +29,10 @@ export const textoEstadoOt = (estado) => {
     return texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : "Sin estado";
 };
 
-// Historial = OT terminadas (entregadas o anuladas). Todo lo demás sigue "en curso".
-export const esHistorial = (orden) => ["entregadas", "anulada"].includes(bandejaSeguimiento(orden));
+// Historial = OT terminadas: entregadas, anuladas o devueltas al cliente.
+export const esHistorial = (orden) =>
+    estadoDe(orden) === "DEVUELTA"
+    || ["entregadas", "anulada"].includes(bandejaSeguimiento(orden));
 
 // Colores de la insignia según la bandeja de la OT
 export const tonoEstado = (orden) => {

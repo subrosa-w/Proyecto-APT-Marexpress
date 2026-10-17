@@ -1,3 +1,9 @@
+/*
+  VISTA: cobertura pública
+  RUTA: /cobertura
+  CSS: index.css y componentes públicos
+  FUNCIONES: muestra las zonas donde opera Marexpress
+*/
 import Contenedor from '../components/Contenedor.jsx'
 import Aparecer from '../components/Aparecer.jsx'
 import Icono from '../components/Icono.jsx'
@@ -5,6 +11,7 @@ import EncabezadoPagina from '../components/EncabezadoPagina.jsx'
 import FranjaContacto from '../components/FranjaContacto.jsx'
 import { zonas, imagenes } from '../data/sitio.js'
 
+// Lista las zonas de operación. Los datos salen de sitio.js, no del servidor.
 function Cobertura() {
   return (
     <>

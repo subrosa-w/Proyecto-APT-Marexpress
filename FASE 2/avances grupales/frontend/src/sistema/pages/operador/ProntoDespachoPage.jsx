@@ -1,3 +1,10 @@
+/*
+  VISTA: pronto despacho
+  RUTA: /operador/despacho
+  CSS: admin-card, mx-table
+  API: órdenes listas para salir
+  FUNCIONES: lista lo que ya puede cargarse a un manifiesto
+*/
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { api } from "../../api.js";
@@ -5,6 +12,7 @@ import { useBodegaTrabajo } from "../../bodegaTrabajo.jsx";
 import Message from "../../components/Message.jsx";
 import { formatearFechaHora, formatearKg, ordenAnulada } from "../../utils.js";
 
+// Días en bodega en palabras. Cero se lee como hoy, no como "0 días".
 const textoDias = (dias) => {
     const n = Number(dias) || 0;
     if (n <= 0) {
@@ -24,6 +32,7 @@ export default function ProntoDespachoPage() {
     const [cargando, setCargando] = useState(true);
     const [abierta, setAbierta] = useState(null);
 
+    // Trae lo que lleva 3 días o más en bodega. Es la carga que ya debería salir.
     useEffect(() => {
         api("/bultos/pronto-despacho?dias=3")
             .then((respuesta) => {
@@ -38,6 +47,7 @@ export default function ProntoDespachoPage() {
             .finally(() => setCargando(false));
     }, []);
 
+    // Deja solo bultos de la bodega activa y descarta OT anuladas.
     const vista = useMemo(() => {
         const ordenes = (datos.ordenes || [])
             .map((orden) => ({
