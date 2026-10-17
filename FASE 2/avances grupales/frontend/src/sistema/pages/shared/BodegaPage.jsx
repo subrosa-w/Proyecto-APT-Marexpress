@@ -1,9 +1,18 @@
+/*
+  VISTA: bodega
+  RUTAS: /administrador/bodega y /operador/bodega
+  CSS: admin-card, mx-table
+  API: /api/bultos
+  FUNCIONES: ubicación de la carga que está en la bodega de trabajo
+*/
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../api.js";
+import { guardarBorrador, leerBorrador } from "../../borrador.js";
 import { useBodegaTrabajo } from "../../bodegaTrabajo.jsx";
 import Message from "../../components/Message.jsx";
 import { ordenAnulada } from "../../utils.js";
 
+// Deja la respuesta del API como arreglo.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -14,6 +23,7 @@ const extraerLista = (datos, clave) => {
     return [];
 };
 
+// Traduce el estado interno del bulto a un texto de la tabla.
 const etiquetaEstado = (estado) => {
     const mapa = {
         EN_BODEGA: "En bodega",
@@ -30,8 +40,8 @@ export default function BodegaPage() {
     const [bultos, setBultos] = useState([]);
     const [resumen, setResumen] = useState({ total: 0, enBodega: 0, enTraslado: 0, sinUbicacion: 0 });
     const [sucursales, setSucursales] = useState([]);
-    const [busqueda, setBusqueda] = useState("");
-    const [estado, setEstado] = useState("EN_BODEGA");
+    const [busqueda, setBusqueda] = useState(() => (leerBorrador("bodega") || {}).busqueda || "");
+    const [estado, setEstado] = useState(() => (leerBorrador("bodega") || {}).estado || "EN_BODEGA");
     const [idSucursal, setIdSucursal] = useState("");
     const [mensaje, setMensaje] = useState("");
     const [tipo, setTipo] = useState("info");
@@ -41,11 +51,13 @@ export default function BodegaPage() {
     const [scanReingreso, setScanReingreso] = useState("");
     const scanRef = useRef(null);
 
+    // Aviso único de la pantalla.
     const aviso = (texto, clase = "info") => {
         setMensaje(texto);
         setTipo(clase);
     };
 
+    // Inventario filtrado por estado, sucursal y texto. El resumen sale del mismo llamado.
     const cargar = async () => {
         const params = new URLSearchParams();
         if (estado) {
@@ -63,12 +75,19 @@ export default function BodegaPage() {
         setResumen(inventario.resumen || { total: 0, enBodega: 0, enTraslado: 0, sinUbicacion: 0 });
     };
 
+    // Recuerda búsqueda y estado al cambiar de pantalla.
+    useEffect(() => {
+        guardarBorrador("bodega", { busqueda, estado });
+    }, [busqueda, estado]);
+
+    // Sucursales para elegir dónde ingresar un bulto.
     useEffect(() => {
         api("/bultos/sucursales")
             .then((datos) => setSucursales(extraerLista(datos, "sucursales")))
             .catch((error) => aviso(error.message, "error"));
     }, []);
 
+    // La bodega de la barra es la sucursal por defecto del inventario y del ingreso.
     useEffect(() => {
         if (idBodegaTrabajo) {
             setIdSucursal(String(idBodegaTrabajo));
@@ -83,6 +102,7 @@ export default function BodegaPage() {
             .finally(() => setCargando(false));
     }, [estado, idSucursal]);
 
+    // La búsqueda va al servidor, no filtra solo lo que ya está en pantalla.
     const buscar = (event) => {
         event.preventDefault();
         setCargando(true);
@@ -96,11 +116,13 @@ export default function BodegaPage() {
         [sucursalIngreso, idBodegaTrabajo]
     );
 
+    // Oculta bultos de OT anuladas: ya no se operan.
     const bultosVisibles = useMemo(
         () => bultos.filter((bulto) => !ordenAnulada(bulto.detalle_carga?.orden_transporte)),
         [bultos]
     );
 
+    // Contadores de lo visible: en bodega, sin ubicación y en traslado.
     const kpis = useMemo(() => ({
         enBodega: bultosVisibles.filter((item) => item.estado === "EN_BODEGA").length,
         sinUbicacion: bultosVisibles.filter((item) => item.estado === "EN_BODEGA" && !item.idSucursalActual).length,
@@ -108,6 +130,7 @@ export default function BodegaPage() {
         total: bultosVisibles.length
     }), [bultosVisibles]);
 
+    // Marca el bulto como recibido en la sucursal elegida.
     const ingresarBulto = async (bulto) => {
         if (!sucursalPorDefecto) {
             aviso("No hay sucursales activas para ingresar el bulto.", "error");
@@ -131,6 +154,7 @@ export default function BodegaPage() {
         }
     };
 
+    // Un rechazo vuelve a bodega escaneando el código, sin buscar la OT a mano.
     const reingresarRechazo = async (event) => {
         event.preventDefault();
         const codigo = scanReingreso.trim();
@@ -211,7 +235,7 @@ export default function BodegaPage() {
                 <form className="mx-toolbar" onSubmit={buscar}>
                     <input
                         type="search"
-                        placeholder="Buscar por código de bulto u OT"
+                        placeholder="Número de OT, por ejemplo 65"
                         value={busqueda}
                         onChange={(event) => setBusqueda(event.target.value)}
                     />

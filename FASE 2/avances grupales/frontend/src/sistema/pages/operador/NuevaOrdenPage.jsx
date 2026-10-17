@@ -1,11 +1,22 @@
+/*
+  VISTA: crear orden de transporte
+  RUTAS: /operador/ordenes y /administrador/nueva-orden
+  CSS: pasos de Nueva OT y resumen lateral (sistema.css)
+  API: POST /api/ordenes-transporte y /calcular
+  FUNCIONES: cliente, origen, destino, carga, recargos y precio.
+  El tamaño de retiro se muestra como S, M y L.
+*/
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api.js";
+import { borrarBorrador, guardarBorrador, leerBorrador } from "../../borrador.js";
 import { etiquetaComuna, formatearCLP, formatearKg, formatearM3, textoResumenTipos, etiquetaTipoCarga } from "../../utils.js";
 import Message from "../../components/Message.jsx";
 import AltaClienteForm from "../../components/AltaClienteForm.jsx";
 import AltaDestinatarioForm from "../../components/AltaDestinatarioForm.jsx";
 import DocumentosEmision from "../../components/DocumentosEmision.jsx";
+import { formatos } from "../../formatos.js";
 
+// Línea de bulto en blanco. Cada bulto nuevo parte de aquí para no arrastrar medidas de la línea anterior.
 const cargaVacia = () => ({
     id: crypto.randomUUID(),
     idTipoBulto: "",
@@ -17,6 +28,7 @@ const cargaVacia = () => ({
     altoCm: ""
 });
 
+// Pasa centímetros a metros cúbicos. El formulario se llena en cm y el tarifario cobra por m³.
 const volumenDeCarga = (carga) => {
     const cantidad = Number(carga.cantidad) || 0;
     const largo = Number(carga.largoCm) || 0;
@@ -25,9 +37,11 @@ const volumenDeCarga = (carga) => {
     return (largo * ancho * alto * cantidad) / 1000000;
 };
 
+// El peso de la línea es el de una pieza por la cantidad, porque el campo pide el peso unitario.
 const pesoDeCarga = (carga) =>
     (Number(carga.pesoUnitario) || 0) * (Number(carga.cantidad) || 0);
 
+// Junta varias líneas en un solo bulto del mismo volumen. Sirve cuando la carga viaja unida y el precio se calcula como una pieza.
 const consolidarCargas = (lista) => {
     if (lista.length === 0) {
         return [];
@@ -52,8 +66,10 @@ const consolidarCargas = (lista) => {
     }];
 };
 
+// Compara ids que a veces llegan como número y a veces como texto desde el select.
 const mismoId = (a, b) => String(a ?? "") === String(b ?? "");
 
+// El API a veces responde un arreglo y a veces un objeto con la lista adentro. Deja siempre un arreglo.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -64,11 +80,13 @@ const extraerLista = (datos, clave) => {
     return [];
 };
 
+// El id de tarifa puede venir suelto en el cliente o dentro del objeto tarifa, según el endpoint.
 const idTarifaDeCliente = (cliente) =>
     Number(cliente?.idTarifa || cliente?.tarifa?.idTarifa) || 0;
 
 export default function NuevaOrdenPage() {
-    const [paso, setPaso] = useState(0);
+    // Paso del asistente y catálogos. El borrador recupera la OT si se recarga la página antes de crearla.
+    const [paso, setPaso] = useState(() => (leerBorrador("nueva-ot") || {}).paso || 0);
     const [clientes, setClientes] = useState([]);
     const [comunas, setComunas] = useState([]);
     const [destinatarios, setDestinatarios] = useState([]);
@@ -83,10 +101,11 @@ export default function NuevaOrdenPage() {
     const [altaDestinatario, setAltaDestinatario] = useState(false);
     const [ordenCreada, setOrdenCreada] = useState(null);
     const [tarifarios, setTarifarios] = useState([]);
+    const [tiposRecargo, setTiposRecargo] = useState([]);
     const [bultoForm, setBultoForm] = useState(cargaVacia());
     const [consolidarCarga, setConsolidarCarga] = useState(false);
 
-    const [formulario, setFormulario] = useState({
+    const [formulario, setFormulario] = useState(() => (leerBorrador("nueva-ot") || {}).formulario || {
         idCliente: "",
         idDestinatario: "",
         idComunaOrigen: "",
@@ -108,6 +127,7 @@ export default function NuevaOrdenPage() {
         valorRetiro: "0",
         tipoRetiro: "PEQUENO",
         aplicaRecargo: "NO",
+        idTipoRecargo: "",
         descripcionRecargo: "",
         valorRecargo: "0",
         pagadoPor: "",
@@ -115,28 +135,70 @@ export default function NuevaOrdenPage() {
         metodoPago: "",
         idCuenta: ""
     });
-    const [cargas, setCargas] = useState([]);
+    const [cargas, setCargas] = useState(() => (leerBorrador("nueva-ot") || {}).cargas || []);
 
+    // Guarda el avance en la sesión. Se detiene cuando la OT ya existe, para no reabrir un borrador ya emitido.
+    useEffect(() => {
+        if (ordenCreada) {
+            return;
+        }
+        guardarBorrador("nueva-ot", { paso, formulario, cargas });
+    }, [paso, formulario, cargas, ordenCreada]);
+
+    // Aplica un recargo del catálogo o deja uno manual. Borra la cotización porque el total ya no coincide.
+    const elegirRecargo = (id) => {
+        if (!id) {
+            setFormulario((prev) => ({
+                ...prev,
+                aplicaRecargo: "NO",
+                idTipoRecargo: "",
+                descripcionRecargo: "",
+                valorRecargo: "0"
+            }));
+        } else if (id === "MANUAL") {
+            setFormulario((prev) => ({
+                ...prev,
+                aplicaRecargo: "SI",
+                idTipoRecargo: "MANUAL"
+            }));
+        } else {
+            const tipo = tiposRecargo.find((item) => String(item.idTipoRecargo) === String(id));
+            setFormulario((prev) => ({
+                ...prev,
+                aplicaRecargo: "SI",
+                idTipoRecargo: id,
+                descripcionRecargo: tipo?.nombre || prev.descripcionRecargo,
+                valorRecargo: tipo ? String(tipo.monto) : prev.valorRecargo
+            }));
+        }
+        setCotizacion(null);
+        setDatosCotizados(null);
+    };
+
+    // Cambia un campo del formulario y anula la cotización: cualquier cambio obliga a calcular de nuevo.
     const setCampo = (campo, valor) => {
         setFormulario((prev) => ({ ...prev, [campo]: valor }));
         setCotizacion(null);
         setDatosCotizados(null);
     };
 
+    // Carga clientes, comunas, destinatarios, tipos de bulto, tarifarios y recargos al abrir la pantalla.
     useEffect(() => {
         Promise.all([
             api("/clientes"),
             api("/comunas"),
             api("/destinatarios"),
             api("/bultos/tipos"),
-            api("/maestros/tarifas")
+            api("/maestros/tarifas"),
+            api("/maestros/recargos").catch(() => ({ recargos: [] }))
         ])
-            .then(([listaClientes, listaComunas, dest, tipos, listaTarifas]) => {
+            .then(([listaClientes, listaComunas, dest, tipos, listaTarifas, listaRecargos]) => {
                 setClientes(extraerLista(listaClientes, "clientes"));
                 setComunas(extraerLista(listaComunas, "comunas"));
                 setDestinatarios(dest?.destinatarios || extraerLista(dest, "destinatarios"));
                 setTiposBulto(tipos?.tipos || extraerLista(tipos, "tipos"));
                 setTarifarios(extraerLista(listaTarifas, "tarifas").filter((item) => item.estado !== false));
+                setTiposRecargo((listaRecargos?.recargos || []).filter((item) => item.estado !== false));
             })
             .catch((error) => {
                 setMensaje(error.message);
@@ -144,6 +206,7 @@ export default function NuevaOrdenPage() {
             });
     }, []);
 
+    // Cliente elegido y tarifario de respaldo si el cliente todavía no tiene uno asignado.
     const clienteSeleccionado = useMemo(
         () => clientes.find((item) => mismoId(item.idCliente, formulario.idCliente)),
         [clientes, formulario.idCliente]
@@ -160,6 +223,7 @@ export default function NuevaOrdenPage() {
     }, [tarifarios]);
     const idTarifaActual = idTarifaDeCliente(clienteSeleccionado) || Number(tarifaPorDefecto?.idTarifa) || 0;
 
+    // Trae la cuenta corriente del cliente para saber si puede pagar con ella y cuánto le queda.
     useEffect(() => {
         if (!formulario.idCliente) {
             setCuenta(null);
@@ -178,6 +242,7 @@ export default function NuevaOrdenPage() {
             });
     }, [formulario.idCliente]);
 
+    // Copia dirección, teléfono y comuna del cliente al origen. Evita reescribir datos que ya están en el maestro.
     const aplicarCliente = (cliente) => {
         if (!cliente) {
             return;
@@ -198,6 +263,7 @@ export default function NuevaOrdenPage() {
         setDatosCotizados(null);
     };
 
+    // Al elegir un cliente del listado, rellena el origen. Si el id no está, deja el campo vacío de cuenta.
     const seleccionarCliente = (idCliente) => {
         const cliente = clientes.find((item) => mismoId(item.idCliente, idCliente));
         if (!cliente) {
@@ -211,6 +277,7 @@ export default function NuevaOrdenPage() {
         aplicarCliente(cliente);
     };
 
+    // Copia nombre, dirección y comuna del destinatario al destino de la OT.
     const aplicarDestinatario = (dest) => {
         if (!dest) {
             return;
@@ -229,6 +296,7 @@ export default function NuevaOrdenPage() {
         setDatosCotizados(null);
     };
 
+    // Busca el destinatario elegido y, si existe, completa el destino.
     const seleccionarDestinatario = (idDestinatario) => {
         const dest = destinatarios.find(
             (item) => String(item.idDestinatario) === String(idDestinatario)
@@ -240,6 +308,7 @@ export default function NuevaOrdenPage() {
         aplicarDestinatario(dest);
     };
 
+    // Guarda el tarifario en el cliente. Sin tarifario el servidor no puede cotizar la OT.
     const asignarTarifario = async (idTarifa) => {
         if (!idTarifa) {
             return;
@@ -292,6 +361,7 @@ export default function NuevaOrdenPage() {
 
     const volumenCarga = volumenDeCarga;
 
+    // Suma piezas, kilos y m³ de todas las líneas para el resumen lateral.
     const totalesCarga = useMemo(() => {
         const porTipo = {};
         let piezas = 0;
@@ -310,10 +380,12 @@ export default function NuevaOrdenPage() {
         return { piezas, peso, volumen, porTipo };
     }, [cargas, tiposBulto]);
 
+    // Edita el bulto que todavía no se ha añadido a la lista.
     const setBultoCampo = (campo, valor) => {
         setBultoForm((prev) => ({ ...prev, [campo]: valor }));
     };
 
+    // Pasa el bulto del formulario a la carga. Exige tipo y cantidad para no cotizar una línea vacía.
     const anadirBulto = () => {
         if (!bultoForm.idTipoBulto) {
             setMensaje("Selecciona el tipo de bulto antes de añadirlo.");
@@ -345,6 +417,7 @@ export default function NuevaOrdenPage() {
         setTipoMensaje("success");
     };
 
+    // Reemplaza las líneas por un solo bulto. Hacen falta al menos dos, porque consolidar una no cambia nada.
     const consolidarBultosAgregados = () => {
         if (cargas.length < 2) {
             setMensaje("Agrega al menos dos líneas de bultos para consolidar.");
@@ -361,6 +434,7 @@ export default function NuevaOrdenPage() {
         setTipoMensaje("success");
     };
 
+    // Arma el cuerpo que entiende el servidor: números, retiro opcional y recargo solo si se marcó.
     const armarPayload = () => {
         const recargos = formulario.aplicaRecargo === "SI"
             ? [{
@@ -404,6 +478,7 @@ export default function NuevaOrdenPage() {
         return datos;
     };
 
+    // Pide el precio sin crear la OT. Si falta un dato, se queda en el paso que hay que completar.
     const calcular = async () => {
         setMensaje("");
         const datos = armarPayload();
@@ -449,6 +524,7 @@ export default function NuevaOrdenPage() {
         }
     };
 
+    // Crea la OT con la cotización ya calculada y abre el ticket y las etiquetas.
     const confirmar = async () => {
         if (!datosCotizados) {
             setMensaje("Primero debes calcular la cotización.");
@@ -514,7 +590,9 @@ export default function NuevaOrdenPage() {
                     orden = ordenCreada;
                 }
             }
+            borrarBorrador("nueva-ot");
             setOrdenCreada(orden);
+            window.dispatchEvent(new Event("marexpress-alertas"));
             setMensaje(`Orden creada correctamente${orden?.numeroOT ? `: ${orden.numeroOT}` : ""}. Imprime la OT y luego las etiquetas.`);
             setTipoMensaje("success");
             setCotizacion(null);
@@ -532,6 +610,7 @@ export default function NuevaOrdenPage() {
     return (
         <section className="ot-layout">
             <div className="ot-contenido">
+            {/* Pasos. Se puede saltar de uno a otro; el precio solo se confirma al calcular. */}
             <div className="ot-pasos">
                 {pasos.map((nombre, indice) => (
                     <button
@@ -547,6 +626,7 @@ export default function NuevaOrdenPage() {
 
             <Message texto={mensaje} tipo={tipoMensaje} />
 
+            {/* Remitente: quién encarga. Su dirección y tarifario se copian al origen. */}
             {paso === 0 && (
                 <section className="ot-seccion abierta">
                     <div className="ot-seccion-body">
@@ -619,6 +699,7 @@ export default function NuevaOrdenPage() {
                             <div className="field">
                                 <label>Contacto origen</label>
                                 <input
+                                    {...formatos.contacto}
                                     value={formulario.contactoOrigen}
                                     onChange={(e) => setCampo("contactoOrigen", e.target.value)}
                                 />
@@ -626,6 +707,7 @@ export default function NuevaOrdenPage() {
                             <div className="field">
                                 <label>Teléfono origen</label>
                                 <input
+                                    {...formatos.telefono}
                                     value={formulario.telefonoOrigen}
                                     onChange={(e) => setCampo("telefonoOrigen", e.target.value)}
                                 />
@@ -633,6 +715,7 @@ export default function NuevaOrdenPage() {
                             <div className="field">
                                 <label>Dirección origen</label>
                                 <input
+                                    {...formatos.direccion}
                                     value={formulario.direccionOrigen}
                                     onChange={(e) => setCampo("direccionOrigen", e.target.value)}
                                 />
@@ -656,6 +739,7 @@ export default function NuevaOrdenPage() {
                 </section>
             )}
 
+            {/* Destinatario: quién recibe. Completa dirección, comuna y referencia de entrega. */}
             {paso === 1 && (
                 <section className="ot-seccion abierta">
                     <div className="ot-seccion-body">
@@ -710,6 +794,7 @@ export default function NuevaOrdenPage() {
                             <div className="field">
                                 <label>Contacto destino</label>
                                 <input
+                                    {...formatos.contacto}
                                     value={formulario.contactoDestino}
                                     onChange={(e) => setCampo("contactoDestino", e.target.value)}
                                 />
@@ -717,6 +802,7 @@ export default function NuevaOrdenPage() {
                             <div className="field">
                                 <label>Teléfono destino</label>
                                 <input
+                                    {...formatos.telefono}
                                     value={formulario.telefonoDestino}
                                     onChange={(e) => setCampo("telefonoDestino", e.target.value)}
                                 />
@@ -724,6 +810,7 @@ export default function NuevaOrdenPage() {
                             <div className="field">
                                 <label>Dirección destino</label>
                                 <input
+                                    {...formatos.direccion}
                                     value={formulario.direccionDestino}
                                     onChange={(e) => setCampo("direccionDestino", e.target.value)}
                                 />
@@ -745,6 +832,7 @@ export default function NuevaOrdenPage() {
                             <div className="field">
                                 <label>Referencia de entrega</label>
                                 <input
+                                    {...formatos.referencia}
                                     value={formulario.referenciaEntrega}
                                     onChange={(e) => setCampo("referenciaEntrega", e.target.value)}
                                 />
@@ -754,6 +842,7 @@ export default function NuevaOrdenPage() {
                 </section>
             )}
 
+            {/* Carga: bultos, kilos y medidas. Se pueden consolidar en una sola pieza. */}
             {paso === 2 && (
                 <section className="ot-seccion abierta">
                     <div className="ot-seccion-body">
@@ -781,16 +870,15 @@ export default function NuevaOrdenPage() {
                                 <div className="field">
                                     <label>Descripción</label>
                                     <input
+                                        {...formatos.descripcion}
                                         value={bultoForm.descripcion}
                                         onChange={(e) => setBultoCampo("descripcion", e.target.value)}
-                                        placeholder="Ej. Caja documentos"
                                     />
                                 </div>
                                 <div className="field">
                                     <label>Cantidad</label>
                                     <input
-                                        type="number"
-                                        min="1"
+                                        {...formatos.cantidad}
                                         value={bultoForm.cantidad}
                                         onChange={(e) => setBultoCampo("cantidad", e.target.value)}
                                     />
@@ -798,9 +886,7 @@ export default function NuevaOrdenPage() {
                                 <div className="field">
                                     <label>Peso unitario (kg)</label>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
+                                        {...formatos.kg}
                                         value={bultoForm.pesoUnitario}
                                         onChange={(e) => setBultoCampo("pesoUnitario", e.target.value)}
                                     />
@@ -808,8 +894,7 @@ export default function NuevaOrdenPage() {
                                 <div className="field">
                                     <label>Largo (cm)</label>
                                     <input
-                                        type="number"
-                                        min="0"
+                                        {...formatos.cm}
                                         value={bultoForm.largoCm}
                                         onChange={(e) => setBultoCampo("largoCm", e.target.value)}
                                     />
@@ -817,8 +902,7 @@ export default function NuevaOrdenPage() {
                                 <div className="field">
                                     <label>Ancho (cm)</label>
                                     <input
-                                        type="number"
-                                        min="0"
+                                        {...formatos.cm}
                                         value={bultoForm.anchoCm}
                                         onChange={(e) => setBultoCampo("anchoCm", e.target.value)}
                                     />
@@ -826,8 +910,7 @@ export default function NuevaOrdenPage() {
                                 <div className="field">
                                     <label>Alto (cm)</label>
                                     <input
-                                        type="number"
-                                        min="0"
+                                        {...formatos.cm}
                                         value={bultoForm.altoCm}
                                         onChange={(e) => setBultoCampo("altoCm", e.target.value)}
                                     />
@@ -923,6 +1006,7 @@ export default function NuevaOrdenPage() {
                 </section>
             )}
 
+            {/* Servicio: zona, documento, retiro S/M/L, recargo y forma de pago. */}
             {paso === 3 && (
                 <section className="ot-seccion abierta">
                     <div className="ot-seccion-body">
@@ -975,6 +1059,7 @@ export default function NuevaOrdenPage() {
                             <div className="field">
                                 <label>Número documento</label>
                                 <input
+                                    {...formatos.documento}
                                     value={formulario.numeroDocumento}
                                     onChange={(e) => setCampo("numeroDocumento", e.target.value)}
                                 />
@@ -994,7 +1079,7 @@ export default function NuevaOrdenPage() {
                                     <div className="field">
                                         <label>Fecha de retiro</label>
                                         <input
-                                            type="date"
+                                            {...formatos.fecha}
                                             value={formulario.fechaRetiro}
                                             onChange={(e) => setCampo("fechaRetiro", e.target.value)}
                                         />
@@ -1002,6 +1087,7 @@ export default function NuevaOrdenPage() {
                                     <div className="field">
                                         <label>Dirección de retiro</label>
                                         <input
+                                            {...formatos.direccion}
                                             value={formulario.direccionRetiro}
                                             onChange={(e) => setCampo("direccionRetiro", e.target.value)}
                                         />
@@ -1012,21 +1098,26 @@ export default function NuevaOrdenPage() {
                                             value={formulario.tipoRetiro}
                                             onChange={(e) => setCampo("tipoRetiro", e.target.value)}
                                         >
-                                            <option value="PEQUENO">Urbano pequeño</option>
-                                            <option value="MEDIANO">Urbano mediano</option>
-                                            <option value="GRANDE">Urbano grande</option>
+                                            <option value="PEQUENO">S</option>
+                                            <option value="MEDIANO">M</option>
+                                            <option value="GRANDE">L</option>
                                         </select>
                                     </div>
                                 </>
                             )}
                             <div className="field">
-                                <label>Aplica recargo</label>
+                                <label>Recargo</label>
                                 <select
-                                    value={formulario.aplicaRecargo}
-                                    onChange={(e) => setCampo("aplicaRecargo", e.target.value)}
+                                    value={formulario.aplicaRecargo === "SI" ? (formulario.idTipoRecargo || "MANUAL") : ""}
+                                    onChange={(e) => elegirRecargo(e.target.value)}
                                 >
-                                    <option value="NO">No</option>
-                                    <option value="SI">Sí</option>
+                                    <option value="">Sin recargo</option>
+                                    {tiposRecargo.map((item) => (
+                                        <option key={item.idTipoRecargo} value={item.idTipoRecargo}>
+                                            {item.nombre} · {formatearCLP(item.monto)}
+                                        </option>
+                                    ))}
+                                    <option value="MANUAL">Otro, ingresar a mano</option>
                                 </select>
                             </div>
                             {formulario.aplicaRecargo === "SI" && (
@@ -1034,6 +1125,7 @@ export default function NuevaOrdenPage() {
                                     <div className="field">
                                         <label>Motivo recargo</label>
                                         <input
+                                            {...formatos.descripcion}
                                             value={formulario.descripcionRecargo}
                                             onChange={(e) => setCampo("descripcionRecargo", e.target.value)}
                                         />
@@ -1041,10 +1133,12 @@ export default function NuevaOrdenPage() {
                                     <div className="field">
                                         <label>Valor recargo</label>
                                         <input
-                                            type="number"
-                                            min="0"
+                                            {...formatos.dinero}
                                             value={formulario.valorRecargo}
-                                            onChange={(e) => setCampo("valorRecargo", e.target.value)}
+                                            onChange={(e) => {
+                                                setFormulario((prev) => ({ ...prev, valorRecargo: e.target.value }));
+                                                setCotizacion(null);
+                                            }}
                                         />
                                     </div>
                                 </>
@@ -1112,6 +1206,7 @@ export default function NuevaOrdenPage() {
                 </section>
             )}
 
+            {/* Resumen: el detalle de plata está en el panel derecho; aquí solo se confirma. */}
             {paso === 4 && (
                 <section className="ot-seccion abierta">
                     <div className="ot-seccion-body">
@@ -1123,6 +1218,7 @@ export default function NuevaOrdenPage() {
                 </section>
             )}
 
+            {/* Calcular no crea la OT. Confirmar la crea con los valores ya cotizados. */}
             <div className="mx-form-actions">
                 <button type="button" className="button-secondary" onClick={calcular} disabled={cargando}>
                     {cargando ? "Calculando..." : "Calcular cotización"}
@@ -1133,6 +1229,7 @@ export default function NuevaOrdenPage() {
             </div>
             </div>
 
+            {/* Panel lateral: kilos, volumen y el desglose que devolvió el cálculo. */}
             <aside className="ot-resumen">
                 <h2>Resumen</h2>
                 <p>Valores de la cotización actual.</p>
@@ -1169,28 +1266,31 @@ export default function NuevaOrdenPage() {
                     <strong>{consolidarCarga ? "Sí" : "No"}</strong>
                 </div>
                 <div className="ot-resumen-bloque">
-                    <span>Cobro</span>
-                    <strong>
-                        {cotizacion?.tipoCobro === "VOLUMEN"
-                            ? "Por m³"
-                            : cotizacion?.tipoCobro === "PESO"
-                                ? "Por kilos"
-                                : "Pendiente"}
-                    </strong>
+                    <span>Valor flete</span>
+                    <strong>{formatearCLP(cotizacion?.valorCargaAplicado)}</strong>
                 </div>
                 <div className="ot-resumen-bloque">
-                    <span>Neto</span>
+                    <span>Valor retiro</span>
+                    <strong>{formatearCLP(cotizacion?.valorRetiro)}</strong>
+                </div>
+                <div className="ot-resumen-bloque">
+                    <span>Valor recargo</span>
+                    <strong>{formatearCLP(cotizacion?.totalRecargos)}</strong>
+                </div>
+                <div className="ot-resumen-bloque">
+                    <span>Valor neto</span>
                     <strong>{formatearCLP(cotizacion?.valorNeto)}</strong>
                 </div>
                 <div className="ot-resumen-bloque">
-                    <span>IVA</span>
+                    <span>Valor IVA</span>
                     <strong>{formatearCLP(cotizacion?.valorIva)}</strong>
                 </div>
                 <div className="ot-resumen-total">
-                    <span>Total</span>
+                    <span>Valor total</span>
                     <strong>{formatearCLP(cotizacion?.valorTotal)}</strong>
                 </div>
             </aside>
+            {/* Ticket de 80 mm y etiquetas de 100×70 mm, solo después de crear la OT. */}
             {ordenCreada ? (
                 <DocumentosEmision
                     orden={ordenCreada}

@@ -9,6 +9,19 @@
 
   Si quieres cambiar cómo se ve un botón o una tabla en TODO el sistema,
   se cambia aquí, una sola vez.
+
+  Bloques, en orden:
+  - Textos: títulos y notas dentro de una vista.
+  - Campos: input, select y textarea.
+  - Botones: button-primary, button-secondary, button-danger.
+  - Mensajes: el aviso verde o rojo del componente Message.
+  - Tarjetas: admin-card, la caja de cada pantalla.
+  - Indicadores: los números grandes (ingresos, órdenes, vueltas).
+  - Tablas: mx-table.
+  - Bloques de datos: fichas de ciudad, manifiesto y OT.
+  - Modal: ventanas de confirmación.
+  - Nueva OT: pasos del formulario y el resumen lateral.
+  - Impresión: ticket de 80 mm y etiqueta de 100×70 mm.
   ============================================================
 */
 
@@ -152,11 +165,18 @@
   .operador-card-header h2 {
     @apply text-base font-bold text-marino sm:text-lg;
   }
+  .mx-desplegable {
+    @apply w-full cursor-pointer border-0 text-left;
+  }
+  .mx-desplegable > span:last-child {
+    @apply text-xs font-semibold text-azul;
+  }
   .operador-acciones {
     @apply flex flex-wrap gap-2;
   }
-  .operador-acciones a {
-    @apply rounded-lg border border-borde bg-white px-3 py-1.5 text-sm font-semibold text-marino transition-colors hover:border-azul/40 hover:bg-celeste-suave;
+  .operador-acciones a,
+  .operador-acciones button {
+    @apply cursor-pointer rounded-lg border border-borde bg-white px-3 py-1.5 text-sm font-semibold text-marino transition-colors hover:border-azul/40 hover:bg-celeste-suave disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   /* ---------- Indicadores (KPI) ---------- */
@@ -339,52 +359,66 @@
     @apply flex flex-wrap items-center gap-3;
   }
   .ot-ticket {
-    @apply mx-auto w-[88mm] max-w-full border border-dashed border-borde bg-white px-[3mm] py-[4mm] text-[11px] leading-snug text-marino;
+    @apply mx-auto w-[88mm] max-w-full border border-dashed border-borde bg-white px-[3mm] py-[4mm] font-mono text-[10px] leading-tight text-black;
   }
   .ot-ticket h3 {
-    @apply mt-2 mb-0.5 border-b border-marino text-[10px] uppercase tracking-wider;
-  }
-  .ot-ticket p {
-    @apply mb-0.5;
+    @apply mt-2 mb-0.5 border-y border-black py-0.5 text-center text-[10px] font-bold uppercase tracking-wide;
   }
   .ot-ticket-cabeza,
   .ot-etiqueta-cabeza {
-    @apply mb-1 flex items-center justify-between gap-2 border-b border-marino pb-1;
+    @apply mb-1 flex items-start justify-between gap-2 border-b border-black pb-1;
   }
-  .ot-ticket-cabeza > div:last-child,
-  .ot-etiqueta-cabeza > div:last-child {
-    @apply text-right;
+  .ot-ticket-logo {
+    @apply h-12 w-auto max-w-[42mm] shrink-0;
   }
-  .ot-ticket-cabeza span,
-  .ot-etiqueta-cabeza span {
-    @apply block text-[9px] font-semibold tracking-wide;
+  .ot-ticket-empresa {
+    @apply text-right text-[8px] leading-tight;
   }
-  .ot-logo {
-    @apply flex items-center gap-1.5;
+  .ot-ticket-dato {
+    @apply mb-0.5 flex items-baseline justify-between gap-2 border-b border-dotted border-neutral-400;
   }
-  .ot-logo img {
-    @apply h-6 w-auto;
+  .ot-ticket-dato span {
+    @apply shrink-0 uppercase;
+  }
+  .ot-ticket-dato strong {
+    @apply text-right font-bold;
+  }
+  .ot-ticket-tabla {
+    @apply my-1 w-full border-collapse text-[7px];
+  }
+  .ot-ticket-tabla th,
+  .ot-ticket-tabla td {
+    @apply border border-black px-0.5 py-0.5 text-center;
   }
   .ot-barcode {
     @apply my-1 h-auto w-full;
   }
-  .ot-ticket-linea {
-    @apply flex flex-col border-b border-dashed border-borde py-1;
-  }
   .ot-ticket-total {
-    @apply mt-2 text-right text-sm font-extrabold;
+    @apply mt-1 flex items-center justify-between border-y-2 border-black py-1 text-xs font-extrabold;
   }
   .ot-ticket-pie {
-    @apply mt-1 text-center text-[9px];
+    @apply mt-2 text-center text-[9px];
   }
   .ot-etiquetas {
     @apply grid justify-items-center gap-4;
   }
   .ot-etiqueta {
-    @apply h-[70mm] w-[100mm] max-w-full overflow-hidden rounded-sm border border-marino bg-white px-[3.5mm] py-[3mm] text-[10px] text-marino;
+    @apply flex h-[70mm] w-[100mm] max-w-full flex-col overflow-hidden rounded-sm border-2 border-marino bg-white px-[3.5mm] py-[2.5mm] text-[10px] text-marino;
+  }
+  .ot-etiqueta-logo {
+    @apply h-10 w-auto max-w-[42mm];
+  }
+  .ot-etiqueta-cabeza > div:last-child {
+    @apply text-right;
+  }
+  .ot-etiqueta-cabeza span {
+    @apply block text-[8px] font-semibold uppercase tracking-wide;
   }
   .ot-etiqueta-codigo {
-    @apply text-center font-mono text-sm font-bold;
+    @apply text-center font-mono text-xs font-bold;
+  }
+  .ot-etiqueta-destino {
+    @apply text-center text-sm font-extrabold uppercase tracking-wide;
   }
   .ot-etiqueta-cuerpo {
     @apply grid grid-cols-2 gap-x-2 gap-y-0.5;

@@ -1,6 +1,7 @@
 import transbankSdk from "transbank-sdk";
 
 import prisma from "../../config/prisma.js";
+import { candidatosCodigo } from "../../common/utils/codigoOt.js";
 import { registrarEventoOt } from "../ordenes/ordenesTransporte.service.js";
 
 const {
@@ -80,7 +81,7 @@ const buscarOrden = async ({ idOrden, numeroOT }) => {
     const where = Number.isInteger(id) && id > 0
         ? { idOrden: id }
         : numero
-            ? { numeroOT: numero }
+            ? { numeroOT: { in: candidatosCodigo(numero) } }
             : null;
 
     if (!where) {

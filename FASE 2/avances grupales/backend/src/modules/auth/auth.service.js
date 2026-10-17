@@ -124,14 +124,17 @@ export const registrarCliente = async (datos = {}) => {
         throw new Error("La contraseña supera el máximo de 72 bytes");
     }
 
-    const rolCliente = await prisma.rol.findUnique({
+    const rolesCliente = await prisma.rol.findMany({
         where: {
-            nombreRol: "CLIENTE"
+            nombreRol: { in: ["CLIENTE NORMAL", "CLIENTE"] }
         },
         select: {
-            idRol: true
+            idRol: true,
+            nombreRol: true
         }
     });
+    const rolCliente = rolesCliente.find((rol) => rol.nombreRol === "CLIENTE NORMAL")
+        || rolesCliente[0];
 
     if (!rolCliente) {
         throw new Error("No fue posible preparar el registro");

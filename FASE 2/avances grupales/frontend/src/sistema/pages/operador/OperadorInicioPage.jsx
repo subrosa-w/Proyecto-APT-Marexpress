@@ -1,3 +1,10 @@
+/*
+  VISTA: inicio del operador
+  RUTA: /operador
+  CSS: admin-card
+  API: órdenes y alertas de la bodega de trabajo
+  FUNCIONES: resumen de lo que hay que recibir, despachar y cobrar hoy
+*/
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { api } from "../../api.js";
@@ -14,6 +21,7 @@ import {
     ordenAnulada
 } from "../../utils.js";
 
+// Deja la respuesta del API como arreglo.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -24,6 +32,7 @@ const extraerLista = (datos, clave) => {
     return [];
 };
 
+// Destino legible: comuna si existe y, si no, la dirección.
 const destinoOrden = (orden) =>
     etiquetaComuna(orden.comuna_orden_transporte_idComunaDestinoTocomuna)
     || orden.direccionDestino
@@ -34,26 +43,43 @@ export default function OperadorInicioPage() {
     const [ordenes, setOrdenes] = useState([]);
     const [bultosBodega, setBultosBodega] = useState([]);
     const [mensaje, setMensaje] = useState("");
+    const [actualizando, setActualizando] = useState(false);
 
-    useEffect(() => {
+    // Órdenes y bultos en bodega. Sin sucursal elegida no hay nada que mostrar.
+    const cargar = async () => {
         if (!idSucursal) {
             setBultosBodega([]);
+            setOrdenes([]);
             return;
         }
-        Promise.all([
-            api("/ordenes-transporte").catch((error) => {
-                setMensaje(error.message);
-                return [];
-            }),
+        const [listaOt, inventario] = await Promise.all([
+            api("/ordenes-transporte"),
             api(`/bultos/bodega?estado=EN_BODEGA&idSucursal=${idSucursal}`).catch(() => ({ bultos: [] }))
-        ]).then(([listaOt, inventario]) => {
-            setOrdenes(extraerLista(listaOt, "ordenes"));
-            setBultosBodega(extraerLista(inventario, "bultos"));
-        });
+        ]);
+        setOrdenes(extraerLista(listaOt, "ordenes"));
+        setBultosBodega(extraerLista(inventario, "bultos"));
+        setMensaje("");
+    };
+
+    useEffect(() => {
+        cargar().catch((error) => setMensaje(error.message));
     }, [idSucursal]);
+
+    // Vuelve a leer al pulsar actualizar, con un estado de espera en el botón.
+    const recargar = async () => {
+        setActualizando(true);
+        try {
+            await cargar();
+        } catch (error) {
+            setMensaje(error.message);
+        } finally {
+            setActualizando(false);
+        }
+    };
 
     const hoy = fechaHoyChile();
 
+    // Separa lo de hoy: rechazos por recepcionar, OT nuevas y bultos que siguen en esta bodega.
     const { porEntregar, porRecepcionar, registradasHoy, historial, totalOt } = useMemo(() => {
         const grupos = { porRecepcionar: [], registradasHoy: [] };
         for (const orden of ordenes) {
@@ -154,6 +180,9 @@ export default function OperadorInicioPage() {
                         <h2>Gestión del día</h2>
                     </div>
                     <div className="operador-acciones">
+                        <button type="button" onClick={recargar} disabled={actualizando}>
+                            {actualizando ? "Actualizando..." : "Actualizar"}
+                        </button>
                         <Link to="/operador/recepcion">Recepción</Link>
                         <Link to="/operador/manifiestos">Manifiestos</Link>
                         <Link to="/operador/bodega">Bodega</Link>

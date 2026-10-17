@@ -1,5 +1,13 @@
+/*
+  VISTA: manifiestos
+  RUTAS: /administrador/manifiestos y /operador/manifiestos
+  CSS: admin-card, mx-table, modal
+  API: /api/manifiestos
+  FUNCIONES: arma la carga, el camión, el conductor y los peonetas
+*/
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../api.js";
+import { guardarBorrador, leerBorrador } from "../../borrador.js";
 import { useBodegaTrabajo } from "../../bodegaTrabajo.jsx";
 import Message from "../../components/Message.jsx";
 import {
@@ -17,6 +25,7 @@ import {
     textoResumenTipos
 } from "../../utils.js";
 
+// Deja la respuesta del API como arreglo.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -27,6 +36,7 @@ const extraerLista = (datos, clave) => {
     return [];
 };
 
+// Baja los bultos anidados del manifiesto a una lista plana, con OT, kilos y medidas, para la tabla.
 const aplanarBultos = (manifiesto) =>
     (manifiesto?.manifiesto_ot || []).flatMap((ot) =>
         (ot.manifiesto_carga || []).flatMap((carga) => {
@@ -60,18 +70,22 @@ const aplanarBultos = (manifiesto) =>
 export default function ManifiestosPage() {
     const { idComuna, nombreBodega, manifiestoDeBodega } = useBodegaTrabajo();
     const scanRef = useRef(null);
+    const manifiestoRestaurado = useRef(false);
+    const [borradorManifiesto] = useState(() => leerBorrador("manifiesto") || {});
     const [manifiestos, setManifiestos] = useState([]);
     const [vehiculos, setVehiculos] = useState([]);
     const [conductores, setConductores] = useState([]);
     const [peonetas, setPeonetas] = useState([]);
     const [comunas, setComunas] = useState([]);
     const [activo, setActivo] = useState(null);
-    const [codigo, setCodigo] = useState("");
+    const [codigo, setCodigo] = useState(() => (leerBorrador("manifiesto") || {}).codigo || "");
+    const [enBodega, setEnBodega] = useState([]);
     const [mensaje, setMensaje] = useState("");
     const [tipo, setTipo] = useState("info");
     const [cargando, setCargando] = useState(false);
     const [seleccionOt, setSeleccionOt] = useState(null);
-    const [formulario, setFormulario] = useState({
+    const [otAbierta, setOtAbierta] = useState(null);
+    const [formulario, setFormulario] = useState(() => (leerBorrador("manifiesto") || {}).formulario || {
         idVehiculo: "",
         idConductor: "",
         idPeoneta: "",
@@ -80,16 +94,19 @@ export default function ManifiestosPage() {
         observacion: ""
     });
 
+    // Aviso único de la pantalla.
     const aviso = (texto, clase = "info") => {
         setMensaje(texto);
         setTipo(clase);
     };
 
+    // Vuelve a leer los manifiestos después de crear, escanear o dar salida.
     const cargarListado = async () => {
         const datos = await api("/manifiestos");
         setManifiestos(extraerLista(datos, "manifiestos"));
     };
 
+    // Al abrir: manifiestos, camiones, conductores, peonetas y comunas.
     useEffect(() => {
         Promise.all([
             api("/manifiestos"),
@@ -108,24 +125,51 @@ export default function ManifiestosPage() {
             .catch((error) => aviso(error.message, "error"));
     }, []);
 
+    // Si no hay borrador, la ciudad del manifiesto parte en la bodega de trabajo.
     useEffect(() => {
-        if (idComuna) {
+        if (idComuna && !borradorManifiesto.formulario?.idComuna) {
             setFormulario((prev) => ({ ...prev, idComuna: String(idComuna) }));
         }
     }, [idComuna]);
 
+    // Guarda el manifiesto abierto. Espera a restaurarlo para no pisar el borrador con un formulario vacío.
+    useEffect(() => {
+        if (!manifiestoRestaurado.current && borradorManifiesto.idManifiesto && !activo) {
+            return;
+        }
+        guardarBorrador("manifiesto", {
+            idManifiesto: activo?.idManifiesto || null,
+            codigo,
+            formulario
+        });
+    }, [activo, codigo, formulario]);
+
+    // Solo en preparación se puede sumar carga, así que la bodega se consulta en ese estado.
+    useEffect(() => {
+        if (activo?.estado !== "PREPARACION") {
+            return;
+        }
+        api("/bultos/bodega?estado=EN_BODEGA")
+            .then((datos) => setEnBodega(datos?.bultos || []))
+            .catch(() => setEnBodega([]));
+    }, [activo?.idManifiesto, activo?.estado]);
+
+    // Deja el cursor en el escáner para leer el siguiente código sin hacer clic.
     useEffect(() => {
         if (activo?.estado === "PREPARACION") {
             scanRef.current?.focus();
         }
     }, [activo?.idManifiesto, activo?.estado]);
 
+    // Solo los manifiestos de la bodega activa.
     const manifiestosVisibles = useMemo(
         () => manifiestos.filter((item) => manifiestoDeBodega(item)),
         [manifiestos, manifiestoDeBodega]
     );
 
+    // Bultos ya cargados en el manifiesto abierto.
     const bultosActivos = useMemo(() => aplanarBultos(activo), [activo]);
+    // Kilos, m³ y piezas de todo el manifiesto.
     const totalesManifiesto = useMemo(
         () => resumirCarga(bultosActivos.map((bulto) => ({
             tipo: bulto.tipoGrupo || bulto.tipo,
@@ -135,6 +179,7 @@ export default function ManifiestosPage() {
         }))),
         [bultosActivos]
     );
+    // Agrupa los bultos por OT para ver cuánto lleva cada orden.
     const otsEnManifiesto = useMemo(() => {
         const grupos = [];
         const indice = new Map();
@@ -161,7 +206,31 @@ export default function ManifiestosPage() {
             })))
         }));
     }, [bultosActivos]);
+    // Órdenes que siguen en bodega y todavía no están en este manifiesto.
+    const disponiblesBodega = useMemo(() => {
+        const cargadas = new Set(otsEnManifiesto.map((grupo) => grupo.numeroOT));
+        const grupos = new Map();
+        for (const bulto of enBodega) {
+            const orden = bulto.detalle_carga?.orden_transporte;
+            if (!orden?.numeroOT || cargadas.has(orden.numeroOT)) {
+                continue;
+            }
+            if (!grupos.has(orden.numeroOT)) {
+                grupos.set(orden.numeroOT, {
+                    numeroOT: orden.numeroOT,
+                    cliente: orden.cliente?.razonSocial || "Sin cliente",
+                    destino: orden.comuna_orden_transporte_idComunaDestinoTocomuna?.nombreComuna
+                        || orden.direccionDestino
+                        || "Sin destino",
+                    piezas: 0
+                });
+            }
+            grupos.get(orden.numeroOT).piezas += 1;
+        }
+        return [...grupos.values()];
+    }, [enBodega, otsEnManifiesto]);
     const enPreparacion = activo?.estado === "PREPARACION";
+    // No sale a ruta sin camión, conductor, peoneta y al menos un bulto.
     const puedeSalir = enPreparacion
         && activo?.idVehiculo
         && activo?.idConductor
@@ -173,6 +242,7 @@ export default function ManifiestosPage() {
         [comunas, formulario.idComuna]
     );
 
+    // Crea el manifiesto en preparación. La carga se agrega después, escaneando.
     const crear = async (event) => {
         event.preventDefault();
         setCargando(true);
@@ -198,6 +268,7 @@ export default function ManifiestosPage() {
         }
     };
 
+    // Abre el detalle y rellena camión, conductor, peoneta y fecha ya guardados.
     const abrir = async (manifiesto) => {
         setCargando(true);
         try {
@@ -219,6 +290,16 @@ export default function ManifiestosPage() {
         }
     };
 
+    // Si había un manifiesto abierto en la sesión, lo vuelve a cargar al entrar.
+    useEffect(() => {
+        if (manifiestoRestaurado.current || !borradorManifiesto.idManifiesto) {
+            return;
+        }
+        manifiestoRestaurado.current = true;
+        abrir({ idManifiesto: borradorManifiesto.idManifiesto }).catch(() => {});
+    }, [borradorManifiesto.idManifiesto]);
+
+    // Actualiza camión, conductor, peoneta, ciudad y fecha sin recrear el manifiesto.
     const guardarAsignacion = async () => {
         if (!activo) {
             return;
@@ -246,12 +327,13 @@ export default function ManifiestosPage() {
         }
     };
 
-    const escanear = async (event) => {
-        event.preventDefault();
-        if (!activo || !codigo.trim()) {
+    // Suma al manifiesto el bulto o la OT del código leído.
+    const escanear = async (event, codigoDirecto) => {
+        event?.preventDefault?.();
+        const codigoIngresado = String(codigoDirecto || codigo).trim();
+        if (!activo || !codigoIngresado) {
             return;
         }
-        const codigoIngresado = codigo.trim();
         setCargando(true);
         try {
             const resultado = await api(`/manifiestos/${activo.idManifiesto}/escanear`, {
@@ -260,6 +342,9 @@ export default function ManifiestosPage() {
             });
             setCodigo("");
             setActivo(resultado.manifiesto);
+            if (resultado.numeroOT) {
+                setOtAbierta(resultado.numeroOT);
+            }
             aviso(resultado.mensaje, "success");
             await cargarListado();
             if (resultado.numeroOT) {
@@ -274,6 +359,7 @@ export default function ManifiestosPage() {
         }
     };
 
+    // Lista los bultos de una OT para marcar cuáles entran, sin escanearlos uno a uno.
     const abrirEditorOt = async (numeroOT, manifiestoActual = activo) => {
         if (!manifiestoActual || !numeroOT) {
             return;
@@ -288,6 +374,7 @@ export default function ManifiestosPage() {
         });
     };
 
+    // Agrega o quita un bulto de la OT que está abierta en el editor.
     const alternarBultoOt = async (bulto) => {
         if (!activo || !seleccionOt) {
             return;
@@ -321,6 +408,7 @@ export default function ManifiestosPage() {
         }
     };
 
+    // Saca un bulto ya cargado y lo devuelve a bodega.
     const quitar = async (idBulto) => {
         setCargando(true);
         try {
@@ -337,6 +425,7 @@ export default function ManifiestosPage() {
         }
     };
 
+    // Marca la salida. A partir de aquí el peoneta puede ver el manifiesto en su ruta.
     const salir = async () => {
         if (!activo) {
             return;
@@ -419,10 +508,11 @@ export default function ManifiestosPage() {
                     </div>
                     <div className="field">
                         <label>Fecha de salida a ruta</label>
-                        <input
-                            type="datetime-local"
-                            required
-                            value={formulario.fechaSalidaProgramada}
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    title="Día y hora de salida, formato local"
+                                    value={formulario.fechaSalidaProgramada}
                             onChange={(event) => setFormulario((prev) => ({ ...prev, fechaSalidaProgramada: event.target.value }))}
                         />
                     </div>
@@ -482,7 +572,10 @@ export default function ManifiestosPage() {
                             <span>{activo.estado}</span>
                             <h2>{activo.numeroManifiesto}</h2>
                         </div>
-                        <button type="button" className="button-secondary" onClick={() => setActivo(null)}>Cerrar</button>
+                        <button type="button" className="button-secondary" onClick={() => {
+                            setActivo(null);
+                            guardarBorrador("manifiesto", { idManifiesto: null, codigo: "", formulario });
+                        }}>Cerrar</button>
                     </header>
                     <Message texto={mensaje} tipo={tipo} />
                     <p className="mx-note">
@@ -540,6 +633,7 @@ export default function ManifiestosPage() {
                                 <input
                                     type="datetime-local"
                                     required
+                                    title="Día y hora de salida, formato local"
                                     value={formulario.fechaSalidaProgramada}
                                     onChange={(event) => setFormulario((prev) => ({ ...prev, fechaSalidaProgramada: event.target.value }))}
                                 />
@@ -598,7 +692,9 @@ export default function ManifiestosPage() {
                                     value={codigo}
                                     autoComplete="off"
                                     autoFocus
-                                    placeholder="Escanea la etiqueta y presiona Enter"
+                                    placeholder="Solo el número, por ejemplo 65"
+                                    title="Número de la orden, sin escribir OT-"
+                                    maxLength={40}
                                     onChange={(event) => setCodigo(event.target.value)}
                                 />
                                 <button type="submit" className="button-primary" disabled={cargando || !codigo.trim()}>
@@ -606,7 +702,7 @@ export default function ManifiestosPage() {
                                 </button>
                             </form>
                             <p className="mx-note">
-                                Al ingresar una OT se cargan todos sus bultos. Luego selecciona esa OT para marcar cuáles van y cuáles no.
+                                Escribe solo el número de la OT. El sistema completa OT- solo. Si sales a bodega o a órdenes, este manifiesto sigue abierto al volver.
                             </p>
                             {seleccionOt ? (
                                 <div className="mx-table-wrap" style={{ marginTop: 12 }}>
@@ -684,21 +780,14 @@ export default function ManifiestosPage() {
                                     <tr
                                         key={`ot-${grupo.numeroOT}`}
                                         className="mx-fila-grupo"
-                                        style={enPreparacion ? { cursor: "pointer" } : undefined}
+                                        style={{ cursor: "pointer" }}
                                         onClick={() => {
-                                            if (!enPreparacion) {
-                                                return;
-                                            }
-                                            if (seleccionOt?.numeroOT === grupo.numeroOT) {
-                                                setSeleccionOt(null);
-                                                return;
-                                            }
-                                            abrirEditorOt(grupo.numeroOT).catch((error) => aviso(error.message, "error"));
+                                            setOtAbierta((actual) => actual === grupo.numeroOT ? null : grupo.numeroOT);
                                         }}
                                     >
                                         <td colSpan={6}>
                                             <strong>{grupo.numeroOT}</strong>
-                                            {enPreparacion ? " · clic para elegir bultos" : ""}
+                                            {otAbierta === grupo.numeroOT ? " · clic para ocultar" : " · clic para ver bultos"}
                                             {" · "}
                                             {grupo.cliente || "Sin cliente"}
                                             {" · "}
@@ -711,7 +800,7 @@ export default function ManifiestosPage() {
                                             {formatearM3(grupo.totales.volumen)}
                                         </td>
                                     </tr>,
-                                    ...grupo.bultos.map((bulto) => (
+                                    ...(otAbierta === grupo.numeroOT ? grupo.bultos.map((bulto) => (
                                         <tr key={bulto.idBulto}>
                                             <td>{bulto.codigoBulto}</td>
                                             <td>{bulto.tipo || bulto.tipoGrupo}</td>
@@ -726,11 +815,51 @@ export default function ManifiestosPage() {
                                                 ) : null}
                                             </td>
                                         </tr>
-                                    ))
+                                    )) : [])
                                 ])}
                             </tbody>
                         </table>
                     </div>
+                    {enPreparacion ? (
+                        disponiblesBodega.length > 0 ? (
+                            <div className="mx-table-wrap">
+                                <p className="mx-note">Órdenes en bodega que puedes cargar a este manifiesto</p>
+                                <table className="mx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>OT</th>
+                                            <th>Cliente</th>
+                                            <th>Destino</th>
+                                            <th>Bultos</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {disponiblesBodega.map((item) => (
+                                            <tr key={item.numeroOT}>
+                                                <td>{item.numeroOT.replace(/^OT-0*/, "")}</td>
+                                                <td>{item.cliente}</td>
+                                                <td>{item.destino}</td>
+                                                <td>{item.piezas}</td>
+                                                <td>
+                                                    <button
+                                                        type="button"
+                                                        className="button-secondary"
+                                                        disabled={cargando}
+                                                        onClick={() => escanear(null, item.numeroOT)}
+                                                    >
+                                                        Cargar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p className="mx-note">No hay otras órdenes en bodega pendientes de cargar.</p>
+                        )
+                    ) : null}
                 </section>
             ) : null}
 

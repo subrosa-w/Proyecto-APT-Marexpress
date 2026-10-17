@@ -1,0 +1,593 @@
+{
+  "fecha": "2026-10-11",
+  "total": 65,
+  "correctas": 65,
+  "fallos": 0,
+  "resultados": [
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/reportes",
+      "metodo": "GET",
+      "ruta": "/api/reportes?periodo=mes&fecha=2026-10-11",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/reportes",
+      "metodo": "GET",
+      "ruta": "/api/reportes?periodo=dia&fecha=2026-10-11",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/maestros/usuarios",
+      "metodo": "GET",
+      "ruta": "/api/maestros/usuarios",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/maestros/roles",
+      "metodo": "GET",
+      "ruta": "/api/maestros/roles",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/maestros/tarifas",
+      "metodo": "GET",
+      "ruta": "/api/maestros/tarifas",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/maestros/conductores",
+      "metodo": "GET",
+      "ruta": "/api/maestros/conductores",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/maestros/vehiculos",
+      "metodo": "GET",
+      "ruta": "/api/maestros/vehiculos",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/maestros/peonetas",
+      "metodo": "GET",
+      "ruta": "/api/maestros/peonetas",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/maestros/regiones",
+      "metodo": "GET",
+      "ruta": "/api/maestros/regiones",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/tarifas-trayecto",
+      "metodo": "GET",
+      "ruta": "/api/tarifas-trayecto",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/ordenes-transporte",
+      "metodo": "GET",
+      "ruta": "/api/ordenes-transporte",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/ordenes-transporte/estados",
+      "metodo": "GET",
+      "ruta": "/api/ordenes-transporte/estados",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/clientes",
+      "metodo": "GET",
+      "ruta": "/api/clientes",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/destinatarios",
+      "metodo": "GET",
+      "ruta": "/api/destinatarios",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/comunas",
+      "metodo": "GET",
+      "ruta": "/api/comunas",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/manifiestos",
+      "metodo": "GET",
+      "ruta": "/api/manifiestos",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/bultos/bodega",
+      "metodo": "GET",
+      "ruta": "/api/bultos/bodega",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/bultos/sucursales",
+      "metodo": "GET",
+      "ruta": "/api/bultos/sucursales",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Lectura /api/alertas",
+      "metodo": "GET",
+      "ruta": "/api/alertas",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Operador no entra a /api/reportes",
+      "metodo": "GET",
+      "ruta": "/api/reportes",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Operador no entra a /api/maestros/usuarios",
+      "metodo": "GET",
+      "ruta": "/api/maestros/usuarios",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Operador no entra a /api/maestros/roles",
+      "metodo": "GET",
+      "ruta": "/api/maestros/roles",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Peoneta no entra a /api/reportes",
+      "metodo": "GET",
+      "ruta": "/api/reportes",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Peoneta no entra a /api/maestros/usuarios",
+      "metodo": "GET",
+      "ruta": "/api/maestros/usuarios",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Peoneta no entra a /api/ordenes-transporte",
+      "metodo": "GET",
+      "ruta": "/api/ordenes-transporte",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Peoneta no entra a /api/clientes",
+      "metodo": "GET",
+      "ruta": "/api/clientes",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Operador no crea tarifarios",
+      "metodo": "POST",
+      "ruta": "/api/maestros/tarifas",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Aislamiento",
+      "nombre": "Operador no crea tarifas de trayecto",
+      "metodo": "POST",
+      "ruta": "/api/tarifas-trayecto",
+      "ok": true,
+      "status": 403,
+      "detalle": "No tienes permisos para realizar esta acción"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Tarifario sin nombre",
+      "metodo": "POST",
+      "ruta": "/api/maestros/tarifas",
+      "ok": true,
+      "status": 400,
+      "detalle": "El nombre del tarifario es obligatorio"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Crear tarifario",
+      "metodo": "POST",
+      "ruta": "/api/maestros/tarifas",
+      "ok": true,
+      "status": 201,
+      "detalle": "Tarifario creado correctamente"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Editar tarifario",
+      "metodo": "PUT",
+      "ruta": "/api/maestros/tarifas/4",
+      "ok": true,
+      "status": 200,
+      "detalle": "Tarifario actualizado. El cambio quedó en el historial."
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Desactivar tarifario",
+      "metodo": "PATCH",
+      "ruta": "/api/maestros/tarifas/4/estado",
+      "ok": true,
+      "status": 200,
+      "detalle": "Tarifario desactivado"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Historial del tarifario",
+      "metodo": "GET",
+      "ruta": "/api/maestros/tarifas/4/historial",
+      "ok": true,
+      "status": 200,
+      "detalle": "4 cambios"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Limpieza del tarifario de prueba",
+      "metodo": "DELETE",
+      "ruta": "base",
+      "ok": true,
+      "status": null,
+      "detalle": "eliminado"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Conductor con RUT inválido",
+      "metodo": "POST",
+      "ruta": "/api/maestros/conductores",
+      "ok": true,
+      "status": 400,
+      "detalle": "El RUT del conductor no es válido. Usa el formato 12.345.678-9"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Camión con patente inválida",
+      "metodo": "POST",
+      "ruta": "/api/maestros/vehiculos",
+      "ok": true,
+      "status": 400,
+      "detalle": "La patente debe tener 2 a 4 letras y 2 números. Ejemplo: ABCD12"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/ordenes-transporte",
+      "metodo": "GET",
+      "ruta": "/api/ordenes-transporte",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/ordenes-transporte/estados",
+      "metodo": "GET",
+      "ruta": "/api/ordenes-transporte/estados",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/clientes",
+      "metodo": "GET",
+      "ruta": "/api/clientes",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/destinatarios",
+      "metodo": "GET",
+      "ruta": "/api/destinatarios",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/comunas",
+      "metodo": "GET",
+      "ruta": "/api/comunas",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/bultos/tipos",
+      "metodo": "GET",
+      "ruta": "/api/bultos/tipos",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/bultos/bodega",
+      "metodo": "GET",
+      "ruta": "/api/bultos/bodega",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/bultos/sucursales",
+      "metodo": "GET",
+      "ruta": "/api/bultos/sucursales",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/bultos/pronto-despacho",
+      "metodo": "GET",
+      "ruta": "/api/bultos/pronto-despacho?dias=3",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/manifiestos",
+      "metodo": "GET",
+      "ruta": "/api/manifiestos",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/maestros/vehiculos",
+      "metodo": "GET",
+      "ruta": "/api/maestros/vehiculos",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/maestros/conductores",
+      "metodo": "GET",
+      "ruta": "/api/maestros/conductores",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/maestros/peonetas",
+      "metodo": "GET",
+      "ruta": "/api/maestros/peonetas",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/maestros/tarifas",
+      "metodo": "GET",
+      "ruta": "/api/maestros/tarifas",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/pagos/pendientes",
+      "metodo": "GET",
+      "ruta": "/api/pagos/pendientes",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/pagos/webpay/ambiente",
+      "metodo": "GET",
+      "ruta": "/api/pagos/webpay/ambiente",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Lectura /api/alertas",
+      "metodo": "GET",
+      "ruta": "/api/alertas",
+      "ok": true,
+      "status": 200,
+      "detalle": "respuesta recibida"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Calcular OT incompleta",
+      "metodo": "POST",
+      "ruta": "/api/ordenes-transporte/calcular",
+      "ok": true,
+      "status": 400,
+      "detalle": "El campo direccionOrigen es obligatorio"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Calcular OT válida",
+      "metodo": "POST",
+      "ruta": "/api/ordenes-transporte/calcular",
+      "ok": true,
+      "status": 200,
+      "detalle": "Cálculo realizado correctamente"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Crear orden de transporte",
+      "metodo": "POST",
+      "ruta": "/api/ordenes-transporte",
+      "ok": true,
+      "status": 201,
+      "detalle": "OT-000065"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Recepción por número de OT",
+      "metodo": "GET",
+      "ruta": "/api/ordenes-transporte/numero/OT-000065",
+      "ok": true,
+      "status": 200,
+      "detalle": "OT-000065"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Consultar pago de la OT",
+      "metodo": "GET",
+      "ruta": "/api/pagos/ot/OT-000065",
+      "ok": true,
+      "status": 200,
+      "detalle": "true"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Cambiar estado de la OT",
+      "metodo": "PATCH",
+      "ruta": "/api/ordenes-transporte/65/estado",
+      "ok": true,
+      "status": 200,
+      "detalle": "Estado actualizado a PROGRAMADA."
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Editar orden",
+      "metodo": "PUT",
+      "ruta": "/api/ordenes-transporte/65",
+      "ok": true,
+      "status": 200,
+      "detalle": "Orden de transporte actualizada correctamente"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Crear manifiesto",
+      "metodo": "POST",
+      "ruta": "/api/manifiestos",
+      "ok": true,
+      "status": 201,
+      "detalle": "MAN-000015"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Escanear OT al manifiesto",
+      "metodo": "POST",
+      "ruta": "/api/manifiestos/15/escanear",
+      "ok": true,
+      "status": 200,
+      "detalle": "Cargado: OT-000065-001"
+    },
+    {
+      "vista": "Operador",
+      "nombre": "Sacar manifiesto a ruta",
+      "metodo": "POST",
+      "ruta": "/api/manifiestos/15/salir",
+      "ok": true,
+      "status": 200,
+      "detalle": "Manifiesto MAN-000015 salió a ruta"
+    },
+    {
+      "vista": "Administrador",
+      "nombre": "Anular la orden de prueba",
+      "metodo": "DELETE",
+      "ruta": "/api/ordenes-transporte/65",
+      "ok": true,
+      "status": 200,
+      "detalle": "Orden anulada. El registro se conserva en la base de datos."
+    },
+    {
+      "vista": "Seguridad",
+      "nombre": "Campo de orden con inyección",
+      "metodo": "POST",
+      "ruta": "/api/ordenes-transporte/calcular",
+      "ok": true,
+      "status": 400,
+      "detalle": "La solicitud contiene texto no permitido y fue bloqueada."
+    }
+  ]
+}

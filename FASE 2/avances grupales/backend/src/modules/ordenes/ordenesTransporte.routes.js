@@ -8,7 +8,9 @@ import {
     calcularOrdenTransporteController,
     actualizarOrdenTransporteController,
     anularOrdenTransporteController,
-    reingresarOtBodegaController
+    reingresarOtBodegaController,
+    listarEstadosOtController,
+    cambiarEstadoOrdenController
 } from "./ordenesTransporte.controller.js";
 
 import {
@@ -65,6 +67,16 @@ router.get(
         "OPERADOR"
     ),
     listarOrdenesTransporte
+);
+
+router.get(
+    "/estados",
+    autenticar,
+    autorizarRoles(
+        "ADMINISTRADOR",
+        "OPERADOR"
+    ),
+    listarEstadosOtController
 );
 
 router.post(
@@ -154,6 +166,16 @@ router.patch(
         "OPERADOR"
     ),
     actualizarOrdenTransporteController
+);
+
+router.patch(
+    "/:id/estado",
+    autenticar,
+    autorizarRoles(
+        "ADMINISTRADOR",
+        "OPERADOR"
+    ),
+    cambiarEstadoOrdenController
 );
 
 router.post(

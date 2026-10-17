@@ -1,3 +1,4 @@
+
 import healthRoutes from "./modules/health/health.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import comunasRoutes from "./modules/catalogos/comunas.routes.js";
@@ -11,11 +12,24 @@ import peonetaRoutes from "./modules/peoneta/peoneta.routes.js";
 import maestrosRoutes from "./modules/maestros/maestros.routes.js";
 import manifiestosRoutes from "./modules/manifiestos/manifiestos.routes.js";
 import pagosRoutes from "./modules/pagos/pagos.routes.js";
+
+// Módulos del panel de administración
+import alertasRoutes from "./modules/alertas/alertas.routes.js";
+import reportesRoutes from "./modules/reportes/reportes.routes.js";
+
+// Módulo del portal de clientes
 import portalClienteRoutes from "./modules/portalCliente/portalCliente.routes.js";
+
 import { actualizarTarifaCliente } from "./modules/clientes/clientes.controller.js";
 import { anularOrdenTransporteController } from "./modules/ordenes/ordenesTransporte.controller.js";
 import { autenticar } from "./common/middlewares/auth.middleware.js";
 import { autorizarRoles } from "./common/middlewares/roles.middleware.js";
+
+/*
+  Rutas del API. Cada módulo vive en src/modules/<nombre> con este orden:
+  routes (URL y rol) → controller (responde) → service (consulta o guarda).
+  El diseño no está aquí: lo pintan las vistas de frontend/src/sistema.
+*/
 
 export const registrarRutas = (app) => {
     const asignarTarifaCliente = [
@@ -23,6 +37,7 @@ export const registrarRutas = (app) => {
         autorizarRoles("ADMINISTRADOR", "OPERADOR"),
         actualizarTarifaCliente
     ];
+
     const anularOt = [
         autenticar,
         autorizarRoles("ADMINISTRADOR", "OPERADOR"),
@@ -32,11 +47,13 @@ export const registrarRutas = (app) => {
     app.put("/api/clientes/:id/tarifa", ...asignarTarifaCliente);
     app.post("/api/clientes/:id/tarifa", ...asignarTarifaCliente);
     app.patch("/api/clientes/:id/tarifa", ...asignarTarifaCliente);
+
     app.post("/api/ordenes-transporte/anular", ...anularOt);
     app.post("/api/ordenes-transporte/anular/:id", ...anularOt);
     app.post("/api/ordenes-transporte/:id/anular", ...anularOt);
     app.delete("/api/ordenes-transporte/:id", ...anularOt);
 
+    // Rutas generales
     app.use("/api/health", healthRoutes);
     app.use("/api/auth", authRoutes);
     app.use("/api/comunas", comunasRoutes);
@@ -50,5 +67,11 @@ export const registrarRutas = (app) => {
     app.use("/api/maestros", maestrosRoutes);
     app.use("/api/manifiestos", manifiestosRoutes);
     app.use("/api/pagos", pagosRoutes);
+
+    // Funcionalidades administrativas
+    app.use("/api/alertas", alertasRoutes);
+    app.use("/api/reportes", reportesRoutes);
+
+    // Portal de clientes y cuentas corrientes
     app.use("/api/cliente", portalClienteRoutes);
 };

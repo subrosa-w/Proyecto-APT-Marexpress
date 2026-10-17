@@ -6,12 +6,15 @@ import {
     calcularOrdenTransporte,
     actualizarOrdenTransporte,
     anularOrdenTransporte,
-    reingresarOtRechazadaEnBodega
+    reingresarOtRechazadaEnBodega,
+    listarEstadosOt,
+    cambiarEstadoOrdenTransporte
 } from "./ordenesTransporte.service.js";
 
 import {
     formatearFechaHoraChile
 } from "../../common/utils/fechaChile.js";
+import { registrarAlertaOrdenCreada } from "../alertas/alertas.service.js";
 
 const prepararOrden = (orden) => {
     if (!orden) {
@@ -128,6 +131,12 @@ export const registrarOrdenTransporte = async (req, res) => {
             req.user.idUsuario
         );
 
+        try {
+            await registrarAlertaOrdenCreada(orden, req.user.idUsuario);
+        } catch (errorAlerta) {
+            console.error("No se pudo registrar la alerta de creación:", errorAlerta);
+        }
+
         res.status(201).json({
             mensaje: "Orden de transporte creada correctamente",
             orden: prepararOrden(orden)
@@ -192,6 +201,39 @@ export const calcularOrdenTransporteController = async (req, res) => {
         return res.status(500).json({
             mensaje:
                 "Error interno al crear la orden de transporte"
+        });
+    }
+};
+
+export const listarEstadosOtController = async (req, res) => {
+    try {
+        const estados = await listarEstadosOt();
+        res.json({ estados });
+    } catch (error) {
+        console.error("Error al listar estados de OT:", error);
+        res.status(500).json({
+            mensaje: "Error interno al obtener los estados de las órdenes"
+        });
+    }
+};
+
+export const cambiarEstadoOrdenController = async (req, res) => {
+    try {
+        const idOrden = Number(req.params.id);
+        const orden = await cambiarEstadoOrdenTransporte(
+            idOrden,
+            req.body,
+            req.user?.idUsuario
+        );
+
+        res.json({
+            mensaje: `Estado actualizado a ${orden?.estado_ot?.nombreEstado || "el estado seleccionado"}.`,
+            orden: prepararOrden(orden)
+        });
+    } catch (error) {
+        console.error("Error al cambiar el estado de la orden:", error);
+        res.status(error.status || 400).json({
+            mensaje: error.message || "Error interno al cambiar el estado de la orden"
         });
     }
 };
