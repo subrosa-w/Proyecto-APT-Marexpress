@@ -330,6 +330,7 @@ model orden_transporte {
   recargo                                         recargo[]
   retiro                                          retiro[]
   seguimiento_ot                                  seguimiento_ot[]
+  alerta                                          alerta[]
 
   @@index([idCliente], map: "fk_orden_cliente")
   @@index([idComunaDestino], map: "fk_orden_comuna_destino")
@@ -528,10 +529,28 @@ model usuario {
   observacion_ot      observacion_ot[]
   pago                pago[]
   seguimiento_ot      seguimiento_ot[]
+  alerta              alerta[]
   rol                 rol                   @relation(fields: [idRol], references: [idRol], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario_rol")
   verificacion_acceso verificacion_acceso[]
 
   @@index([idRol], map: "fk_usuario_rol")
+}
+
+model alerta {
+  idAlerta         Int               @id @default(autoincrement())
+  tipo             String            @db.VarChar(40)
+  titulo           String            @db.VarChar(150)
+  mensaje          String            @db.VarChar(300)
+  fechaCreacion    DateTime          @default(now()) @db.DateTime(0)
+  leida            Boolean           @default(false)
+  idOrden          Int?
+  idUsuario        Int?
+  orden_transporte orden_transporte? @relation(fields: [idOrden], references: [idOrden], onDelete: NoAction, onUpdate: NoAction, map: "fk_alerta_orden")
+  usuario          usuario?          @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_alerta_usuario")
+
+  @@index([idOrden], map: "fk_alerta_orden")
+  @@index([idUsuario], map: "fk_alerta_usuario")
+  @@index([leida, fechaCreacion], map: "idx_alerta_leida_fecha")
 }
 
 model vehiculo {

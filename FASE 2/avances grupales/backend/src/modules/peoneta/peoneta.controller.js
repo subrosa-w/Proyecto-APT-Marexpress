@@ -1,5 +1,6 @@
 import {
-    obtenerManifiestosPeoneta
+    obtenerManifiestosPeoneta,
+    registrarEntregaPeoneta
 } from "./peoneta.service.js";
 
 /*
@@ -60,6 +61,33 @@ export const listarMisManifiestos = async (req, res) => {
             ok: false,
             mensaje:
                 "No fue posible obtener los manifiestos asignados"
+        });
+    }
+};
+
+export const registrarEntrega = async (req, res) => {
+    try {
+        const manifiestos = await registrarEntregaPeoneta({
+            idUsuario: req.user?.idUsuario,
+            numeroOT: req.body?.numeroOT,
+            resultado: req.body?.resultado,
+            observacion: req.body?.observacion,
+            nombreReceptor: req.body?.nombreReceptor,
+            metodoPago: req.body?.metodoPago
+        });
+        return res.json({
+            ok: true,
+            mensaje: "Resultado de entrega guardado",
+            data: manifiestos
+        });
+    } catch (error) {
+        const status = error.status || 400;
+        if (status >= 500) {
+            console.error("Error al registrar la entrega del peoneta:", error);
+        }
+        return res.status(status).json({
+            ok: false,
+            mensaje: error.message || "No fue posible registrar la entrega"
         });
     }
 };

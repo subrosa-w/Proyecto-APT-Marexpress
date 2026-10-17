@@ -19,9 +19,8 @@ export default defineConfig([
     },
   },
   {
-    // Código traído tal cual desde frontend-prueba (que no usaba ESLint).
-    // Estas reglas son recomendaciones de rendimiento/estilo, no errores que rompan la app,
-    // así que se muestran como advertencias para no tener que reescribir esa lógica.
+    // El sistema interno avisa estas reglas sin frenar el programa.
+    // Son recomendaciones de estilo, no fallos que impidan usar las vistas.
     files: ['src/sistema/**/*.{js,jsx}'],
     rules: {
       'react-hooks/set-state-in-effect': 'warn',

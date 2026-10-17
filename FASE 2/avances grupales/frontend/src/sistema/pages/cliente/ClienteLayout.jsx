@@ -1,6 +1,13 @@
+/*
+  VISTA: menú del cliente
+  RUTA: /cliente
+  CSS: sistema.css y RoleLayout
+  FUNCIONES: el detalle de órdenes propias sigue en preparación; el perfil ya abre
+*/
 import { Outlet, useLocation } from "react-router";
 import RoleLayout from "../../components/RoleLayout.jsx";
 
+// Título de cada sección del portal. Varias siguen en preparación.
 const titulos = {
     "/cliente": ["PORTAL CLIENTE", "Inicio"],
     "/cliente/ordenes": ["ENVÍOS", "Mis órdenes"],
@@ -11,6 +18,7 @@ const titulos = {
     "/cliente/perfil": ["CUENTA", "Mi perfil"]
 };
 
+// Menú del cliente. El perfil ya funciona; el resto muestra el aviso de preparación.
 const items = [
     { to: "/cliente", label: "Inicio", end: true },
     { to: "/cliente/ordenes", label: "Mis órdenes" },

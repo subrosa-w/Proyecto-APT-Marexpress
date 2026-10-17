@@ -1,10 +1,17 @@
+/*
+  COMPONENTE: marco de las pantallas internas
+  CSS: sistema.css
+  FUNCIONES: barra lateral, título e icono de cada ítem del menú
+*/
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router";
+import { NavLink, Navigate, useLocation } from "react-router";
 import { useAuth } from "../auth.jsx";
 import { useBodegaTrabajo } from "../bodegaTrabajo.jsx";
 import { nombreCompleto } from "../utils.js";
 import Icono from "../../components/Icono.jsx";
-import { FlechasLogo } from "../../components/Logo.jsx";
+import AlertasCampana from "./AlertasCampana.jsx";
+import AvisoActualizacion from "./AvisoActualizacion.jsx";
+import logoMarexpress from "../assets/logo-marexpress.png";
 
 /*
   Molde común de los 4 paneles (administrador, operador, peoneta y cliente).
@@ -17,6 +24,7 @@ const iconos = {
     "Inicio": "dashboard",
     "Recepción": "move_to_inbox",
     "Nueva OT": "add_box",
+    "Crear orden de transporte": "add_box",
     "Órdenes de transporte": "receipt_long",
     "Clientes": "groups",
     "Bodega": "warehouse",
@@ -28,7 +36,6 @@ const iconos = {
     "Conductores y vehículos": "local_shipping",
     "Usuarios": "manage_accounts",
     "Cuenta corriente": "account_balance_wallet",
-    "Facturación": "request_quote",
     "Reportes": "monitoring",
     "Mi ruta": "map",
     "Entregas": "inventory",
@@ -40,6 +47,13 @@ const iconos = {
     "Evidencias": "photo_camera"
 };
 
+const rolesDelPrefijo = {
+    admin: ["ADMINISTRADOR"],
+    operador: ["OPERADOR"],
+    cliente: ["CLIENTE", "CLIENTE NORMAL", "CLIENTE CUENTA CORRIENTE"],
+    peoneta: ["PEONETA"]
+};
+
 export default function RoleLayout({
     prefijo,
     subtitulo,
@@ -48,11 +62,15 @@ export default function RoleLayout({
     items,
     children
 }) {
-    const { usuario, cerrarSesion } = useAuth();
+    const { usuario, cerrarSesion, rutaPorRol } = useAuth();
     const bodegaTrabajo = useBodegaTrabajo();
     const location = useLocation();
     const [menuAbierto, setMenuAbierto] = useState(false);
     const iniciales = (usuario?.nombre?.[0] || prefijo[0] || "U").toUpperCase();
+    const rolesPermitidos = rolesDelPrefijo[prefijo] || [];
+    const rolAjeno = Boolean(
+        usuario?.rol && rolesPermitidos.length && !rolesPermitidos.includes(usuario.rol)
+    );
 
     // Al cambiar de página se cierra el menú del celular
     useEffect(() => {
@@ -76,8 +94,13 @@ export default function RoleLayout({
         return () => document.body.classList.remove("overflow-hidden");
     }, [menuAbierto]);
 
+    if (rolAjeno) {
+        return <Navigate to={rutaPorRol(usuario.rol)} replace />;
+    }
+
     return (
         <div className="mx-sistema flex min-h-screen bg-[#f3f6fa] text-slate-800">
+            <AvisoActualizacion />
             {/* Barra superior: solo en celular y tablet */}
             <div className="fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 bg-marino px-4 text-white shadow-md lg:hidden print:hidden">
                 <button
@@ -110,15 +133,10 @@ export default function RoleLayout({
                     menuAbierto ? "translate-x-0" : "-translate-x-full"
                 }`}
             >
-                <div className="flex items-center gap-2.5 border-b border-white/10 p-5">
-                    <FlechasLogo claro className="h-8 w-8" />
-                    <div>
-                        <div className="text-lg font-extrabold italic leading-none tracking-tight">
-                            MAR<span className="text-verde-claro">EXPRESS</span>
-                        </div>
-                        <div className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-celeste">
-                            {subtitulo}
-                        </div>
+                <div className="border-b border-white/10 px-4 py-4">
+                    <img src={logoMarexpress} alt="Marexpress" className="h-auto w-full" />
+                    <div className="mt-2 text-[10px] font-semibold uppercase tracking-widest text-celeste">
+                        {subtitulo}
                     </div>
                 </div>
 
@@ -174,6 +192,7 @@ export default function RoleLayout({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 md:shrink-0 md:flex-nowrap">
+                        <AlertasCampana />
                         {bodegaTrabajo.habilitado ? (
                             <label className="flex flex-col gap-1">
                                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-texto-suave">Bodega</span>

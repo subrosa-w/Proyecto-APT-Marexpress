@@ -5,6 +5,7 @@ import {
     buscarCliente,
     registrarCliente,
     obtenerCuentaCorrienteCliente,
+    listarResumenCuentas,
     actualizarTarifaCliente
 } from "./clientes.controller.js";
 
@@ -65,6 +66,13 @@ router.get(
         "OPERADOR"
     ),
     buscarCliente
+);
+
+router.get(
+    "/cuentas-corrientes",
+    autenticar,
+    autorizarRoles("ADMINISTRADOR"),
+    listarResumenCuentas
 );
 
 router.get(

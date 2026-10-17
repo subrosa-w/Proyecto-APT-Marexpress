@@ -1,4 +1,4 @@
-import { obtenerClientes, buscarClientes, crearCliente , obtenerCuentaCorrientePorCliente, asignarTarifaCliente } from "./clientes.service.js";
+import { obtenerClientes, buscarClientes, crearCliente , obtenerCuentaCorrientePorCliente, asignarTarifaCliente, obtenerResumenCuentas } from "./clientes.service.js";
 
 export const listarClientes = async (req, res) => {
     try {
@@ -45,6 +45,21 @@ export const registrarCliente = async (req, res) => {
 
         res.status(500).json({
             mensaje: "Error interno al crear el cliente"
+        });
+    }
+};
+
+export const listarResumenCuentas = async (req, res) => {
+    try {
+        const resumen = await obtenerResumenCuentas({
+            periodo: req.query.periodo,
+            fecha: req.query.fecha
+        });
+        res.json(resumen);
+    } catch (error) {
+        console.error("Error al resumir cuentas corrientes:", error);
+        res.status(500).json({
+            mensaje: "No fue posible cargar las cuentas corrientes"
         });
     }
 };

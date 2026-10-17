@@ -5,12 +5,20 @@ import {
     obtenerTarifas,
     obtenerUsuarios,
     obtenerVehiculos,
-    obtenerPeonetas
+    obtenerPeonetas,
+    asegurarRoles,
+    cambiarRolUsuario,
+    crearConductor,
+    crearVehiculo,
+    listarTiposRecargo,
+    crearTipoRecargo,
+    editarTipoRecargo
 } from "./maestros.service.js";
 import {
     actualizarTarifa,
     cambiarEstadoTarifa,
-    obtenerHistorialTarifa
+    obtenerHistorialTarifa,
+    obtenerHistorialPrecios
 } from "../tarifas/tarifario.service.js";
 
 const responderError = (res, error, mensaje) => {
@@ -81,6 +89,15 @@ export const cambiarEstadoTarifario = async (req, res) => {
     }
 };
 
+export const listarHistorialPrecios = async (req, res) => {
+    try {
+        const historial = await obtenerHistorialPrecios();
+        return res.json({ historial });
+    } catch (error) {
+        return responderError(res, error, "Error interno al obtener el historial de precios");
+    }
+};
+
 export const listarHistorialTarifa = async (req, res) => {
     try {
         const historial = await obtenerHistorialTarifa(req.params.id);
@@ -126,6 +143,91 @@ export const listarPeonetas = async (req, res) => {
         return res.json(peonetas);
     } catch (error) {
         return responderError(res, error, "Error interno al obtener los peonetas");
+    }
+};
+
+const responderValidacion = (res, error, mensaje) => {
+    if (error.status === 400 || error.status === 404) {
+        return res.status(error.status).json({ mensaje: error.message });
+    }
+    return responderError(res, error, mensaje);
+};
+
+export const listarRoles = async (req, res) => {
+    try {
+        const roles = await asegurarRoles();
+        return res.json({ roles });
+    } catch (error) {
+        return responderError(res, error, "Error interno al obtener los roles");
+    }
+};
+
+export const asignarRolUsuario = async (req, res) => {
+    try {
+        const usuario = await cambiarRolUsuario(req.params.id, req.body?.idRol);
+        return res.json({
+            mensaje: `Rol actualizado a ${usuario.rol?.nombreRol}`,
+            usuario
+        });
+    } catch (error) {
+        return responderValidacion(res, error, "Error interno al cambiar el rol");
+    }
+};
+
+export const registrarConductor = async (req, res) => {
+    try {
+        const conductor = await crearConductor(req.body);
+        return res.status(201).json({
+            mensaje: "Conductor añadido a la flota",
+            conductor
+        });
+    } catch (error) {
+        return responderValidacion(res, error, "Error interno al crear el conductor");
+    }
+};
+
+export const registrarVehiculo = async (req, res) => {
+    try {
+        const vehiculo = await crearVehiculo(req.body);
+        return res.status(201).json({
+            mensaje: "Camión añadido a la flota",
+            vehiculo
+        });
+    } catch (error) {
+        return responderValidacion(res, error, "Error interno al crear el vehículo");
+    }
+};
+
+export const listarRecargos = async (req, res) => {
+    try {
+        const recargos = await listarTiposRecargo();
+        return res.json({ recargos });
+    } catch (error) {
+        return responderError(res, error, "Error interno al obtener los recargos");
+    }
+};
+
+export const registrarRecargo = async (req, res) => {
+    try {
+        const recargo = await crearTipoRecargo(req.body || {});
+        return res.status(201).json({
+            mensaje: "Recargo creado",
+            recargo
+        });
+    } catch (error) {
+        return responderValidacion(res, error, "Error interno al crear el recargo");
+    }
+};
+
+export const actualizarRecargo = async (req, res) => {
+    try {
+        const recargo = await editarTipoRecargo(req.params.id, req.body || {});
+        return res.json({
+            mensaje: "Recargo actualizado",
+            recargo
+        });
+    } catch (error) {
+        return responderValidacion(res, error, "Error interno al actualizar el recargo");
     }
 };
 

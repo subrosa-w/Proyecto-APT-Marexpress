@@ -1,3 +1,10 @@
+/*
+  VISTA: seguimiento público
+  RUTA: /seguimiento
+  CSS: index.css
+  DATOS: src/data/envios.js (consulta de demostración por número)
+  FUNCIONES: el visitante ve el estado de su envío y la línea de progreso
+*/
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import Contenedor from '../components/Contenedor.jsx'
@@ -48,6 +55,7 @@ function LineaProgreso({ etapaActual }) {
   )
 }
 
+// Ficha del envío encontrado: destino, bultos, kilos y fecha estimada.
 function DatosEnvio({ envio }) {
   const filas = [
     ['Destino', envio.destino],
@@ -73,6 +81,7 @@ function DatosEnvio({ envio }) {
   )
 }
 
+// Movimientos de más nuevo a más antiguo. El primero va en verde porque es el estado actual.
 function Historial({ movimientos }) {
   return (
     <div className="tarjeta p-6 sm:p-8">
@@ -107,6 +116,7 @@ function Seguimiento() {
 
   const envio = ordenConsultada ? buscarEnvio(ordenConsultada) : null
 
+  // Escribe el número en la URL para poder compartir el seguimiento sin perderlo al recargar.
   function consultar(evento) {
     evento.preventDefault()
     if (texto.trim()) setParametros({ orden: texto.trim().toUpperCase() })

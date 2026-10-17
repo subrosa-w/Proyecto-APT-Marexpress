@@ -1,5 +1,6 @@
 import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
+import { empresa } from "../empresa.js";
 
 const ANCHO_ETIQUETA_MM = 100;
 const ALTO_ETIQUETA_MM = 70;
@@ -24,6 +25,27 @@ const barcodePng = (valor, { alto = 80, anchoBarra = 2 } = {}) => {
     return canvas.toDataURL("image/png");
 };
 
+let logoListo = null;
+const logoPdf = async () => {
+    if (logoListo) {
+        return logoListo;
+    }
+    try {
+        const modulo = await import("../assets/logo-marexpress.png");
+        const respuesta = await fetch(modulo.default);
+        const blob = await respuesta.blob();
+        logoListo = await new Promise((resolve, reject) => {
+            const lector = new FileReader();
+            lector.onload = () => resolve(lector.result);
+            lector.onerror = () => reject(lector.error);
+            lector.readAsDataURL(blob);
+        });
+        return logoListo;
+    } catch {
+        return null;
+    }
+};
+
 const descargarArchivo = (blob, nombre) => {
     const url = URL.createObjectURL(blob);
     const enlace = document.createElement("a");
@@ -33,146 +55,162 @@ const descargarArchivo = (blob, nombre) => {
     window.setTimeout(() => URL.revokeObjectURL(url), 4000);
 };
 
-const imprimirBlob = (blob, nombre) =>
-    new Promise((resolve) => {
-        const url = URL.createObjectURL(blob);
-        const ventana = window.open(url, "_blank");
-        if (!ventana) {
-            descargarArchivo(blob, nombre);
-            resolve();
-            return;
-        }
-
-        let listo = false;
-        const terminar = () => {
-            if (listo) {
-                return;
-            }
-            listo = true;
-            try {
-                ventana.focus();
-                ventana.print();
-            } catch {
-                descargarArchivo(blob, nombre);
-            }
-            resolve();
-        };
-
-        ventana.addEventListener("load", () => window.setTimeout(terminar, 400));
-        window.setTimeout(terminar, 1200);
-    });
-
-export const crearPdfOrden = ({ orden, bultos, origen, destino, pago, medidas, formatearCLP, etiquetaComuna }) => {
-    const alto = Math.max(180, 118 + bultos.length * 14);
+/*
+  IMPRESIÓN
+  crearPdfOrden         ticket de la OT en 80 mm
+  crearPdfEtiquetas     etiquetas de 100×70 mm
+  imprimirOrdenTermica  abre el ticket para imprimir
+  descargarZplEtiquetas archivo ZPL para una Zebra
+  imprimirEtiquetasZebra envía las etiquetas a 127.0.0.1:9100
+*/
+export const crearPdfOrden = async ({ orden, origen, destino, pago, formatearCLP, etiquetaComuna }) => {
+    const cargas = orden.detalle_carga || [];
+    const alto = Math.max(220, 190 + cargas.length * 6);
     const doc = new jsPDF({ unit: "mm", format: [ANCHO_OT_MM, alto], orientation: "portrait" });
     const margen = 4;
-    let y = 6;
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("MAREXPRESS", margen, y);
+    let y = 5;
+    const logo = await logoPdf();
+    if (logo) {
+        doc.addImage(logo, "PNG", margen, y, 34, 12);
+    }
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.text("ORDEN DE TRANSPORTE", ANCHO_OT_MM - margen, y, { align: "right" });
-    y += 6;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text(orden.numeroOT, ANCHO_OT_MM / 2, y, { align: "center" });
-    y += 4;
+    doc.setFontSize(6.5);
+    empresa.lineas.forEach((linea, indice) => {
+        doc.text(linea, ANCHO_OT_MM - margen, y + 3 + indice * 3.2, { align: "right" });
+    });
+    y += 16;
 
-    const barcode = barcodePng(orden.numeroOT, { alto: 70, anchoBarra: 2 });
-    doc.addImage(barcode, "PNG", margen, y, ANCHO_OT_MM - margen * 2, 14);
-    y += 18;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.text(orden.numeroOT, ANCHO_OT_MM / 2, y, { align: "center" });
-    y += 6;
-
-    const bloque = (titulo, lineas) => {
+    const fila = (etiqueta, valor) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.text(String(etiqueta), margen, y);
+        doc.setFont("helvetica", "normal");
+        const texto = doc.splitTextToSize(String(valor || "—"), 46);
+        doc.text(texto, ANCHO_OT_MM - margen, y, { align: "right" });
+        y += Math.max(4, texto.length * 3.4);
+    };
+    const titulo = (texto) => {
+        y += 1;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
-        doc.text(titulo.toUpperCase(), margen, y);
+        doc.text(texto, ANCHO_OT_MM / 2, y, { align: "center" });
         doc.setLineWidth(0.2);
         doc.line(margen, y + 1, ANCHO_OT_MM - margen, y + 1);
         y += 5;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        lineas.filter(Boolean).forEach((linea) => {
-            const filas = doc.splitTextToSize(String(linea), ANCHO_OT_MM - margen * 2);
-            doc.text(filas, margen, y);
-            y += filas.length * 4;
-        });
-        y += 2;
     };
 
-    bloque("Remitente", [
-        orden.cliente?.razonSocial,
-        orden.cliente?.rut ? `RUT ${orden.cliente.rut}` : "",
-        orden.direccionOrigen,
-        etiquetaComuna(origen),
-        [orden.contactoOrigen, orden.telefonoOrigen].filter(Boolean).join(" ")
-    ]);
+    const momento = orden.fechaCreacion ? new Date(orden.fechaCreacion) : new Date();
+    const recargos = Array.isArray(orden.recargo) ? orden.recargo : [];
+    const totalRecargo = recargos.reduce((suma, item) => suma + Number(item.monto || 0), 0);
+    const usuario = [...(orden.historial_ot || [])].at(-1)?.usuario;
+    const creador = usuario
+        ? [usuario.nombre, usuario.apellido].filter(Boolean).join(" ") || usuario.nombreUsuario
+        : "";
 
-    bloque("Destinatario", [
-        orden.destinatario?.nombreRazonSocial || orden.contactoDestino,
-        orden.destinatario?.rut ? `RUT ${orden.destinatario.rut}` : "",
-        orden.direccionDestino,
-        etiquetaComuna(destino),
-        orden.telefonoDestino,
-        orden.referenciaEntrega ? `Ref: ${orden.referenciaEntrega}` : ""
-    ]);
+    fila("N° DE TRANSPORTE", orden.numeroOT);
+    const barcode = barcodePng(orden.numeroOT, { alto: 70, anchoBarra: 2 });
+    doc.addImage(barcode, "PNG", margen, y, ANCHO_OT_MM - margen * 2, 12);
+    y += 15;
+    fila("FECHA", momento.toLocaleDateString("es-CL"));
+    fila("HORA", momento.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    fila("ORIGEN", etiquetaComuna(origen));
+    fila("DESTINO", etiquetaComuna(destino));
+    fila("TIPO ENTREGA", orden.direccionDestino ? "DOMICILIO" : "SUCURSAL");
 
-    bloque("Pago", [
-        [pago?.pagadoPor, pago?.tipoPago, pago?.metodoPago].filter(Boolean).join(" · "),
-        `${pago?.estadoPago || "—"} · ${formatearCLP(orden.valorTotal)}`
-    ]);
+    titulo("DATOS REMITENTE");
+    fila("NOMBRE", orden.cliente?.razonSocial);
+    fila("RUT", orden.cliente?.rut);
+    fila("CIUDAD", etiquetaComuna(origen));
+    fila("FONO", orden.telefonoOrigen || orden.cliente?.telefono);
 
-    bloque("Cobro", [
-        `${orden.tarifa?.nombreTarifa || "Tarifa"} · ${orden.tipoCobro === "VOLUMEN" ? "m³" : "kg"}`,
-        `${orden.pesoTotal} kg · ${orden.volumenTotalM3} m³`
-    ]);
+    titulo("DATOS DESTINATARIO");
+    fila("NOMBRE", orden.destinatario?.nombreRazonSocial || orden.contactoDestino);
+    fila("RUT", orden.destinatario?.rut);
+    fila("CIUDAD ENTREGA", etiquetaComuna(destino));
+    fila("DIRECCION ENTREGA", orden.direccionDestino);
+    fila("FONO", orden.telefonoDestino || orden.destinatario?.telefono);
 
-    bloque("Bultos", bultos.length ? bultos.map((bulto) =>
-        `${bulto.codigoBulto}  ${bulto.tipo || "Bulto"} · ${bulto.descripcion || "—"} · ${bulto.peso ? `${bulto.peso} kg` : "—"} · ${medidas(bulto)}`
-    ) : ["Sin bultos"]);
+    titulo("CONTENIDO");
+    fila("OBSERVACION", orden.referenciaEntrega || "SIN OBSERVACIONES");
+    fila("GUIA", orden.numeroDocumento);
 
+    doc.setFontSize(6);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`TOTAL ${formatearCLP(orden.valorTotal)}`, ANCHO_OT_MM / 2, y + 2, { align: "center" });
+    doc.text("Encar  Cant  Peso  Largo  Ancho  Alto  M3  Valor", margen, y);
+    y += 4;
+    doc.setFont("helvetica", "normal");
+    (cargas.length ? cargas : [{ tipo_bulto: { nombreTipo: "Sin carga" } }]).forEach((carga, indice) => {
+        const linea = [
+            carga.tipo_bulto?.nombreTipo || "Bulto",
+            carga.cantidad ?? "—",
+            carga.pesoTotal ?? carga.pesoUnitario ?? "—",
+            carga.largoCm ?? "—",
+            carga.anchoCm ?? "—",
+            carga.altoCm ?? "—",
+            carga.volumenM3 ?? "—",
+            indice === 0 ? formatearCLP(orden.valorCargaAplicado) : "—"
+        ].join("  ");
+        const filas = doc.splitTextToSize(linea, ANCHO_OT_MM - margen * 2);
+        doc.text(filas, margen, y);
+        y += filas.length * 3.2;
+    });
+    y += 2;
+
+    fila("FORMA DE PAGO", [pago?.tipoPago, pago?.pagadoPor].filter(Boolean).join(" "));
+    fila("METODO DE PAGO", pago?.metodoPago);
+    fila("ESTADO DE PAGO", pago?.estadoPago || "PENDIENTE");
+    fila("VENTA", formatearCLP(orden.valorCargaAplicado));
+    fila("RETIRO", formatearCLP(orden.valorRetiroAplicado));
+    fila("RECARGO", formatearCLP(totalRecargo));
+    fila("IVA 19%", formatearCLP(orden.valorIva));
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(`TOTAL A PAGAR  ${formatearCLP(orden.valorTotal)}`, margen, y + 2);
+    y += 8;
+
+    titulo("RECEPCION CONFORME");
+    fila("FECHA", " ");
+    fila("HORA", " ");
+    fila("NOMBRE", " ");
+    fila("RUT", " ");
+    fila("OBSERVACIONES", " ");
+    doc.setFontSize(7);
+    doc.text(`Creado por usuario${creador ? ` : ${creador}` : ""}`, ANCHO_OT_MM / 2, y, { align: "center" });
 
     return doc.output("blob");
 };
 
-const dibujarEtiquetaPdf = (doc, { orden, bulto, indice, total, destino, medidas, etiquetaComuna }) => {
+const dibujarEtiquetaPdf = (doc, { orden, bulto, indice, total, origen, destino, medidas, etiquetaComuna, logo }) => {
     const m = 4;
     doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("MAREXPRESS", m, 7);
+    if (logo) {
+        doc.addImage(logo, "PNG", m, 2, 32, 11);
+    }
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text(`ETIQUETA ${indice + 1}/${total}`, ANCHO_ETIQUETA_MM - m, 7, { align: "right" });
+    doc.text(`ETIQUETA ${indice + 1}/${total}`, ANCHO_ETIQUETA_MM - m, 6, { align: "right" });
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
-    doc.text(orden.numeroOT, m, 14);
+    doc.setFontSize(13);
+    doc.text(orden.numeroOT, ANCHO_ETIQUETA_MM - m, 11, { align: "right" });
 
     const codigo = bulto.codigoBulto || orden.numeroOT;
     const barcode = barcodePng(codigo, { alto: 64, anchoBarra: 2 });
-    doc.addImage(barcode, "PNG", m, 16, ANCHO_ETIQUETA_MM - m * 2, 16);
-    doc.setFontSize(10);
-    doc.text(codigo, ANCHO_ETIQUETA_MM / 2, 36, { align: "center" });
+    doc.addImage(barcode, "PNG", m, 13, ANCHO_ETIQUETA_MM - m * 2, 14);
+    doc.setFontSize(9);
+    doc.text(codigo, ANCHO_ETIQUETA_MM / 2, 31, { align: "center" });
+    doc.setFontSize(11);
+    doc.text(String(etiquetaComuna(destino) || "DESTINO"), ANCHO_ETIQUETA_MM / 2, 36, { align: "center" });
 
     const campos = [
         ["DESTINO", orden.destinatario?.nombreRazonSocial || orden.contactoDestino || "—"],
+        ["ORIGEN", etiquetaComuna(origen) || "—"],
         ["DIRECCIÓN", orden.direccionDestino || "—"],
-        ["COMUNA", etiquetaComuna(destino) || "—"],
         ["TIPO", bulto.tipo || "—"],
         ["PESO", bulto.peso ? `${bulto.peso} kg` : "—"],
         ["MEDIDAS", medidas(bulto)]
     ];
 
-    let y = 41;
+    let y = 40;
     const col = (ANCHO_ETIQUETA_MM - m * 2 - 3) / 2;
     campos.forEach((campo, i) => {
         const x = m + (i % 2) * (col + 3);
@@ -189,30 +227,29 @@ const dibujarEtiquetaPdf = (doc, { orden, bulto, indice, total, destino, medidas
     });
 };
 
-export const crearPdfEtiquetas = ({ orden, bultos, destino, medidas, etiquetaComuna }) => {
+export const crearPdfEtiquetas = async ({ orden, bultos, origen, destino, medidas, etiquetaComuna }) => {
+    const logo = await logoPdf();
     const doc = new jsPDF({
         unit: "mm",
         format: [ANCHO_ETIQUETA_MM, ALTO_ETIQUETA_MM],
-        orientation: "landscape",
+        orientation: "portrait",
         compress: true
     });
-    doc.internal.pageSize.width = ANCHO_ETIQUETA_MM;
-    doc.internal.pageSize.height = ALTO_ETIQUETA_MM;
 
     bultos.forEach((bulto, indice) => {
         if (indice > 0) {
-            doc.addPage([ANCHO_ETIQUETA_MM, ALTO_ETIQUETA_MM], "landscape");
-            doc.internal.pageSize.width = ANCHO_ETIQUETA_MM;
-            doc.internal.pageSize.height = ALTO_ETIQUETA_MM;
+            doc.addPage([ANCHO_ETIQUETA_MM, ALTO_ETIQUETA_MM], "portrait");
         }
         dibujarEtiquetaPdf(doc, {
             orden,
             bulto,
             indice,
             total: bultos.length,
+            origen,
             destino,
             medidas,
-            etiquetaComuna
+            etiquetaComuna,
+            logo
         });
     });
 
@@ -276,9 +313,201 @@ const enviarZplZebra = async (zpl) => {
     }
 };
 
+const escaparHtml = (valor) => String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const imprimirDocumento = (html) => new Promise((resolve) => {
+    const ventana = window.open("", "_blank");
+    if (!ventana) {
+        resolve();
+        return;
+    }
+    ventana.document.open();
+    ventana.document.write(html);
+    ventana.document.close();
+    let listo = false;
+    const lanzar = () => {
+        if (listo) {
+            return;
+        }
+        listo = true;
+        try {
+            ventana.focus();
+            ventana.print();
+        } catch {
+            /* el navegador puede bloquear la impresión automática */
+        }
+        resolve();
+    };
+    ventana.addEventListener("load", () => window.setTimeout(lanzar, 250));
+    window.setTimeout(lanzar, 900);
+});
+
+const htmlOrden = async ({ orden, origen, destino, pago, formatearCLP, etiquetaComuna }) => {
+    const logo = await logoPdf();
+    const cargas = orden.detalle_carga || [];
+    const momento = orden.fechaCreacion ? new Date(orden.fechaCreacion) : new Date();
+    const recargos = Array.isArray(orden.recargo) ? orden.recargo : [];
+    const totalRecargo = recargos.reduce((suma, item) => suma + Number(item.monto || 0), 0);
+    const usuario = [...(orden.historial_ot || [])].at(-1)?.usuario;
+    const creador = usuario
+        ? [usuario.nombre, usuario.apellido].filter(Boolean).join(" ") || usuario.nombreUsuario
+        : "";
+    const barcode = barcodePng(orden.numeroOT, { alto: 70, anchoBarra: 2 });
+    const alto = 210 + cargas.length * 8;
+    const fila = (etiqueta, valor) => `<p><span>${escaparHtml(etiqueta)}</span><strong>${escaparHtml(valor || " ")}</strong></p>`;
+    const filasCarga = (cargas.length ? cargas : [{ tipo_bulto: { nombreTipo: "Sin carga" } }]).map((carga, indice) => `
+        <tr>
+            <td>${escaparHtml(carga.tipo_bulto?.nombreTipo || "Bulto")}</td>
+            <td>${escaparHtml(carga.cantidad ?? "—")}</td>
+            <td>${escaparHtml(carga.pesoTotal ?? carga.pesoUnitario ?? "—")}</td>
+            <td>${escaparHtml(carga.volumenM3 ?? "—")}</td>
+            <td>${escaparHtml(indice === 0 ? formatearCLP(orden.valorCargaAplicado) : "—")}</td>
+        </tr>
+    `).join("");
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>${escaparHtml(orden.numeroOT)}</title>
+<style>
+  @page { size: 80mm ${alto}mm; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #000; }
+  body { width: 80mm; padding: 3mm; font-family: "Courier New", Courier, monospace; font-size: 9px; line-height: 1.25; }
+  header { display: flex; justify-content: space-between; gap: 2mm; align-items: flex-start; }
+  header img { width: 28mm; height: auto; }
+  header div { text-align: right; font-size: 7px; }
+  .codigo { width: 100%; height: 16mm; object-fit: contain; margin: 1mm 0; }
+  p { display: flex; justify-content: space-between; gap: 2mm; margin: 0; border-bottom: 1px dotted #999; }
+  p span { font-weight: 700; }
+  p strong { font-weight: 400; text-align: right; }
+  h2 { margin: 2mm 0 1mm; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align: center; font-size: 9px; }
+  table { width: 100%; border-collapse: collapse; font-size: 7px; margin: 1mm 0; }
+  th, td { border: 1px solid #000; padding: 0.4mm; text-align: center; }
+  .total { border-top: 2px solid #000; border-bottom: 2px solid #000; font-weight: 700; font-size: 11px; }
+  .pie { display: block; text-align: center; border: 0; margin-top: 2mm; }
+</style>
+</head>
+<body>
+  <header>
+    ${logo ? `<img src="${logo}" alt="Marexpress" />` : "<strong>MAREXPRESS</strong>"}
+    <div>${empresa.lineas.map((linea) => `<div>${escaparHtml(linea)}</div>`).join("")}</div>
+  </header>
+  ${fila("N° DE TRANSPORTE", orden.numeroOT)}
+  <img class="codigo" src="${barcode}" alt="" />
+  ${fila("FECHA", momento.toLocaleDateString("es-CL"))}
+  ${fila("HORA", momento.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" }))}
+  ${fila("ORIGEN", etiquetaComuna(origen))}
+  ${fila("DESTINO", etiquetaComuna(destino))}
+  ${fila("TIPO ENTREGA", orden.direccionDestino ? "DOMICILIO" : "SUCURSAL")}
+  <h2>DATOS REMITENTE</h2>
+  ${fila("NOMBRE", orden.cliente?.razonSocial)}
+  ${fila("RUT", orden.cliente?.rut)}
+  ${fila("CIUDAD", etiquetaComuna(origen))}
+  ${fila("FONO", orden.telefonoOrigen || orden.cliente?.telefono)}
+  <h2>DATOS DESTINATARIO</h2>
+  ${fila("NOMBRE", orden.destinatario?.nombreRazonSocial || orden.contactoDestino)}
+  ${fila("RUT", orden.destinatario?.rut)}
+  ${fila("CIUDAD ENTREGA", etiquetaComuna(destino))}
+  ${fila("DIRECCIÓN", orden.direccionDestino)}
+  ${fila("FONO", orden.telefonoDestino || orden.destinatario?.telefono)}
+  <h2>CONTENIDO</h2>
+  ${fila("OBSERVACIÓN", orden.referenciaEntrega || "SIN OBSERVACIONES")}
+  ${fila("GUÍA", orden.numeroDocumento)}
+  <table>
+    <thead><tr><th>Encar</th><th>Cant</th><th>Peso</th><th>M3</th><th>Valor</th></tr></thead>
+    <tbody>${filasCarga}</tbody>
+  </table>
+  ${fila("FORMA DE PAGO", [pago?.tipoPago, pago?.pagadoPor].filter(Boolean).join(" "))}
+  ${fila("MÉTODO DE PAGO", pago?.metodoPago)}
+  ${fila("ESTADO DE PAGO", pago?.estadoPago || "PENDIENTE")}
+  ${fila("VENTA", formatearCLP(orden.valorCargaAplicado))}
+  ${fila("RETIRO", formatearCLP(orden.valorRetiroAplicado))}
+  ${fila("RECARGO", formatearCLP(totalRecargo))}
+  ${fila("IVA 19%", formatearCLP(orden.valorIva))}
+  <p class="total"><span>TOTAL A PAGAR</span><strong>${escaparHtml(formatearCLP(orden.valorTotal))}</strong></p>
+  <h2>RECEPCIÓN CONFORME</h2>
+  ${fila("FECHA", " ")}
+  ${fila("HORA", " ")}
+  ${fila("NOMBRE", " ")}
+  ${fila("RUT", " ")}
+  ${fila("OBSERVACIONES", " ")}
+  <p class="pie">Creado por usuario${creador ? ` : ${escaparHtml(creador)}` : ""}</p>
+</body>
+</html>`;
+};
+
+const htmlEtiquetas = async ({ orden, bultos, origen, destino, medidas, etiquetaComuna }) => {
+    const logo = await logoPdf();
+    const piezas = bultos.map((bulto, indice) => {
+        const codigo = bulto.codigoBulto || orden.numeroOT;
+        const barcode = barcodePng(codigo, { alto: 64, anchoBarra: 1.6 });
+        const campos = [
+            ["Destino", orden.destinatario?.nombreRazonSocial || orden.contactoDestino || "—"],
+            ["Origen", etiquetaComuna(origen) || "—"],
+            ["Dirección", orden.direccionDestino || "—"],
+            ["Tipo", bulto.tipo || "Bulto"],
+            ["Peso", bulto.peso ? `${bulto.peso} kg` : "—"],
+            ["Medidas", medidas(bulto)]
+        ];
+        return `<article>
+          <header>
+            ${logo ? `<img src="${logo}" alt="Marexpress" />` : "<strong>MAREXPRESS</strong>"}
+            <div><small>${indice + 1} / ${bultos.length}</small><strong>${escaparHtml(orden.numeroOT)}</strong></div>
+          </header>
+          <img class="codigo" src="${barcode}" alt="" />
+          <p class="numero">${escaparHtml(codigo)}</p>
+          <p class="ciudad">${escaparHtml(etiquetaComuna(destino) || "Destino")}</p>
+          <div class="datos">
+            ${campos.map(([titulo, valor]) => `<p><span>${escaparHtml(titulo)}</span><strong>${escaparHtml(valor)}</strong></p>`).join("")}
+          </div>
+        </article>`;
+    }).join("");
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Etiquetas ${escaparHtml(orden.numeroOT)}</title>
+<style>
+  @page { size: 100mm 70mm; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #000; }
+  article {
+    width: 100mm;
+    height: 70mm;
+    padding: 3mm 4mm;
+    overflow: hidden;
+    page-break-after: always;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  article:last-child { page-break-after: auto; }
+  header { display: flex; justify-content: space-between; align-items: center; height: 12mm; }
+  header img { height: 10mm; width: auto; }
+  header div { text-align: right; }
+  header small { display: block; font-size: 8px; }
+  header strong { font-size: 13px; }
+  .codigo { display: block; width: 92mm; height: 16mm; object-fit: contain; }
+  .numero, .ciudad { margin: 0; text-align: center; }
+  .numero { font-family: "Courier New", monospace; font-size: 11px; font-weight: 700; }
+  .ciudad { font-size: 13px; font-weight: 800; }
+  .datos { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 3mm; margin-top: 1mm; }
+  .datos p { margin: 0; }
+  .datos span { display: block; font-size: 7px; text-transform: uppercase; color: #444; }
+  .datos strong { display: block; font-size: 10px; }
+</style>
+</head>
+<body>${piezas}</body>
+</html>`;
+};
+
 export const imprimirOrdenTermica = async (datos) => {
-    const blob = crearPdfOrden(datos);
-    await imprimirBlob(blob, `OT-${datos.orden.numeroOT}.pdf`);
+    await imprimirDocumento(await htmlOrden(datos));
 };
 
 export const descargarZplEtiquetas = (datos) => {
@@ -296,7 +525,6 @@ export const imprimirEtiquetasZebra = async (datos) => {
         return "zebra";
     }
 
-    const blob = crearPdfEtiquetas(datos);
-    await imprimirBlob(blob, `etiquetas-${datos.orden.numeroOT}.pdf`);
+    await imprimirDocumento(await htmlEtiquetas(datos));
     return "pdf";
 };

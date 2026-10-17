@@ -1,3 +1,10 @@
+/*
+  VISTA: pagos de órdenes
+  RUTA: /operador/pagos
+  CSS: admin-card, mx-table
+  API: /api/pagos
+  FUNCIONES: registra el cobro de una OT y su comprobante
+*/
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useSearchParams } from "react-router";
 import { api } from "../../api.js";
@@ -5,6 +12,7 @@ import { useBodegaTrabajo } from "../../bodegaTrabajo.jsx";
 import Message from "../../components/Message.jsx";
 import { formatearCLP, ordenAnulada } from "../../utils.js";
 
+// Deja la respuesta del API como arreglo.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -15,6 +23,7 @@ const extraerLista = (datos, clave) => {
     return [];
 };
 
+// Traduce el retorno de Webpay (?estado=) al aviso que ve el operador al volver.
 const mensajeRetorno = (estado) => {
     if (estado === "ok") {
         return { texto: "Pago Webpay autorizado. La OT quedó marcada como pagada.", tipo: "success" };
@@ -31,6 +40,7 @@ const mensajeRetorno = (estado) => {
     return { texto: "", tipo: "info" };
 };
 
+// Webpay exige un POST con token_ws. Un enlace normal no sirve, por eso se arma un formulario y se envía.
 const irAWebpay = (url, token) => {
     const form = document.createElement("form");
     form.method = "POST";
@@ -57,17 +67,20 @@ export default function PagosOtPage() {
     const [cargando, setCargando] = useState(false);
     const [pagando, setPagando] = useState(false);
 
+    // Aviso único de la pantalla.
     const aviso = (texto, tipoAviso = "info") => {
         setMensaje(texto);
         setTipo(tipoAviso);
     };
 
+    // Órdenes que todavía no están pagadas, para elegirlas sin escribir el número.
     const cargarPendientes = () => {
         api("/pagos/pendientes")
             .then((respuesta) => setPendientes(extraerLista(respuesta, "ordenes")))
             .catch(() => setPendientes([]));
     };
 
+    // Solo pendientes de la comuna de la bodega activa, y ninguna anulada.
     const pendientesBodega = useMemo(
         () => pendientes.filter((item) =>
             !ordenAnulada(item)
@@ -104,6 +117,7 @@ export default function PagosOtPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Carga la OT a cobrar. Si ya está pagada o anulada, lo dice y no abre Webpay.
     const buscar = async (valor) => {
         const numero = String(valor || numeroOT || "").trim();
         if (!numero) {
@@ -141,6 +155,7 @@ export default function PagosOtPage() {
         }
     };
 
+    // Pide a Webpay la URL y el token, y redirige al operador a pagar.
     const pagar = async () => {
         if (!orden?.puedePagar) {
             return;
@@ -196,7 +211,7 @@ export default function PagosOtPage() {
                             ref={scanRef}
                             value={numeroOT}
                             onChange={(evento) => setNumeroOT(evento.target.value.toUpperCase())}
-                            placeholder="OT-000123"
+                            placeholder="Solo el número, por ejemplo 65"
                             autoComplete="off"
                         />
                     </label>
@@ -324,6 +339,7 @@ export default function PagosOtPage() {
     );
 }
 
+// La ruta vieja de comprobantes ahora abre pagos, que es donde se cobra la OT.
 export function RedirigirComprobantesAPagos() {
     return <Navigate to="/operador/pagos" replace />;
 }

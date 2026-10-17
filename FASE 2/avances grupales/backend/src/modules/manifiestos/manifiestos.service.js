@@ -1,4 +1,5 @@
 import prisma from "../../config/prisma.js";
+import { candidatosCodigo } from "../../common/utils/codigoOt.js";
 
 const incluirManifiesto = {
     vehiculo: true,
@@ -427,16 +428,29 @@ export const escanearCodigoManifiesto = async (idManifiesto, codigoRaw, idUsuari
         tipo: bulto.detalle_carga?.tipo_bulto?.nombreTipo || "Bulto"
     });
 
-    const porCodigo = await prisma.bulto.findUnique({
-        where: { codigoBulto: codigo },
-        include: bultoConOrden
-    });
+    const candidatos = candidatosCodigo(codigo);
+    let porCodigo = null;
+    for (const item of candidatos) {
+        porCodigo = await prisma.bulto.findUnique({
+            where: { codigoBulto: item },
+            include: bultoConOrden
+        });
+        if (porCodigo) {
+            break;
+        }
+    }
 
     if (!porCodigo) {
-        const orden = await prisma.orden_transporte.findUnique({
-            where: { numeroOT: codigo },
-            include: { estado_ot: true }
-        });
+        let orden = null;
+        for (const item of candidatos) {
+            orden = await prisma.orden_transporte.findUnique({
+                where: { numeroOT: item },
+                include: { estado_ot: true }
+            });
+            if (orden) {
+                break;
+            }
+        }
         if (!orden) {
             throw errorHttp(`No se encontró el código ${codigo}`);
         }

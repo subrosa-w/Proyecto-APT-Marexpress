@@ -1,8 +1,18 @@
+/*
+  VISTA: tarifario
+  RUTA: /administrador/tarifas
+  CSS: admin-card, mx-table, campos y button-primary
+  API: /api/maestros/tarifas y /api/maestros/tarifas/historial
+  FUNCIONES: crea y edita tarifas. Retiro S, M y L. El precio base de un
+  tramo es opcional. Muestra el historial de precios.
+*/
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api.js";
+import { guardarBorrador, leerBorrador } from "../../borrador.js";
 import { etiquetaComuna, formatearCLP, formatearFechaHora, nombreCompleto } from "../../utils.js";
 import Message from "../../components/Message.jsx";
 
+// Precio fijo entre dos comunas, aparte del tarifario general.
 const vacioTrayecto = {
     idTarifa: "",
     idComunaOrigen: "",
@@ -12,6 +22,7 @@ const vacioTrayecto = {
     valorM3: ""
 };
 
+// Un rango de kilos. El precio base puede quedar vacío: en ese caso el tramo cobra solo por kilo.
 const tramoVacio = () => ({
     kgDesde: "",
     kgHasta: "",
@@ -19,11 +30,12 @@ const tramoVacio = () => ({
     valorKg: ""
 });
 
+// Tarifario nuevo. Los retiros S, M y L tienen un valor de partida que se puede cambiar.
 const tarifarioVacio = {
     nombreTarifa: "",
     valorKg: "",
     valorM3: "",
-    valorBase: "0",
+    valorBase: "",
     valorRetiro: "30000",
     valorRetiroMediano: "60000",
     valorRetiroGrande: "120000",
@@ -32,14 +44,15 @@ const tarifarioVacio = {
     tramos: [tramoVacio()]
 };
 
+// Nombre legible de cada campo en el historial. En pantalla el retiro se ve S, M y L.
 const etiquetaCampo = {
     nombreTarifa: "Nombre",
     valorBase: "Valor base",
     valorKg: "Kg sobre 200",
     valorM3: "Valor m³",
-    valorRetiro: "Retiro pequeño",
-    valorRetiroMediano: "Retiro mediano",
-    valorRetiroGrande: "Retiro grande",
+    valorRetiro: "Retiro S",
+    valorRetiroMediano: "Retiro M",
+    valorRetiroGrande: "Retiro L",
     valorZonaUrbana: "Zona urbana",
     valorZonaLejana: "Zona lejana",
     estado: "Estado",
@@ -47,6 +60,7 @@ const etiquetaCampo = {
     tarifario: "Alta de tarifario"
 };
 
+// Normaliza la respuesta del API a un arreglo, venga suelta o dentro de una clave.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -54,11 +68,12 @@ const extraerLista = (datos, clave) => {
     return Array.isArray(datos?.[clave]) ? datos[clave] : [];
 };
 
+// Pasa la tarifa guardada a textos de input. Un valor fijo nulo queda vacío para seguir siendo opcional.
 const aFormulario = (tarifa) => ({
     nombreTarifa: tarifa.nombreTarifa || "",
     valorKg: String(tarifa.valorKg ?? ""),
     valorM3: String(tarifa.valorM3 ?? ""),
-    valorBase: String(tarifa.valorBase ?? "0"),
+    valorBase: Number(tarifa.valorBase) ? String(tarifa.valorBase) : "",
     valorRetiro: String(tarifa.valorRetiro ?? "0"),
     valorRetiroMediano: String(tarifa.valorRetiroMediano ?? "0"),
     valorRetiroGrande: String(tarifa.valorRetiroGrande ?? "0"),
@@ -74,6 +89,7 @@ const aFormulario = (tarifa) => ({
         : [tramoVacio()]
 });
 
+// Convierte los textos del formulario a números antes de guardarlos.
 const payloadTarifario = (formulario) => ({
     nombreTarifa: formulario.nombreTarifa,
     valorKg: Number(formulario.valorKg) || 0,
@@ -87,6 +103,7 @@ const payloadTarifario = (formulario) => ({
     tramos: formulario.tramos
 });
 
+// Muestra un cambio del historial en plata o en texto. Los tramos vienen guardados como JSON.
 const textoHistorial = (valor, campo) => {
     if (valor == null || valor === "") {
         return "—";
@@ -121,38 +138,54 @@ export default function TarifasPage() {
     const [catalogo, setCatalogo] = useState([]);
     const [comunas, setComunas] = useState([]);
     const [formularioTrayecto, setFormularioTrayecto] = useState(vacioTrayecto);
-    const [tarifario, setTarifario] = useState(tarifarioVacio);
-    const [idEditando, setIdEditando] = useState(null);
+    const [tarifario, setTarifario] = useState(() => (leerBorrador("tarifas") || {}).tarifario || tarifarioVacio);
+    const [idEditando, setIdEditando] = useState(() => (leerBorrador("tarifas") || {}).idEditando || null);
     const [historial, setHistorial] = useState([]);
+    const [historialGeneral, setHistorialGeneral] = useState([]);
+    const [recargos, setRecargos] = useState([]);
+    const [recargoForm, setRecargoForm] = useState(() => (leerBorrador("tarifas") || {}).recargoForm || { nombre: "", monto: "" });
     const [mensaje, setMensaje] = useState("");
     const [tipo, setTipo] = useState("info");
     const [cargando, setCargando] = useState(false);
 
+    // Un solo aviso para toda la pantalla: éxito o error del último guardado.
     const aviso = (texto, clase = "info") => {
         setMensaje(texto);
         setTipo(clase);
     };
 
+    // Trae trayectos, tarifarios, comunas, recargos y el historial general de precios.
     const cargar = async () => {
-        const [lista, maestros, listaComunas] = await Promise.all([
+        const [lista, maestros, listaComunas, listaRecargos, precios] = await Promise.all([
             api("/tarifas-trayecto"),
             api("/maestros/tarifas"),
-            api("/comunas")
+            api("/comunas"),
+            api("/maestros/recargos"),
+            api("/maestros/tarifas/historial").catch(() => ({ historial: [] }))
         ]);
         setTrayectos(Array.isArray(lista) ? lista : []);
         setCatalogo(Array.isArray(maestros) ? maestros : extraerLista(maestros, "tarifas"));
         setComunas(Array.isArray(listaComunas) ? listaComunas : extraerLista(listaComunas, "comunas"));
+        setRecargos(listaRecargos?.recargos || []);
+        setHistorialGeneral(extraerLista(precios, "historial"));
     };
+
+    // Conserva el formulario si se cambia de pantalla antes de guardar.
+    useEffect(() => {
+        guardarBorrador("tarifas", { tarifario, idEditando, recargoForm });
+    }, [tarifario, idEditando, recargoForm]);
 
     useEffect(() => {
         cargar().catch((error) => aviso(error.message, "error"));
     }, []);
 
+    // Historial de un tarifario concreto, al elegirlo en la tabla.
     const cargarHistorial = async (idTarifa) => {
         const respuesta = await api(`/maestros/tarifas/${idTarifa}/historial`);
         setHistorial(extraerLista(respuesta, "historial"));
     };
 
+    // Abre un tarifario existente para editarlo y ver cómo cambió su precio.
     const seleccionar = async (tarifa) => {
         setIdEditando(tarifa.idTarifa);
         setTarifario(aFormulario(tarifa));
@@ -163,12 +196,14 @@ export default function TarifasPage() {
         }
     };
 
+    // Limpia el formulario para crear otro tarifario sin mezclarlo con el que estaba abierto.
     const nuevo = () => {
         setIdEditando(null);
         setTarifario(tarifarioVacio);
         setHistorial([]);
     };
 
+    // Copia solo los tramos de otro tarifario, para no reescribir rangos de kilos a mano.
     const copiarTramosDe = (idTarifa) => {
         const origen = catalogo.find((item) => String(item.idTarifa) === String(idTarifa));
         if (!origen) {
@@ -180,6 +215,7 @@ export default function TarifasPage() {
         }));
     };
 
+    // Cambia un campo de un tramo sin tocar los demás rangos.
     const setTramo = (indice, campo, valor) => {
         setTarifario((prev) => ({
             ...prev,
@@ -187,6 +223,7 @@ export default function TarifasPage() {
         }));
     };
 
+    // Crea o actualiza. La actualización queda en el historial para poder revisar el precio anterior.
     const guardarTarifario = async (event) => {
         event.preventDefault();
         setCargando(true);
@@ -219,6 +256,7 @@ export default function TarifasPage() {
         }
     };
 
+    // Activa o desactiva sin borrar. Una tarifa inactiva deja de ofrecerse al crear una OT.
     const cambiarEstado = async (tarifa) => {
         setCargando(true);
         try {
@@ -235,6 +273,7 @@ export default function TarifasPage() {
         }
     };
 
+    // Precio especial entre dos comunas, cuando el tarifario general no alcanza para ese trayecto.
     const crearTrayecto = async (event) => {
         event.preventDefault();
         setCargando(true);
@@ -260,18 +299,103 @@ export default function TarifasPage() {
         }
     };
 
+    // Si hay un tarifario abierto se ve su historial; si no, el de todos.
+    const filasHistorial = idEditando ? historial : historialGeneral;
+    // Los últimos cambios de precio que tienen porcentaje, para ver si subió o bajó.
     const comparativa = useMemo(() => {
-        const numericos = historial.filter((item) =>
+        const numericos = filasHistorial.filter((item) =>
             item.variacionPct != null && ["valorM3", "valorKg", "valorRetiro", "valorRetiroMediano", "valorRetiroGrande", "valorBase"].includes(item.campo)
         );
         return numericos.slice(0, 8);
-    }, [historial]);
+    }, [filasHistorial]);
+
+    // Da de alta un recargo con nombre y monto. Después aparece al crear una orden.
+    const guardarRecargo = async (evento) => {
+        evento.preventDefault();
+        setCargando(true);
+        try {
+            await api("/maestros/recargos", {
+                method: "POST",
+                body: JSON.stringify({
+                    nombre: recargoForm.nombre,
+                    monto: Number(recargoForm.monto)
+                })
+            });
+            setRecargoForm({ nombre: "", monto: "" });
+            await cargar();
+            aviso("Recargo listo para usarlo al crear una orden", "success");
+        } catch (error) {
+            aviso(error.message, "error");
+        } finally {
+            setCargando(false);
+        }
+    };
 
     return (
         <>
+            {/* Recargos con nombre. Se eligen después al crear una orden. */}
             <section className="admin-card">
                 <header className="admin-card-header">
                     <div>
+                        <span>RECARGOS</span>
+                        <h2>Valores con nombre</h2>
+                    </div>
+                </header>
+                <p className="mx-note">
+                    Crea un recargo con nombre y valor. Al crear una orden, al seleccionarlo el valor entra solo en la casilla y se puede cambiar a mano.
+                </p>
+                <form className="mx-form-grid" onSubmit={guardarRecargo}>
+                    <div className="field">
+                        <label>Nombre</label>
+                        <input
+                            value={recargoForm.nombre}
+                            onChange={(e) => setRecargoForm((prev) => ({ ...prev, nombre: e.target.value }))}
+                            placeholder="Seguro, feriado, espera"
+                            required
+                        />
+                    </div>
+                    <div className="field">
+                        <label>Valor</label>
+                        <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={recargoForm.monto}
+                            onChange={(e) => setRecargoForm((prev) => ({ ...prev, monto: e.target.value }))}
+                            required
+                        />
+                    </div>
+                    <div className="mx-form-actions">
+                        <button type="submit" className="button-primary" disabled={cargando}>Añadir recargo</button>
+                    </div>
+                </form>
+                {recargos.length > 0 && (
+                    <div className="mx-table-wrap">
+                        <table className="mx-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Valor</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {recargos.map((item) => (
+                                    <tr key={item.idTipoRecargo}>
+                                        <td>{item.nombre}</td>
+                                        <td>{formatearCLP(item.monto)}</td>
+                                        <td>{item.estado ? "Activo" : "Inactivo"}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
+            <section className="admin-card">
+                <header className="admin-card-header">
+                    <div>
+                        {/* Lista y formulario del tarifario: kilos, m³, retiro S/M/L y tramos. */}
                         <span>TARIFARIOS</span>
                         <h2>Precios vigentes</h2>
                     </div>
@@ -290,7 +414,7 @@ export default function TarifasPage() {
                                 <th>Nombre</th>
                                 <th>m³</th>
                                 <th>+200 kg</th>
-                                <th>Retiro P/M/G</th>
+                                <th>Retiro S / M / L</th>
                                 <th>Tramos</th>
                                 <th>Estado</th>
                                 <th></th>
@@ -364,16 +488,20 @@ export default function TarifasPage() {
                         />
                     </div>
                     <div className="field">
-                        <label>Valor base</label>
+                        <label>Valor base (opcional)</label>
                         <input
                             type="number"
                             min="0"
+                            step="1"
+                            placeholder="Vacío = no se cobra"
+                            title="Opcional. La empresa no usa precio base de la carga. Si queda vacío se guarda en 0."
                             value={tarifario.valorBase}
                             onChange={(e) => setTarifario({ ...tarifario, valorBase: e.target.value })}
                         />
+                        <small className="mx-note">No se suma al flete si queda vacío.</small>
                     </div>
                     <div className="field">
-                        <label>Retiro urbano pequeño</label>
+                        <label>Retiro S</label>
                         <input
                             type="number"
                             min="0"
@@ -382,7 +510,7 @@ export default function TarifasPage() {
                         />
                     </div>
                     <div className="field">
-                        <label>Retiro urbano mediano</label>
+                        <label>Retiro M</label>
                         <input
                             type="number"
                             min="0"
@@ -391,7 +519,7 @@ export default function TarifasPage() {
                         />
                     </div>
                     <div className="field">
-                        <label>Retiro urbano grande</label>
+                        <label>Retiro L</label>
                         <input
                             type="number"
                             min="0"
@@ -411,13 +539,13 @@ export default function TarifasPage() {
                         </select>
                     </div>
                     <div className="mx-table-wrap" style={{ gridColumn: "1 / -1" }}>
-                        <p className="mx-note">Tramos de kilos: valor fijo o, en el último, valor por kg.</p>
+                        <p className="mx-note">El precio base de cada tramo es opcional. Si queda vacío, ese tramo cobra solo el valor por kg.</p>
                         <table className="mx-table">
                             <thead>
                                 <tr>
                                     <th>Desde kg</th>
                                     <th>Hasta kg</th>
-                                    <th>Valor fijo</th>
+                                    <th>Precio base</th>
                                     <th>Valor / kg</th>
                                     <th></th>
                                 </tr>
@@ -447,6 +575,8 @@ export default function TarifasPage() {
                                             <input
                                                 type="number"
                                                 min="0"
+                                                placeholder="Opcional"
+                                                title="Opcional. Si queda vacío, el tramo no usa precio base."
                                                 value={tramo.valorFijo}
                                                 onChange={(e) => setTramo(indice, "valorFijo", e.target.value)}
                                             />
@@ -492,63 +622,68 @@ export default function TarifasPage() {
                 </form>
             </section>
 
-            {idEditando ? (
-                <section className="admin-card">
-                    <header className="admin-card-header">
-                        <div>
-                            <span>HISTORIAL</span>
-                            <h2>Comparativa de precios</h2>
-                        </div>
-                    </header>
-                    {comparativa.length ? (
-                        <p className="mx-note">
-                            Últimas variaciones: {comparativa.map((item) =>
-                                `${etiquetaCampo[item.campo] || item.campo} ${Number(item.variacionPct) > 0 ? "+" : ""}${item.variacionPct}%`
-                            ).join(" · ")}
-                        </p>
-                    ) : (
-                        <p className="mx-note">Todavía no hay cambios de valor para comparar.</p>
-                    )}
-                    <div className="mx-table-wrap">
-                        <table className="mx-table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Campo</th>
-                                    <th>Antes</th>
-                                    <th>Después</th>
-                                    <th>Variación</th>
-                                    <th>Usuario</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {historial.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="mx-empty">Sin movimientos registrados.</td>
-                                    </tr>
-                                ) : historial.map((item) => (
-                                    <tr key={item.idHistorial}>
-                                        <td>{formatearFechaHora(item.fechaCambio)}</td>
-                                        <td>{etiquetaCampo[item.campo] || item.campo || item.tipoCambio}</td>
-                                        <td>{textoHistorial(item.valorAnterior, item.campo)}</td>
-                                        <td>{textoHistorial(item.valorNuevo, item.campo)}</td>
-                                        <td>
-                                            {item.variacionPct == null
-                                                ? "—"
-                                                : `${Number(item.variacionPct) > 0 ? "+" : ""}${item.variacionPct}%`}
-                                        </td>
-                                        <td>{nombreCompleto(item.usuario) || "—"}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            <section className="admin-card" id="historico-precios">
+                <header className="admin-card-header">
+                    <div>
+                        {/* Cambios de precio ya guardados, del tarifario abierto o de todos. */}
+                        <span>HISTORIAL</span>
+                        <h2>{idEditando ? "Comparativa de este tarifario" : "Histórico de precios"}</h2>
                     </div>
-                </section>
-            ) : null}
+                </header>
+                <p className="mx-note">
+                    {idEditando
+                        ? "Cambios guardados en el tarifario que estás editando."
+                        : "Últimos cambios de precio de todos los tarifarios. Edita uno para ver solo su historial."}
+                </p>
+                {comparativa.length ? (
+                    <p className="mx-note">
+                        Últimas variaciones: {comparativa.map((item) =>
+                            `${etiquetaCampo[item.campo] || item.campo} ${Number(item.variacionPct) > 0 ? "+" : ""}${item.variacionPct}%`
+                        ).join(" · ")}
+                    </p>
+                ) : null}
+                <div className="mx-table-wrap">
+                    <table className="mx-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                {idEditando ? null : <th>Tarifario</th>}
+                                <th>Campo</th>
+                                <th>Antes</th>
+                                <th>Después</th>
+                                <th>Variación</th>
+                                <th>Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filasHistorial.length === 0 ? (
+                                <tr>
+                                    <td colSpan={idEditando ? 6 : 7} className="mx-empty">Sin movimientos registrados.</td>
+                                </tr>
+                            ) : filasHistorial.map((item) => (
+                                <tr key={item.idHistorial}>
+                                    <td>{formatearFechaHora(item.fechaCambio)}</td>
+                                    {idEditando ? null : <td>{item.tarifa?.nombreTarifa || "—"}</td>}
+                                    <td>{etiquetaCampo[item.campo] || item.campo || item.tipoCambio}</td>
+                                    <td>{textoHistorial(item.valorAnterior, item.campo)}</td>
+                                    <td>{textoHistorial(item.valorNuevo, item.campo)}</td>
+                                    <td>
+                                        {item.variacionPct == null
+                                            ? "—"
+                                            : `${Number(item.variacionPct) > 0 ? "+" : ""}${item.variacionPct}%`}
+                                    </td>
+                                    <td>{nombreCompleto(item.usuario) || "—"}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
             <section className="admin-card">
                 <header className="admin-card-header">
                     <div>
+                        {/* Precio fijo entre dos comunas, distinto del tarifario general. */}
                         <span>TRAYECTO</span>
                         <h2>Tarifa fija por comunas (opcional)</h2>
                     </div>

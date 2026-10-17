@@ -31,6 +31,10 @@ export const autorizarRoles = (...rolesPermitidos) => {
             });
         }
 
+        const equivalentes = {
+            CLIENTE: ["CLIENTE", "CLIENTE NORMAL", "CLIENTE CUENTA CORRIENTE"]
+        };
+        const permitidos = rolesPermitidos.flatMap((rol) => equivalentes[rol] || [rol]);
         const rolUsuario = req.user.rol;
 
         if (!rolUsuario) {
@@ -44,7 +48,7 @@ export const autorizarRoles = (...rolesPermitidos) => {
          * El rol actual debe estar expresamente
          * autorizado para utilizar la ruta.
          */
-        if (!rolesPermitidos.includes(rolUsuario)) {
+        if (!permitidos.includes(rolUsuario)) {
             return res.status(403).json({
                 ok: false,
                 mensaje:

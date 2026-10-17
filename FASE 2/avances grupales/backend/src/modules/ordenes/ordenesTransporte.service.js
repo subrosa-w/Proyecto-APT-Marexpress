@@ -1,5 +1,6 @@
 ﻿import { randomUUID } from "node:crypto";
 import prisma from "../../config/prisma.js";
+import { candidatosCodigo } from "../../common/utils/codigoOt.js";
 import { asegurarTarifaCliente } from "../clientes/clientes.service.js";
 import {
     cobroPorTramoPeso,
@@ -378,8 +379,8 @@ export const obtenerOrdenTransportePorId = async (idOrden, opciones = {}) => {
 };
 
 export const obtenerOrdenTransportePorNumero = async (numeroOT, opciones = {}) => {
-    const orden = await prisma.orden_transporte.findUnique({
-        where: { numeroOT: numeroOT.trim() },
+    const orden = await prisma.orden_transporte.findFirst({
+        where: { numeroOT: { in: candidatosCodigo(numeroOT) } },
         select: { idOrden: true, numeroOT: true }
     });
 
@@ -703,10 +704,7 @@ const calcularValoresOrden = async (datos, db) => {
                 datos.valorBaseAplicado,
                 "valorBaseAplicado"
             )
-            : Number(
-                tarifa.valorBase ??
-                0
-            );
+            : 0;
 
 
     const valorKg =
@@ -1849,6 +1847,82 @@ const obtenerEstadoAnulacion = async () => {
     });
 };
 
+export const listarEstadosOt = async () =>
+    prisma.estado_ot.findMany({
+        orderBy: { idEstado: "asc" },
+        select: {
+            idEstado: true,
+            nombreEstado: true,
+            descripcion: true
+        }
+    });
+
+export const cambiarEstadoOrdenTransporte = async (idOrden, datos, idUsuario) => {
+    const ordenId = Number(idOrden);
+    const usuarioId = Number(idUsuario);
+
+    if (!Number.isInteger(ordenId) || ordenId <= 0) {
+        throw errorHttp("El ID de la orden no es válido", 400);
+    }
+    if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+        throw errorHttp("Usuario no autenticado", 401);
+    }
+
+    const orden = await prisma.orden_transporte.findUnique({
+        where: { idOrden: ordenId },
+        include: { estado_ot: true }
+    });
+
+    if (!orden) {
+        throw errorHttp("Orden de transporte no encontrada", 404);
+    }
+
+    const idEstado = Number(datos?.idEstado);
+    let estado = null;
+    if (Number.isInteger(idEstado) && idEstado > 0) {
+        estado = await prisma.estado_ot.findUnique({ where: { idEstado } });
+    } else if (datos?.nombreEstado) {
+        estado = await prisma.estado_ot.findFirst({
+            where: { nombreEstado: String(datos.nombreEstado).trim() }
+        });
+    }
+
+    if (!estado) {
+        throw errorHttp("Ese estado no existe en la base de datos", 400);
+    }
+
+    if (estado.idEstado === orden.idEstado) {
+        throw errorHttp(`La orden ya está en estado ${estado.nombreEstado}`, 400);
+    }
+
+    const nota = String(datos?.observacion || "").trim();
+    const anterior = orden.estado_ot?.nombreEstado || "sin estado";
+    const descripcion = (
+        nota
+            ? `Estado actualizado de ${anterior} a ${estado.nombreEstado}. ${nota}`
+            : `Estado actualizado de ${anterior} a ${estado.nombreEstado}`
+    ).slice(0, 250);
+
+    await prisma.$transaction(async (tx) => {
+        await tx.orden_transporte.update({
+            where: { idOrden: orden.idOrden },
+            data: { idEstado: estado.idEstado }
+        });
+        await registrarEventoOt({
+            db: tx,
+            idOrden: orden.idOrden,
+            idEstado: estado.idEstado,
+            idUsuario: usuarioId,
+            descripcion
+        });
+    });
+
+    return prisma.orden_transporte.findUnique({
+        where: { idOrden: orden.idOrden },
+        include: incluirOrdenCompleta
+    });
+};
+
 export const actualizarOrdenTransporte = async (idOrden, datos, idUsuario) => {
     const orden = await prisma.orden_transporte.findUnique({
         where: { idOrden: Number(idOrden) },
@@ -1989,10 +2063,17 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
         throw errorHttp("La sucursal no existe o está inactiva", 400);
     }
 
-    const bultoEscaneado = await prisma.bulto.findUnique({
-        where: { codigoBulto: codigoLimpio },
-        select: { idBulto: true, idDetalleCarga: true }
-    });
+    const candidatos = candidatosCodigo(codigoLimpio);
+    let bultoEscaneado = null;
+    for (const item of candidatos) {
+        bultoEscaneado = await prisma.bulto.findUnique({
+            where: { codigoBulto: item },
+            select: { idBulto: true, idDetalleCarga: true }
+        });
+        if (bultoEscaneado) {
+            break;
+        }
+    }
 
     let idOrden = null;
     if (bultoEscaneado) {
@@ -2002,8 +2083,8 @@ export const reingresarOtRechazadaEnBodega = async ({ codigo, idSucursal, idUsua
         });
         idOrden = detalle?.idOrden || null;
     } else {
-        const ordenPorNumero = await prisma.orden_transporte.findUnique({
-            where: { numeroOT: codigoLimpio },
+        const ordenPorNumero = await prisma.orden_transporte.findFirst({
+            where: { numeroOT: { in: candidatos } },
             select: { idOrden: true }
         });
         idOrden = ordenPorNumero?.idOrden || null;

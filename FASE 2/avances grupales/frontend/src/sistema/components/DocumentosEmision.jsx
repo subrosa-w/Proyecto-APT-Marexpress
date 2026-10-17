@@ -1,5 +1,11 @@
+/*
+  COMPONENTE: ticket y etiquetas
+  CSS: vista previa de impresión en sistema.css
+  FUNCIONES: ticket de 80 mm y etiquetas de 100×70 mm
+*/
 import { useEffect, useMemo, useRef, useState } from "react";
-import logoMarexpress from "../assets/logo-marexpress.svg";
+import logoMarexpress from "../assets/logo-marexpress.png";
+import { empresa } from "../empresa.js";
 import { etiquetaComuna, formatearCLP } from "../utils.js";
 import { descargarZplEtiquetas, imprimirEtiquetasZebra, imprimirOrdenTermica } from "../utils/impresionTermica.js";
 
@@ -64,6 +70,131 @@ function CodigoBarras({ valor, alto = 36 }) {
     return <svg ref={svgRef} className="ot-barcode" role="img" aria-label={valor} />;
 }
 
+const numero = (valor, decimales = 2) => {
+    const cantidad = Number(valor);
+    return Number.isFinite(cantidad) ? cantidad.toFixed(decimales) : "—";
+};
+
+const fechaHora = (valor) => {
+    const fecha = valor ? new Date(valor) : new Date();
+    if (Number.isNaN(fecha.getTime())) {
+        return { fecha: "—", hora: "—" };
+    }
+    return {
+        fecha: fecha.toLocaleDateString("es-CL"),
+        hora: fecha.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    };
+};
+
+function VoucherOrden({ orden, origen, destino, pago, etiquetaComuna, formatearCLP }) {
+    const momento = fechaHora(orden.fechaCreacion);
+    const cargas = orden.detalle_carga || [];
+    const recargos = Array.isArray(orden.recargo) ? orden.recargo : [];
+    const totalRecargo = recargos.reduce((suma, item) => suma + Number(item.monto || 0), 0);
+    const historial = orden.historial_ot || [];
+    const usuario = [...historial].at(-1)?.usuario;
+    const creador = usuario
+        ? [usuario.nombre, usuario.apellido].filter(Boolean).join(" ") || usuario.nombreUsuario
+        : "";
+    const observacion = cargas.map((item) => item.observacion).filter(Boolean).join(" · ")
+        || orden.referenciaEntrega
+        || "SIN OBSERVACIONES";
+    const fila = (etiqueta, valor) => (
+        <p className="ot-ticket-dato">
+            <span>{etiqueta}</span>
+            <strong>{valor || "—"}</strong>
+        </p>
+    );
+
+    return (
+        <section className="ot-ticket">
+            <header className="ot-ticket-cabeza">
+                <img src={logoMarexpress} alt="Marexpress" className="ot-ticket-logo" />
+                <div className="ot-ticket-empresa">
+                    {empresa.lineas.map((linea) => <p key={linea}>{linea}</p>)}
+                </div>
+            </header>
+            {fila("N° DE TRANSPORTE", orden.numeroOT)}
+            <CodigoBarras valor={orden.numeroOT} alto={36} />
+            {fila("FECHA", momento.fecha)}
+            {fila("HORA", momento.hora)}
+            {fila("ORIGEN", etiquetaComuna(origen))}
+            {fila("DESTINO", etiquetaComuna(destino))}
+            {fila("TIPO ENTREGA", orden.direccionDestino ? "DOMICILIO" : "SUCURSAL")}
+
+            <h3>Datos remitente</h3>
+            {fila("NOMBRE", orden.cliente?.razonSocial)}
+            {fila("RUT", orden.cliente?.rut)}
+            {fila("CIUDAD", etiquetaComuna(origen))}
+            {fila("FONO", orden.telefonoOrigen || orden.cliente?.telefono)}
+
+            <h3>Datos destinatario</h3>
+            {fila("NOMBRE", orden.destinatario?.nombreRazonSocial || orden.contactoDestino)}
+            {fila("RUT", orden.destinatario?.rut)}
+            {fila("CIUDAD ENTREGA", etiquetaComuna(destino))}
+            {fila("DIRECCIÓN ENTREGA", orden.direccionDestino)}
+            {fila("FONO", orden.telefonoDestino || orden.destinatario?.telefono)}
+
+            <h3>Contenido</h3>
+            {fila("OBSERVACIÓN", observacion)}
+            {fila("GUÍA", orden.numeroDocumento)}
+
+            <table className="ot-ticket-tabla">
+                <thead>
+                    <tr>
+                        <th>Encar</th>
+                        <th>Cant</th>
+                        <th>Peso</th>
+                        <th>Largo</th>
+                        <th>Ancho</th>
+                        <th>Alto</th>
+                        <th>M3</th>
+                        <th>Kg</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {cargas.length === 0 ? (
+                        <tr><td colSpan="9">Sin carga</td></tr>
+                    ) : cargas.map((carga, indice) => (
+                        <tr key={carga.idDetalleCarga || indice}>
+                            <td>{carga.tipo_bulto?.nombreTipo || "Bulto"}</td>
+                            <td>{carga.cantidad}</td>
+                            <td>{numero(carga.pesoTotal || carga.pesoUnitario)}</td>
+                            <td>{numero(carga.largoCm)}</td>
+                            <td>{numero(carga.anchoCm)}</td>
+                            <td>{numero(carga.altoCm)}</td>
+                            <td>{numero(carga.volumenM3, 3)}</td>
+                            <td>{numero(carga.pesoTotal || carga.pesoUnitario)}</td>
+                            <td>{indice === 0 ? formatearCLP(orden.valorCargaAplicado) : "—"}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+
+            {fila("FORMA DE PAGO", [pago?.tipoPago, pago?.pagadoPor].filter(Boolean).join(" "))}
+            {fila("MÉTODO DE PAGO", pago?.metodoPago)}
+            {fila("ESTADO DE PAGO", pago?.estadoPago || "PENDIENTE")}
+            {fila("VENTA", formatearCLP(orden.valorCargaAplicado))}
+            {fila("RETIRO", formatearCLP(orden.valorRetiroAplicado ?? orden.retiro?.valor))}
+            {fila("RECARGO", formatearCLP(totalRecargo))}
+            {fila("IVA 19%", formatearCLP(orden.valorIva))}
+            <p className="ot-ticket-total">
+                <span>TOTAL A PAGAR</span>
+                <strong>{formatearCLP(orden.valorTotal)}</strong>
+            </p>
+
+            <h3>Recepción conforme</h3>
+            {fila("FECHA", "")}
+            {fila("HORA", "")}
+            {fila("NOMBRE", "")}
+            {fila("RUT", "")}
+            {fila("OBSERVACIONES", "")}
+            <p className="ot-ticket-pie">Creado por usuario{creador ? ` : ${creador}` : ""}</p>
+        </section>
+    );
+}
+
 export default function DocumentosEmision({ orden, onCerrar }) {
     const [paso, setPaso] = useState("ot");
     const [imprimiendo, setImprimiendo] = useState(false);
@@ -111,7 +242,7 @@ export default function DocumentosEmision({ orden, onCerrar }) {
             const modo = await imprimirEtiquetasZebra(datosImpresion);
             setAvisoZebra(modo === "zebra"
                 ? "Etiquetas enviadas a la impresora Zebra."
-                : "PDF 100 × 70 mm. Elige la Zebra, papel 100×70 y escala 100% (sin ajustar a la página).");
+                : "Listas en 100 × 70 mm. Deja ese papel y la escala en 100%.");
         } finally {
             setImprimiendo(false);
         }
@@ -122,7 +253,7 @@ export default function DocumentosEmision({ orden, onCerrar }) {
             <div className="ot-impresion-acciones no-print">
                 {paso === "ot" ? (
                     <>
-                        <p className="mx-note">Imprime primero la orden de transporte en ticket 88 mm. Al cerrar esa impresión podrás emitir las etiquetas Zebra 100 × 70 mm.</p>
+                        <p className="mx-note">La orden se imprime en ticket de 80 mm de ancho. En el diálogo deja ese tamaño de papel y la escala en 100%.</p>
                         <button type="button" className="button-primary" onClick={imprimirOt} disabled={imprimiendo}>
                             {imprimiendo ? "Preparando..." : "Imprimir orden de transporte"}
                         </button>
@@ -132,7 +263,7 @@ export default function DocumentosEmision({ orden, onCerrar }) {
                     </>
                 ) : (
                     <>
-                        <p className="mx-note">Etiquetas Zebra 100 × 70 mm (una etiqueta por página). En el diálogo elige la impresora Zebra, papel 100×70 mm y escala 100%. Si está instalado Zebra Browser Print, se envían en ZPL directo.</p>
+                        <p className="mx-note">Cada etiqueta sale en una hoja de 100 × 70 mm. En el diálogo deja ese papel y la escala en 100%.</p>
                         {avisoZebra ? <p className="mx-note">{avisoZebra}</p> : null}
                         <button type="button" className="button-primary" onClick={imprimirEtiquetas} disabled={!bultos.length || imprimiendo}>
                             {imprimiendo ? "Preparando..." : "Imprimir etiquetas Zebra"}
@@ -153,56 +284,14 @@ export default function DocumentosEmision({ orden, onCerrar }) {
             </div>
 
             {paso === "ot" ? (
-                <section className="ot-ticket">
-                    <header className="ot-ticket-cabeza">
-                        <div className="ot-logo">
-                            <img src={logoMarexpress} alt="" />
-                            <strong>MAREXPRESS</strong>
-                        </div>
-                        <div>
-                            <span>ORDEN DE TRANSPORTE</span>
-                            <strong>{orden.numeroOT}</strong>
-                        </div>
-                    </header>
-                    <CodigoBarras valor={orden.numeroOT} alto={40} />
-
-                    <h3>Remitente</h3>
-                    <p><strong>{orden.cliente?.razonSocial}</strong></p>
-                    <p>RUT {orden.cliente?.rut}</p>
-                    <p>{orden.direccionOrigen}</p>
-                    <p>{etiquetaComuna(origen)}</p>
-                    <p>{orden.contactoOrigen} {orden.telefonoOrigen}</p>
-
-                    <h3>Destinatario</h3>
-                    <p><strong>{orden.destinatario?.nombreRazonSocial || orden.contactoDestino}</strong></p>
-                    {orden.destinatario?.rut ? <p>RUT {orden.destinatario.rut}</p> : null}
-                    <p>{orden.direccionDestino}</p>
-                    <p>{etiquetaComuna(destino)}</p>
-                    <p>{orden.telefonoDestino}</p>
-                    {orden.referenciaEntrega ? <p>Ref: {orden.referenciaEntrega}</p> : null}
-
-                    <h3>Pago</h3>
-                    <p>{pago?.pagadoPor || "—"} · {pago?.tipoPago || "—"}{pago?.metodoPago ? ` / ${pago.metodoPago}` : ""}</p>
-                    <p>{pago?.estadoPago || "—"} · {formatearCLP(orden.valorTotal)}</p>
-
-                    <h3>Cobro</h3>
-                    <p>{orden.tarifa?.nombreTarifa || "Tarifa"} · {orden.tipoCobro === "VOLUMEN" ? "m³" : "kg"}</p>
-                    <p>{orden.pesoTotal} kg · {orden.volumenTotalM3} m³</p>
-
-                    <h3>Bultos</h3>
-                    {bultos.length === 0 ? (
-                        <p>Sin bultos</p>
-                    ) : bultos.map((bulto) => (
-                        <p key={bulto.idBulto || bulto.codigoBulto} className="ot-ticket-linea">
-                            <strong>{bulto.codigoBulto}</strong>
-                            <span>{bulto.tipo || "Bulto"} · {bulto.descripcion || "—"}</span>
-                            <span>{bulto.peso ? `${bulto.peso} kg` : "—"} · {medidas(bulto)}</span>
-                        </p>
-                    ))}
-
-                    <p className="ot-ticket-total">TOTAL {formatearCLP(orden.valorTotal)}</p>
-                    <p className="ot-ticket-pie">MAREXPRESS · {bultos.length} bulto{bultos.length === 1 ? "" : "s"}</p>
-                </section>
+                <VoucherOrden
+                    orden={orden}
+                    origen={origen}
+                    destino={destino}
+                    pago={pago}
+                    etiquetaComuna={etiquetaComuna}
+                    formatearCLP={formatearCLP}
+                />
             ) : (
                 <section className="ot-etiquetas">
                     {bultos.length === 0 ? (
@@ -210,24 +299,22 @@ export default function DocumentosEmision({ orden, onCerrar }) {
                     ) : bultos.map((bulto, indice) => (
                         <article key={bulto.idBulto || bulto.codigoBulto} className="ot-etiqueta">
                             <header className="ot-etiqueta-cabeza">
-                                <div className="ot-logo">
-                                    <img src={logoMarexpress} alt="" />
-                                    <strong>MAREXPRESS</strong>
-                                </div>
+                                <img src={logoMarexpress} alt="Marexpress" className="ot-etiqueta-logo" />
                                 <div>
                                     <span>ETIQUETA {indice + 1}/{bultos.length}</span>
                                     <strong>{orden.numeroOT}</strong>
                                 </div>
                             </header>
-                            <CodigoBarras valor={bulto.codigoBulto || orden.numeroOT} alto={32} />
+                            <CodigoBarras valor={bulto.codigoBulto || orden.numeroOT} alto={28} />
                             <p className="ot-etiqueta-codigo">{bulto.codigoBulto}</p>
+                            <p className="ot-etiqueta-destino">{etiquetaComuna(destino)}</p>
                             <div className="ot-etiqueta-cuerpo">
                                 <p><span>Destino</span><strong>{orden.destinatario?.nombreRazonSocial || orden.contactoDestino}</strong></p>
                                 <p><span>Dirección</span><strong>{orden.direccionDestino}</strong></p>
-                                <p><span>Comuna</span><strong>{etiquetaComuna(destino)}</strong></p>
-                                <p><span>Tipo</span><strong>{bulto.tipo || "—"}</strong></p>
+                                <p><span>Tipo</span><strong>{bulto.tipo || "Bulto"}</strong></p>
                                 <p><span>Peso</span><strong>{bulto.peso ? `${bulto.peso} kg` : "—"}</strong></p>
                                 <p><span>Medidas</span><strong>{medidas(bulto)}</strong></p>
+                                <p><span>Origen</span><strong>{etiquetaComuna(origen)}</strong></p>
                             </div>
                         </article>
                     ))}

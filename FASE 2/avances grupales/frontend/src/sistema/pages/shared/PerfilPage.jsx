@@ -1,3 +1,10 @@
+/*
+  VISTA: perfil
+  RUTAS: /cliente/perfil y /peoneta/perfil
+  CSS: admin-card
+  API: datos del usuario autenticado
+  FUNCIONES: muestra y actualiza los datos de la sesión
+*/
 import { useAuth } from "../../auth.jsx";
 import { nombreCompleto } from "../../utils.js";
 

@@ -1,3 +1,10 @@
+/*
+  VISTA: recepción de carga
+  RUTA: /operador/recepcion
+  CSS: admin-card, mx-table
+  API: órdenes pendientes de recepción en la bodega activa
+  FUNCIONES: marca la llegada de los bultos a bodega
+*/
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { api } from "../../api.js";
@@ -17,6 +24,7 @@ import {
     lineaTiempoOt
 } from "../../utils.js";
 
+// Deja la respuesta del API como arreglo.
 const extraerLista = (datos, clave) => {
     if (Array.isArray(datos)) {
         return datos;
@@ -27,6 +35,7 @@ const extraerLista = (datos, clave) => {
     return [];
 };
 
+// Ficha vacía mientras no hay una OT cargada.
 const vacio = {
     cliente: "",
     rutRemitente: "",
@@ -40,6 +49,7 @@ const vacio = {
     numeroDocumento: ""
 };
 
+// Detecta un rechazo en el estado o en la entrega, para ingresarla de nuevo a bodega.
 const ordenRechazada = (orden) => {
     if (!orden) {
         return false;
@@ -67,6 +77,7 @@ export default function RecepcionPage() {
     const [tipo, setTipo] = useState("info");
     const [cargando, setCargando] = useState(false);
 
+    // Pasa la OT a los campos de solo lectura de la ficha.
     const mapearOrden = (resultado) => {
         setOrden(resultado);
         setDatos({
@@ -99,6 +110,7 @@ export default function RecepcionPage() {
         }
     }, [idBodegaTrabajo]);
 
+    // Busca por número de OT y, si no aparece, por código de bulto. Una anulada no se recepciona.
     const cargarOrden = async (valor) => {
         const codigo = String(valor || "").trim();
         if (!codigo) {
@@ -155,11 +167,13 @@ export default function RecepcionPage() {
         }
     }, [searchParams]);
 
+    // El escáner o el formulario disparan la misma búsqueda.
     const buscar = (event) => {
         event.preventDefault();
         cargarOrden(numeroOT);
     };
 
+    // Deja la carga en la sucursal elegida y anota el reingreso.
     const ingresar = async () => {
         if (!orden || !idSucursal) {
             setMensaje("Selecciona la sucursal de ingreso.");
@@ -237,7 +251,9 @@ export default function RecepcionPage() {
                             autoComplete="off"
                             autoFocus
                             onChange={(e) => setNumeroOT(e.target.value)}
-                            placeholder="Escanea la OT o la etiqueta y presiona Enter"
+                            placeholder="Solo el número, por ejemplo 65"
+                            title="Número de orden o código de la etiqueta"
+                            maxLength={40}
                         />
                     </div>
                     <div className="mx-form-actions">

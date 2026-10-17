@@ -1,3 +1,10 @@
+/*
+  VISTA: clientes
+  RUTAS: /administrador/clientes y /operador/clientes
+  CSS: admin-card, mx-table, modal
+  API: /api/clientes
+  FUNCIONES: busca, crea y edita clientes y su tarifa
+*/
 import { useEffect, useState } from "react";
 import { api } from "../../api.js";
 import Message from "../../components/Message.jsx";
@@ -10,6 +17,7 @@ export default function ClientesPage() {
     const [mensaje, setMensaje] = useState("");
     const [tipo, setTipo] = useState("info");
 
+    // Clientes y comunas. Las comunas alimentan el formulario de alta.
     const cargar = async () => {
         const [lista, listaComunas] = await Promise.all([
             api("/clientes"),
@@ -28,6 +36,7 @@ export default function ClientesPage() {
 
     return (
         <>
+            {/* Alta de cliente. Al crearlo se refresca la tabla de abajo. */}
             <section className="admin-card operador-card">
                 <header className="admin-card-header">
                     <div>
@@ -46,6 +55,7 @@ export default function ClientesPage() {
                 />
             </section>
 
+            {/* Clientes ya guardados, con cuenta corriente y tarifario. */}
             <section className="admin-card operador-card">
                 <header className="admin-card-header">
                     <div>

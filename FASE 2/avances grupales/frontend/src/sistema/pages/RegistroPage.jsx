@@ -1,3 +1,10 @@
+/*
+  VISTA: registro de cliente
+  RUTA: /registro
+  CSS: sistema.css
+  API: POST /api/auth/registro
+  FUNCIONES: crea la cuenta de un cliente nuevo
+*/
 import { useState } from "react";
 import { Link } from "react-router";
 import { api } from "../api.js";
@@ -5,6 +12,7 @@ import Message from "../components/Message.jsx";
 import PanelMarca from "../components/PanelMarca.jsx";
 import Icono from "../../components/Icono.jsx";
 
+// Campos del alta. Se limpian solo si se vuelve a entrar a la pantalla.
 const estadoInicial = {
     nombre: "",
     apellido: "",
@@ -25,15 +33,18 @@ export default function RegistroPage() {
     const [tipoMensaje, setTipoMensaje] = useState("info");
     const [verificado, setVerificado] = useState(false);
 
+    // Cambia un campo sin perder el resto del formulario.
     const actualizar = (campo, valor) => {
         setFormulario((prev) => ({ ...prev, [campo]: valor }));
     };
 
+    // Aviso del registro: contraseñas distintas, correo enviado o error del servidor.
     const aviso = (texto, tipo = "info") => {
         setMensaje(texto);
         setTipoMensaje(tipo);
     };
 
+    // Crea la cuenta solo si las dos contraseñas coinciden y pide el código al correo.
     const registrar = async (event) => {
         event.preventDefault();
         aviso("");
@@ -68,6 +79,7 @@ export default function RegistroPage() {
         }
     };
 
+    // Confirma el código. Recién ahí la cuenta queda lista para iniciar sesión.
     const verificar = async (event) => {
         event.preventDefault();
         setCargando(true);
@@ -130,6 +142,10 @@ export default function RegistroPage() {
                                     <label htmlFor="nombre">Nombre *</label>
                                     <input
                                         id="nombre"
+                                        placeholder="Nombre"
+                                        title="Solo el nombre, sin números"
+                                        maxLength={100}
+                                        autoComplete="given-name"
                                         value={formulario.nombre}
                                         onChange={(e) => actualizar("nombre", e.target.value)}
                                         required
@@ -139,6 +155,9 @@ export default function RegistroPage() {
                                     <label htmlFor="apellido">Apellido *</label>
                                     <input
                                         id="apellido"
+                                        placeholder="Apellido"
+                                        maxLength={100}
+                                        autoComplete="family-name"
                                         value={formulario.apellido}
                                         onChange={(e) => actualizar("apellido", e.target.value)}
                                         required
@@ -150,7 +169,9 @@ export default function RegistroPage() {
                                         id="rut"
                                         value={formulario.rut}
                                         onChange={(e) => actualizar("rut", e.target.value)}
-                                        placeholder="12345678-9"
+                                        placeholder="12.345.678-9"
+                                        title="RUT chileno con puntos y guion"
+                                        maxLength={12}
                                         required
                                     />
                                 </div>
@@ -158,6 +179,10 @@ export default function RegistroPage() {
                                     <label htmlFor="telefono">Teléfono</label>
                                     <input
                                         id="telefono"
+                                        type="tel"
+                                        placeholder="+56 9 1234 5678"
+                                        title="Teléfono chileno, con código de país"
+                                        maxLength={16}
                                         value={formulario.telefono}
                                         onChange={(e) => actualizar("telefono", e.target.value)}
                                     />
@@ -167,6 +192,9 @@ export default function RegistroPage() {
                                     <input
                                         id="correo"
                                         type="email"
+                                        placeholder="nombre@correo.cl"
+                                        maxLength={150}
+                                        autoComplete="email"
                                         value={formulario.correo}
                                         onChange={(e) => actualizar("correo", e.target.value)}
                                         required
@@ -176,6 +204,11 @@ export default function RegistroPage() {
                                     <label htmlFor="nombreUsuario">Nombre de usuario *</label>
                                     <input
                                         id="nombreUsuario"
+                                        placeholder="usuario.marexpress"
+                                        title="Sin espacios. Letras, números, punto o guion"
+                                        maxLength={50}
+                                        pattern="[A-Za-z0-9._-]{3,50}"
+                                        autoComplete="username"
                                         value={formulario.nombreUsuario}
                                         onChange={(e) => actualizar("nombreUsuario", e.target.value)}
                                         required
@@ -189,6 +222,8 @@ export default function RegistroPage() {
                                         value={formulario.password}
                                         onChange={(e) => actualizar("password", e.target.value)}
                                         minLength={10}
+                                        title="Mínimo 10 caracteres, con mayúscula, minúscula, número y símbolo"
+                                        autoComplete="new-password"
                                         required
                                     />
                                 </div>
@@ -197,6 +232,9 @@ export default function RegistroPage() {
                                     <input
                                         id="confirmarPassword"
                                         type="password"
+                                        title="Debe coincidir con la contraseña"
+                                        autoComplete="new-password"
+                                        minLength={10}
                                         value={formulario.confirmarPassword}
                                         onChange={(e) => actualizar("confirmarPassword", e.target.value)}
                                         required
@@ -218,6 +256,12 @@ export default function RegistroPage() {
                                 <input
                                     id="codigo"
                                     className="font-mono text-lg tracking-[0.3em]"
+                                    placeholder="000000"
+                                    title="Código numérico enviado al correo"
+                                    inputMode="numeric"
+                                    maxLength={8}
+                                    pattern="[0-9]{4,8}"
+                                    autoComplete="one-time-code"
                                     value={codigo}
                                     onChange={(e) => setCodigo(e.target.value)}
                                     autoFocus

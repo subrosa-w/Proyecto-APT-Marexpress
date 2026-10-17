@@ -1,3 +1,29 @@
+/*
+  FUNCIONES COMUNES DE LAS VISTAS
+  Las usa más de una pantalla. El diseño está en sistema.css, no aquí.
+
+  formatearCLP        pesos chilenos
+  nombreCompleto      nombre y apellido de un usuario
+  etiquetaComuna      comuna y su región
+  aInputFechaLocal    fecha para un input datetime-local
+  fechaHoyChile       hoy en America/Santiago
+  diaChile            una fecha en zona Chile
+  formatearFechaHora  fecha y hora legibles
+  aNumero             convierte un texto a número
+  volumenPiezaM3      m³ de una pieza
+  etiquetaMedidas     largo × ancho × alto
+  etiquetaTipoCarga   nombre del tipo de bulto
+  formatearKg         kilos con unidad
+  formatearM3         metros cúbicos con unidad
+  resumirCarga        totales de las piezas de una OT
+  textoResumenTipos   texto corto de los tipos de carga
+  esRechazoEntrega    la entrega fue rechazada
+  motivoRechazoOrden  texto del rechazo
+  ordenAnulada        la OT está anulada o cancelada
+  bandejaSeguimiento  en qué bandeja mostrar la OT
+  resumirDetallesCarga resumen de las líneas de carga
+  lineaTiempoOt       historial ordenado de la OT
+*/
 export const formatearCLP = (valor) => {
     return new Intl.NumberFormat("es-CL", {
         style: "currency",
@@ -205,7 +231,15 @@ export const bandejaSeguimiento = (orden) => {
     if (["ANULADA", "CANCELADA"].includes(estado)) {
         return "anulada";
     }
-
+    if (["ENTREGADA", "ENTREGADO"].includes(estado)) {
+        return "entregadas";
+    }
+    if (esRechazoEntrega(estado)) {
+        return "rechazadas";
+    }
+    if (["EN_TRANSITO", "EN_RUTA", "DESPACHADA"].includes(estado)) {
+        return "enCurso";
+    }
     if (["EN_BODEGA", "RECEPCIONADA", "EN_ORIGEN"].includes(estado)) {
         return "bodega";
     }
@@ -214,21 +248,14 @@ export const bandejaSeguimiento = (orden) => {
         ...(orden?.entrega_ot || []),
         ...(orden?.manifiesto_ot || []).map((item) => item.entrega_ot).filter(Boolean)
     ];
-    const fueRechazada = esRechazoEntrega(estado)
-        || entregas.some((item) => esRechazoEntrega(item.resultadoEntrega));
-    if (fueRechazada) {
+    if (entregas.some((item) => esRechazoEntrega(item.resultadoEntrega))) {
         return "rechazadas";
     }
-
-    if (["ENTREGADA", "ENTREGADO"].includes(estado)) {
-        return "entregadas";
-    }
-    const manifiestos = orden?.manifiesto_ot || [];
-    const enRuta = manifiestos.some((item) => {
+    const enRuta = (orden?.manifiesto_ot || []).some((item) => {
         const manifiesto = item.manifiesto?.estado || "";
         return ["EN_RUTA", "EN_TRANSITO"].includes(String(manifiesto).toUpperCase());
     });
-    if (enRuta || ["EN_TRANSITO", "EN_RUTA", "DESPACHADA"].includes(estado)) {
+    if (enRuta) {
         return "enCurso";
     }
     return "bodega";

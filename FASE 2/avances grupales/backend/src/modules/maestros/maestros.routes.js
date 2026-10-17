@@ -7,9 +7,17 @@ import {
     listarUsuarios,
     listarVehiculos,
     listarPeonetas,
+    listarRoles,
+    asignarRolUsuario,
+    registrarConductor,
+    registrarVehiculo,
+    listarRecargos,
+    registrarRecargo,
+    actualizarRecargo,
     registrarTarifa,
     editarTarifa,
     cambiarEstadoTarifario,
+    listarHistorialPrecios,
     listarHistorialTarifa
 } from "./maestros.controller.js";
 
@@ -42,6 +50,12 @@ router.patch(
     "/tarifas/:id/estado",
     autorizarRoles("ADMINISTRADOR"),
     cambiarEstadoTarifario
+);
+
+router.get(
+    "/tarifas/historial",
+    autorizarRoles("ADMINISTRADOR"),
+    listarHistorialPrecios
 );
 
 router.get(
@@ -78,6 +92,48 @@ router.get(
     "/usuarios",
     autorizarRoles("ADMINISTRADOR"),
     listarUsuarios
+);
+
+router.get(
+    "/roles",
+    autorizarRoles("ADMINISTRADOR"),
+    listarRoles
+);
+
+router.patch(
+    "/usuarios/:id/rol",
+    autorizarRoles("ADMINISTRADOR"),
+    asignarRolUsuario
+);
+
+router.post(
+    "/conductores",
+    autorizarRoles("ADMINISTRADOR"),
+    registrarConductor
+);
+
+router.post(
+    "/vehiculos",
+    autorizarRoles("ADMINISTRADOR"),
+    registrarVehiculo
+);
+
+router.get(
+    "/recargos",
+    autorizarRoles("ADMINISTRADOR", "OPERADOR"),
+    listarRecargos
+);
+
+router.post(
+    "/recargos",
+    autorizarRoles("ADMINISTRADOR"),
+    registrarRecargo
+);
+
+router.patch(
+    "/recargos/:id",
+    autorizarRoles("ADMINISTRADOR"),
+    actualizarRecargo
 );
 
 export default router;

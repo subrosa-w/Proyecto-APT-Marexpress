@@ -1,15 +1,23 @@
+/*
+  VISTA: nosotros
+  RUTA: /nosotros
+  CSS: index.css y componentes públicos
+  FUNCIONES: cuenta quién es la empresa
+*/
 import Contenedor from '../components/Contenedor.jsx'
 import Aparecer from '../components/Aparecer.jsx'
 import Icono from '../components/Icono.jsx'
 import FranjaContacto from '../components/FranjaContacto.jsx'
 import { imagenes } from '../data/sitio.js'
 
+// Tres ideas de la empresa. Van debajo de la foto de la flota.
 const valores = [
   { icono: 'warehouse', titulo: 'Depósitos propios', texto: 'En Santiago y Puerto Montt, para controlar cada etapa del despacho.' },
   { icono: 'route', titulo: 'Ruta directa', texto: 'Conexión continua entre la Región Metropolitana y el sur de Chile.' },
   { icono: 'home_pin', titulo: 'Hasta tu puerta', texto: 'Entrega a domicilio sin costo en Puerto Montt y Chiloé.' },
 ]
 
+// Portada con foto, valores y el cierre de contacto.
 function Nosotros() {
   return (
     <>

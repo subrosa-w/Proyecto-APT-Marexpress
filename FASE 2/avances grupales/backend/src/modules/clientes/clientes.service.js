@@ -220,3 +220,125 @@ export const obtenerCuentaCorrientePorCliente = async (idCliente) => {
         }
     });
 };
+
+const diaChile = (fecha = new Date()) =>
+    new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Santiago",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).format(fecha);
+
+const dinero = (valor) => {
+    const numero = Number(valor);
+    return Number.isFinite(numero) ? numero : 0;
+};
+
+const rangoFrecuentes = (periodo, fecha) => {
+    const dia = /^\d{4}-\d{2}-\d{2}$/.test(String(fecha || "")) ? fecha : diaChile();
+    if (periodo === "dia") {
+        const desde = new Date(`${dia}T00:00:00`);
+        const hasta = new Date(desde);
+        hasta.setDate(hasta.getDate() + 1);
+        return { desde, hasta, etiqueta: "hoy" };
+    }
+    if (periodo === "semana") {
+        const desde = new Date(`${dia}T00:00:00`);
+        const diaSemana = desde.getDay();
+        desde.setDate(desde.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
+        const hasta = new Date(desde);
+        hasta.setDate(hasta.getDate() + 7);
+        return { desde, hasta, etiqueta: "esta semana" };
+    }
+    if (periodo === "anio") {
+        const anio = dia.slice(0, 4);
+        return {
+            desde: new Date(`${anio}-01-01T00:00:00`),
+            hasta: new Date(`${Number(anio) + 1}-01-01T00:00:00`),
+            etiqueta: `el año ${anio}`
+        };
+    }
+    const mes = dia.slice(0, 7);
+    const desde = new Date(`${mes}-01T00:00:00`);
+    const hasta = new Date(desde);
+    hasta.setMonth(hasta.getMonth() + 1);
+    return { desde, hasta, etiqueta: "este mes" };
+};
+
+const umbralFrecuente = { dia: 2, semana: 2, mes: 2, anio: 8 };
+
+export const obtenerResumenCuentas = async ({ periodo = "mes", fecha } = {}) => {
+    const modo = umbralFrecuente[periodo] ? periodo : "mes";
+    const { desde, hasta, etiqueta } = rangoFrecuentes(modo, fecha);
+    const cerradas = { nombreEstado: { in: ["ANULADA", "CANCELADA"] } };
+    const cuentas = await prisma.cuenta_corriente.findMany({
+        include: {
+            cliente: {
+                select: {
+                    idCliente: true,
+                    razonSocial: true,
+                    rut: true,
+                    estado: true,
+                    _count: {
+                        select: {
+                            orden_transporte: {
+                                where: {
+                                    fechaCreacion: { gte: desde, lt: hasta },
+                                    NOT: { estado_ot: cerradas }
+                                }
+                            }
+                        }
+                    },
+                    orden_transporte: {
+                        where: { NOT: { estado_ot: cerradas } },
+                        orderBy: { fechaCreacion: "desc" },
+                        take: 1,
+                        select: { fechaCreacion: true }
+                    }
+                }
+            }
+        }
+    });
+    const haceNoventa = new Date();
+    haceNoventa.setDate(haceNoventa.getDate() - 90);
+    const minimo = umbralFrecuente[modo];
+    const filas = cuentas.map((cuenta) => {
+        const cliente = cuenta.cliente || {};
+        const saldo = dinero(cuenta.saldoActual);
+        const limite = dinero(cuenta.limiteCredito);
+        const ultima = cliente.orden_transporte?.[0]?.fechaCreacion || null;
+        const motivos = [];
+        if (cuenta.estado) {
+            if (!ultima || new Date(ultima) < haceNoventa) {
+                motivos.push(ultima ? "Sin órdenes en 90 días" : "Nunca ha encargado");
+            }
+            if (limite > 0 && saldo > limite) {
+                motivos.push("Deuda sobre el límite");
+            }
+            if (cliente.estado === false) {
+                motivos.push("Cliente inactivo");
+            }
+        }
+        return {
+            idCliente: cliente.idCliente,
+            cliente: cliente.razonSocial || "Sin nombre",
+            rut: cliente.rut || "—",
+            saldo,
+            limite,
+            ordenes: cliente._count?.orden_transporte || 0,
+            ultimaOrden: ultima,
+            activa: Boolean(cuenta.estado),
+            motivos
+        };
+    });
+    const porNombre = (a, b) => a.cliente.localeCompare(b.cliente, "es");
+    return {
+        periodo: modo,
+        etiqueta,
+        umbralFrecuente: minimo,
+        deuda: filas.filter((item) => item.saldo > 0).sort((a, b) => b.saldo - a.saldo),
+        alDia: filas.filter((item) => item.activa && item.saldo <= 0).sort(porNombre),
+        frecuentes: filas.filter((item) => item.ordenes >= minimo).sort((a, b) => b.ordenes - a.ordenes),
+        posiblesBaja: filas.filter((item) => item.motivos.length > 0).sort(porNombre)
+    };
+};

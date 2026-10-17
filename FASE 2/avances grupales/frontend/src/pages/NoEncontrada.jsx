@@ -1,5 +1,12 @@
+/*
+  VISTA: página no encontrada
+  RUTA: cualquier dirección que no exista
+  CSS: index.css
+  FUNCIONES: avisa que la dirección no corresponde a una pantalla
+*/
 import { Link } from 'react-router'
 
+// Cualquier URL que no está en App.jsx cae aquí, con vuelta al inicio.
 function NoEncontrada() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">

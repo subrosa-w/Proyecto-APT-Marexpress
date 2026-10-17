@@ -1,4 +1,5 @@
 import prisma from "../../config/prisma.js";
+import { candidatosCodigo } from "../../common/utils/codigoOt.js";
 
 export async function trasladarBultoEntreSucursales({
     idBulto,
@@ -250,14 +251,16 @@ export async function obtenerInventarioBodega({ estado, idSucursal, busqueda } =
 
     if (busqueda?.trim()) {
         const texto = busqueda.trim();
+        const numeros = candidatosCodigo(texto);
         where.OR = [
             { codigoBulto: { contains: texto } },
+            ...numeros.map((numero) => ({ codigoBulto: { contains: numero } })),
             {
                 detalle_carga: {
                     is: {
                         orden_transporte: {
                             is: {
-                                numeroOT: { contains: texto }
+                                numeroOT: { in: numeros }
                             }
                         }
                     }

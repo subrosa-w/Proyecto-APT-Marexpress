@@ -1,6 +1,12 @@
+/*
+  COMPONENTE: formulario de destinatario
+  CSS: campos de sistema.css
+  FUNCIONES: datos de quien recibe la carga
+*/
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { etiquetaComuna } from "../utils.js";
+import { formatos } from "../formatos.js";
 
 const vacio = {
     rut: "",
@@ -66,6 +72,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                         RUT {formulario.crearCuentaCorriente ? "*" : ""}
                     </label>
                     <input
+                        {...formatos.rut}
                         value={formulario.rut}
                         onChange={(e) => setCampo("rut", e.target.value)}
                         required={formulario.crearCuentaCorriente}
@@ -74,6 +81,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                 <div className="field">
                     <label>Nombre o razón social *</label>
                     <input
+                        {...formatos.razon}
                         value={formulario.nombreRazonSocial}
                         onChange={(e) => setCampo("nombreRazonSocial", e.target.value)}
                         required
@@ -82,6 +90,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                 <div className="field">
                     <label>Dirección *</label>
                     <input
+                        {...formatos.direccion}
                         value={formulario.direccion}
                         onChange={(e) => setCampo("direccion", e.target.value)}
                         required
@@ -105,6 +114,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                 <div className="field">
                     <label>Teléfono</label>
                     <input
+                        {...formatos.telefono}
                         value={formulario.telefono}
                         onChange={(e) => setCampo("telefono", e.target.value)}
                     />
@@ -112,7 +122,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                 <div className="field">
                     <label>Correo</label>
                     <input
-                        type="email"
+                        {...formatos.correo}
                         value={formulario.correo}
                         onChange={(e) => setCampo("correo", e.target.value)}
                     />
@@ -120,6 +130,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                 <div className="field">
                     <label>Referencia de entrega</label>
                     <input
+                        {...formatos.referencia}
                         value={formulario.referencia}
                         onChange={(e) => setCampo("referencia", e.target.value)}
                     />
@@ -154,9 +165,7 @@ export default function AltaDestinatarioForm({ comunas, onCreado, onCancelar }) 
                         <div className="field">
                             <label>Límite de crédito</label>
                         <input
-                            type="number"
-                            min="0"
-                            step="1"
+                            {...formatos.dinero}
                             value={formulario.limiteCredito}
                             onChange={(e) => setCampo("limiteCredito", e.target.value)}
                         />

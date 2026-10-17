@@ -1,3 +1,9 @@
+/*
+  VISTA: inicio público
+  RUTA: /
+  CSS: index.css (colores de marca) y componentes públicos
+  FUNCIONES: presenta la empresa, servicios y el acceso al seguimiento
+*/
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import Contenedor from '../components/Contenedor.jsx'
@@ -54,6 +60,7 @@ function TarjetaSeguimiento() {
   )
 }
 
+// Portada: el texto a la izquierda y la consulta de seguimiento sobre la foto.
 function Hero() {
   return (
     <section className="relative overflow-hidden bg-marino-oscuro">
@@ -93,6 +100,7 @@ function Hero() {
   )
 }
 
+// Números de la empresa, montados sobre el borde de la portada.
 function Estadisticas() {
   // -mt-24: las tarjetas suben y quedan "flotando" sobre el borde del hero
   return (
@@ -114,6 +122,7 @@ function Estadisticas() {
   )
 }
 
+// Tres servicios resumidos. Cada tarjeta abre la página de servicios.
 function QueHacemos() {
   return (
     <section className="py-24">
@@ -192,6 +201,7 @@ function NuestraFlota() {
   )
 }
 
+// Los cuatro pasos del despacho, unidos por una línea en pantallas grandes.
 function ComoFunciona() {
   return (
     <section className="py-24">
@@ -218,6 +228,7 @@ function ComoFunciona() {
   )
 }
 
+// Orden de la portada: foto, cifras, servicios, flota, pasos y contacto.
 function Inicio() {
   return (
     <>

@@ -1,3 +1,7 @@
+/*
+  COMPONENTE: panel de marca
+  FUNCIONES: logo y nombre de Marexpress en el acceso y el registro
+*/
 import { Link } from "react-router";
 import Logo from "../../components/Logo.jsx";
 import { imagenes } from "../../data/sitio.js";
