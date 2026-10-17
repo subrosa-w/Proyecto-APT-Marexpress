@@ -3,6 +3,7 @@ import {
     consultarPagoOt,
     ErrorPago,
     finalizarRetornoWebpay,
+    finalizarRetornoWebpayCliente,
     iniciarWebpayOt,
     listarOtsPendientesPago
 } from "./pagos.service.js";
@@ -81,5 +82,21 @@ export const retornoWebpay = async (req, res) => {
         console.error("Error al confirmar Webpay:", error);
         const frontend = String(process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
         return res.redirect(302, `${frontend}/operador/pagos?estado=error`);
+    }
+};
+
+// Retorno de Webpay para los pagos que hace el cliente con cuenta corriente
+export const retornoWebpayCliente = async (req, res) => {
+    try {
+        const datos = { ...cuerpo(req), ...req.query };
+        const destino = await finalizarRetornoWebpayCliente({
+            tokenWs: datos.token_ws,
+            tbkToken: datos.TBK_TOKEN
+        });
+        return res.redirect(302, destino);
+    } catch (error) {
+        console.error("Error al confirmar Webpay del cliente:", error);
+        const frontend = String(process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+        return res.redirect(302, `${frontend}/cliente/pagos?estado=error`);
     }
 };

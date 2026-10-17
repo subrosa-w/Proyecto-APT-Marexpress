@@ -107,6 +107,19 @@ export const formatearFechaHora = (valor) => {
     }).format(fecha);
 };
 
+// Columnas DATE de MySQL (sin hora): llegan como medianoche UTC y se muestran en UTC
+// para que no aparezcan un día antes en la hora de Chile.
+export const formatearFechaSola = (valor) => {
+    if (!valor) {
+        return "—";
+    }
+    const fecha = new Date(valor);
+    if (Number.isNaN(fecha.getTime())) {
+        return "—";
+    }
+    return new Intl.DateTimeFormat("es-CL", { dateStyle: "short", timeZone: "UTC" }).format(fecha);
+};
+
 export const aNumero = (valor) => {
     const numero = Number(valor);
     return Number.isFinite(numero) ? numero : 0;

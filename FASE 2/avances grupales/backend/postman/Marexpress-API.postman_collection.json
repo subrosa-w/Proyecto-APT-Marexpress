@@ -1,0 +1,1936 @@
+{
+  "info": {
+    "name": "Marexpress API",
+    "description": "Pruebas del backend Marexpress (Express + Prisma).\n\n1. Importa la colección y el environment 'Marexpress local'.\n2. En el environment completa `identificador` y `password`.\n3. Corre 01 · Autenticación → 1 y 2 (el token queda guardado).\n4. Usa las carpetas según el rol del usuario con el que entraste.\n\nLas peticiones guardan solas idOrden, numeroOT, idCliente, idManifiesto, etc. para usarlas en las siguientes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.response.code === 401) { console.warn('401: el token falta o venció. Repite 01 · Autenticación.'); }",
+          "if (pm.response.code === 403) { console.warn('403: tu rol no tiene acceso a esta ruta.'); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Salud",
+      "description": "Comprueba que el backend está arriba.",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 · Autenticación",
+      "description": "Login en 2 pasos:\n1. **Login (pide OTP)** con `identificador` y `password` del environment. Guarda `challengeId` solo.\n2. Copia el código de 6 dígitos (llega al correo o, con OTP_EN_CONSOLA=true, sale en la consola del backend) en la variable `otp`.\n3. **Verificar OTP** guarda `token` y `rol`. Todas las demás peticiones usan ese token.\n\nPara cambiar de rol, cambia `identificador` (por ejemplo operador.benjamin o cliente.cuentacorriente) y repite.",
+      "item": [
+        {
+          "name": "1. Login (pide OTP)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"{{identificador}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "try { const j = pm.response.json(); const v = j.challengeId; if (v !== undefined && v !== null) { pm.environment.set(\"challengeId\", v); console.log(\"challengeId =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Verificar OTP (guarda token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/verificar-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verificar-otp"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challengeId\": \"{{challengeId}}\",\n  \"codigo\": \"{{otp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "try { const j = pm.response.json(); const v = j.token; if (v !== undefined && v !== null) { pm.environment.set(\"token\", v); console.log(\"token =\", v); } } catch (e) {}",
+                  "try { const j = pm.response.json(); const v = j.usuario && j.usuario.rol; if (v !== undefined && v !== null) { pm.environment.set(\"rol\", v); console.log(\"rol =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro de cliente (envía OTP)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "Crea un usuario CLIENTE pendiente. Usa un correo y RUT que no existan. Guarda el challengeId.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cliente\",\n  \"apellido\": \"Postman\",\n  \"rut\": \"12.345.678-5\",\n  \"correo\": \"correo.nuevo@ejemplo.cl\",\n  \"telefono\": \"+56933333333\",\n  \"nombreUsuario\": \"cliente.postman\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = j.challengeId; if (v !== undefined && v !== null) { pm.environment.set(\"challengeId\", v); console.log(\"challengeId =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro: verificar OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro/verificar-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro",
+                "verificar-otp"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challengeId\": \"{{challengeId}}\",\n  \"codigo\": \"{{otp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro: reenviar OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro/reenviar-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro",
+                "reenviar-otp"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"cliente.postman\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = j.challengeId; if (v !== undefined && v !== null) { pm.environment.set(\"challengeId\", v); console.log(\"challengeId =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 · Catálogos y maestros",
+      "description": "Comunas (todos los roles), tipos de bulto y maestros (ADMINISTRADOR / OPERADOR).",
+      "item": [
+        {
+          "name": "Comunas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comunas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comunas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tipos de bulto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bultos/tipos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bultos",
+                "tipos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Regiones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/regiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "regiones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conductores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/conductores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "conductores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vehículos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/vehiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "vehiculos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Peonetas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/peonetas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "peonetas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Usuarios (solo admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "usuarios"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 · Tarifas",
+      "description": "Tarifarios con tramos de peso e historial de cambios. Crear/editar solo ADMINISTRADOR.",
+      "item": [
+        {
+          "name": "Listar tarifarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/tarifas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "tarifas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "try { const j = pm.response.json(); const v = (Array.isArray(j) ? j : (j.tarifas || j.data || []))[0]?.idTarifa; if (v !== undefined && v !== null) { pm.environment.set(\"idTarifa\", v); console.log(\"idTarifa =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear tarifario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/tarifas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "tarifas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreTarifa\": \"Tarifario Postman\",\n  \"idTipoTarifa\": 1,\n  \"valorBase\": 0,\n  \"valorKg\": 150,\n  \"valorM3\": 40000,\n  \"valorRetiro\": 30000,\n  \"valorRetiroMediano\": 60000,\n  \"valorRetiroGrande\": 120000,\n  \"valorZonaUrbana\": 0,\n  \"valorZonaLejana\": 0,\n  \"tramos\": [\n    {\n      \"kgDesde\": 0,\n      \"kgHasta\": 20,\n      \"valorFijo\": 9000\n    },\n    {\n      \"kgDesde\": 20.01,\n      \"kgHasta\": 200,\n      \"valorKg\": 150\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Editar tarifario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/tarifas/{{idTarifa}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "tarifas",
+                "{{idTarifa}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valorKg\": 160\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Activar / desactivar tarifario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/tarifas/{{idTarifa}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "tarifas",
+                "{{idTarifa}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Historial del tarifario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/maestros/tarifas/{{idTarifa}}/historial",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "maestros",
+                "tarifas",
+                "{{idTarifa}}",
+                "historial"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tarifas por trayecto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tarifas-trayecto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas-trayecto"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear tarifa por trayecto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tarifas-trayecto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tarifas-trayecto"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idTarifa\": {{idTarifa}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 14,\n  \"valorFijo\": 10000,\n  \"valorKg\": 150,\n  \"valorM3\": 38000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 · Clientes y destinatarios",
+      "description": "ADMINISTRADOR / OPERADOR.",
+      "item": [
+        {
+          "name": "Listar clientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "try { const j = pm.response.json(); const v = (Array.isArray(j) ? j : (j.clientes || j.data || []))[0]?.idCliente; if (v !== undefined && v !== null) { pm.environment.set(\"idCliente\", v); console.log(\"idCliente =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/buscar?q=prueba",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "buscar"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "prueba",
+                  "description": "RUT, razón social o nombre de fantasía"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear cliente (con cuenta corriente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rut\": \"77.888.999-4\",\n  \"razonSocial\": \"Empresa Postman SpA\",\n  \"nombreFantasia\": \"Postman\",\n  \"giro\": \"Comercio\",\n  \"direccion\": \"Calle Prueba 123\",\n  \"telefono\": \"+56944444444\",\n  \"correo\": \"empresa@ejemplo.cl\",\n  \"idComuna\": 2,\n  \"crearCuentaCorriente\": true,\n  \"limiteCredito\": 1000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = (j.cliente || j.data || j).idCliente; if (v !== undefined && v !== null) { pm.environment.set(\"idCliente\", v); console.log(\"idCliente =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cuenta corriente del cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{idCliente}}/cuenta-corriente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{idCliente}}",
+                "cuenta-corriente"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Asignar tarifario al cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{idCliente}}/tarifa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{idCliente}}",
+                "tarifa"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idTarifa\": {{idTarifa}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ubicaciones del cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{idCliente}}/ubicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{idCliente}}",
+                "ubicaciones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear ubicación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{idCliente}}/ubicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{idCliente}}",
+                "ubicaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bodega central\",\n  \"tipoUbicacion\": \"BODEGA\",\n  \"direccion\": \"Ruta 5 Sur km 1020\",\n  \"idComuna\": 2,\n  \"nombreContacto\": \"Encargado bodega\",\n  \"telefonoContacto\": \"+56955555555\",\n  \"esPrincipal\": true,\n  \"permiteRetiro\": true,\n  \"permiteEntrega\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listar destinatarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destinatarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinatarios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear destinatario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/destinatarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinatarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rut\": \"15.555.555-6\",\n  \"nombreRazonSocial\": \"Destinatario Postman\",\n  \"direccion\": \"Av. Destino 45\",\n  \"telefono\": \"+56966666666\",\n  \"idComuna\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 · Órdenes de transporte",
+      "description": "ADMINISTRADOR / OPERADOR. tipoDocumento válido en la BD: SIN_DOCUMENTO, FACTURA, BOLETA, OT_MANUAL (los tres últimos con numeroDocumento). tipoServicio válido: NORMAL, URGENTE, PRIORITARIO.",
+      "item": [
+        {
+          "name": "Calcular valor (sin guardar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte/calcular",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte",
+                "calcular"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idCliente}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 2,\n  \"direccionOrigen\": \"Av. Presidente Ibáñez 1000\",\n  \"contactoOrigen\": \"Bodega remitente\",\n  \"telefonoOrigen\": \"+56911111111\",\n  \"direccionDestino\": \"O'Higgins 500\",\n  \"contactoDestino\": \"Recepción destino\",\n  \"telefonoDestino\": \"+56922222222\",\n  \"referenciaEntrega\": \"Entregar en recepción\",\n  \"tipoZona\": \"URBANA\",\n  \"tipoServicio\": \"NORMAL\",\n  \"tipoDocumento\": \"SIN_DOCUMENTO\",\n  \"requiereRetiro\": false,\n  \"cargas\": [\n    {\n      \"descripcion\": \"Caja con repuestos\",\n      \"cantidad\": 2,\n      \"idTipoBulto\": 1,\n      \"pesoUnitario\": 15,\n      \"largoCm\": 40,\n      \"anchoCm\": 30,\n      \"altoCm\": 30\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear OT · contado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idCliente}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 2,\n  \"direccionOrigen\": \"Av. Presidente Ibáñez 1000\",\n  \"contactoOrigen\": \"Bodega remitente\",\n  \"telefonoOrigen\": \"+56911111111\",\n  \"direccionDestino\": \"O'Higgins 500\",\n  \"contactoDestino\": \"Recepción destino\",\n  \"telefonoDestino\": \"+56922222222\",\n  \"referenciaEntrega\": \"Entregar en recepción\",\n  \"tipoZona\": \"URBANA\",\n  \"tipoServicio\": \"NORMAL\",\n  \"tipoDocumento\": \"SIN_DOCUMENTO\",\n  \"requiereRetiro\": false,\n  \"cargas\": [\n    {\n      \"descripcion\": \"Caja con repuestos\",\n      \"cantidad\": 2,\n      \"idTipoBulto\": 1,\n      \"pesoUnitario\": 15,\n      \"largoCm\": 40,\n      \"anchoCm\": 30,\n      \"altoCm\": 30\n    }\n  ],\n  \"pagadoPor\": \"REMITENTE\",\n  \"tipoPago\": \"CONTADO\",\n  \"metodoPago\": \"EFECTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null) { pm.environment.set(\"idOrden\", v); console.log(\"idOrden =\", v); } } catch (e) {}",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).numeroOT; if (v !== undefined && v !== null) { pm.environment.set(\"numeroOT\", v); console.log(\"numeroOT =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear OT · por pagar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idCliente}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 2,\n  \"direccionOrigen\": \"Av. Presidente Ibáñez 1000\",\n  \"contactoOrigen\": \"Bodega remitente\",\n  \"telefonoOrigen\": \"+56911111111\",\n  \"direccionDestino\": \"O'Higgins 500\",\n  \"contactoDestino\": \"Recepción destino\",\n  \"telefonoDestino\": \"+56922222222\",\n  \"referenciaEntrega\": \"Entregar en recepción\",\n  \"tipoZona\": \"URBANA\",\n  \"tipoServicio\": \"NORMAL\",\n  \"tipoDocumento\": \"SIN_DOCUMENTO\",\n  \"requiereRetiro\": false,\n  \"cargas\": [\n    {\n      \"descripcion\": \"Caja con repuestos\",\n      \"cantidad\": 2,\n      \"idTipoBulto\": 1,\n      \"pesoUnitario\": 15,\n      \"largoCm\": 40,\n      \"anchoCm\": 30,\n      \"altoCm\": 30\n    }\n  ],\n  \"pagadoPor\": \"DESTINATARIO\",\n  \"tipoPago\": \"POR_PAGAR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null) { pm.environment.set(\"idOrden\", v); console.log(\"idOrden =\", v); } } catch (e) {}",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).numeroOT; if (v !== undefined && v !== null) { pm.environment.set(\"numeroOT\", v); console.log(\"numeroOT =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear OT · cuenta corriente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte"
+              ]
+            },
+            "description": "El cliente debe tener cuenta corriente activa con crédito disponible. idCuenta sale de 'Cuenta corriente del cliente'.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idCliente}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 2,\n  \"direccionOrigen\": \"Av. Presidente Ibáñez 1000\",\n  \"contactoOrigen\": \"Bodega remitente\",\n  \"telefonoOrigen\": \"+56911111111\",\n  \"direccionDestino\": \"O'Higgins 500\",\n  \"contactoDestino\": \"Recepción destino\",\n  \"telefonoDestino\": \"+56922222222\",\n  \"referenciaEntrega\": \"Entregar en recepción\",\n  \"tipoZona\": \"URBANA\",\n  \"tipoServicio\": \"NORMAL\",\n  \"tipoDocumento\": \"SIN_DOCUMENTO\",\n  \"requiereRetiro\": false,\n  \"cargas\": [\n    {\n      \"descripcion\": \"Caja con repuestos\",\n      \"cantidad\": 2,\n      \"idTipoBulto\": 1,\n      \"pesoUnitario\": 15,\n      \"largoCm\": 40,\n      \"anchoCm\": 30,\n      \"altoCm\": 30\n    }\n  ],\n  \"pagadoPor\": \"REMITENTE\",\n  \"tipoPago\": \"CUENTA_CORRIENTE\",\n  \"idCuenta\": {{idCuenta}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null) { pm.environment.set(\"idOrden\", v); console.log(\"idOrden =\", v); } } catch (e) {}",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).numeroOT; if (v !== undefined && v !== null) { pm.environment.set(\"numeroOT\", v); console.log(\"numeroOT =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar OT",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OT por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte/{{idOrden}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte",
+                "{{idOrden}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "OT por número",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte/numero/{{numeroOT}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte",
+                "numero",
+                "{{numeroOT}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Editar OT",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte/{{idOrden}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte",
+                "{{idOrden}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idCliente}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 2,\n  \"direccionOrigen\": \"Av. Presidente Ibáñez 1000\",\n  \"contactoOrigen\": \"Bodega remitente\",\n  \"telefonoOrigen\": \"+56911111111\",\n  \"direccionDestino\": \"O'Higgins 700\",\n  \"contactoDestino\": \"Recepción destino\",\n  \"telefonoDestino\": \"+56922222222\",\n  \"referenciaEntrega\": \"Entregar en recepción\",\n  \"tipoZona\": \"URBANA\",\n  \"tipoServicio\": \"NORMAL\",\n  \"tipoDocumento\": \"SIN_DOCUMENTO\",\n  \"requiereRetiro\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Anular OT",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte/{{idOrden}}/anular",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte",
+                "{{idOrden}}",
+                "anular"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reingresar OT rechazada a bodega",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte/reingreso-bodega",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte",
+                "reingreso-bodega"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{numeroOT}}\",\n  \"idSucursal\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 · Bodega y bultos",
+      "description": "ADMINISTRADOR / OPERADOR.",
+      "item": [
+        {
+          "name": "Sucursales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bultos/sucursales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bultos",
+                "sucursales"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Inventario de bodega",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bultos/bodega?estado=EN_BODEGA&idSucursal=1&q=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bultos",
+                "bodega"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "EN_BODEGA"
+                },
+                {
+                  "key": "idSucursal",
+                  "value": "1",
+                  "description": "id o 'sin'"
+                },
+                {
+                  "key": "q",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = ((j.bultos || j.data || j.items || [])[0] || {}).idBulto; if (v !== undefined && v !== null) { pm.environment.set(\"idBulto\", v); console.log(\"idBulto =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pronto despacho",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bultos/pronto-despacho?dias=3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bultos",
+                "pronto-despacho"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "3"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bultos de una sucursal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bultos/sucursal/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bultos",
+                "sucursal",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Recibir bulto en bodega",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bultos/{{idBulto}}/recibir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bultos",
+                "{{idBulto}}",
+                "recibir"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSucursal\": 1,\n  \"observacion\": \"Recepción Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Trasladar bulto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bultos/{{idBulto}}/trasladar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bultos",
+                "{{idBulto}}",
+                "trasladar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSucursalOrigen\": 1,\n  \"idSucursalDestino\": 2,\n  \"observacion\": \"Traslado Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 · Manifiestos",
+      "description": "ADMINISTRADOR / OPERADOR. Flujo: crear → escanear bultos u OT → salir a ruta.",
+      "item": [
+        {
+          "name": "Listar manifiestos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/manifiestos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "manifiestos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear manifiesto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/manifiestos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "manifiestos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehiculo\": 1,\n  \"idConductor\": 1,\n  \"idsPeoneta\": [\n    2\n  ],\n  \"idComuna\": 2,\n  \"fechaSalidaProgramada\": \"2026-10-20\",\n  \"observacion\": \"Manifiesto Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = (j.manifiesto || j.data || j).idManifiesto; if (v !== undefined && v !== null) { pm.environment.set(\"idManifiesto\", v); console.log(\"idManifiesto =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle del manifiesto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/manifiestos/{{idManifiesto}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "manifiestos",
+                "{{idManifiesto}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Escanear OT (listar bultos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/manifiestos/{{idManifiesto}}/escanear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "manifiestos",
+                "{{idManifiesto}}",
+                "escanear"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{numeroOT}}\",\n  \"listar\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Escanear OT (cargar todos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/manifiestos/{{idManifiesto}}/escanear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "manifiestos",
+                "{{idManifiesto}}",
+                "escanear"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{numeroOT}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Quitar bulto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/manifiestos/{{idManifiesto}}/bultos/{{idBulto}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "manifiestos",
+                "{{idManifiesto}}",
+                "bultos",
+                "{{idBulto}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Editar asignación",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/manifiestos/{{idManifiesto}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "manifiestos",
+                "{{idManifiesto}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehiculo\": 1,\n  \"idConductor\": 1,\n  \"idsPeoneta\": [\n    2\n  ],\n  \"idComuna\": 2,\n  \"fechaSalidaProgramada\": \"2026-10-21\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Salir a ruta",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/manifiestos/{{idManifiesto}}/salir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "manifiestos",
+                "{{idManifiesto}}",
+                "salir"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 · Pagos (operador)",
+      "description": "Webpay en ambiente de integración. 'Iniciar' devuelve url y token: abre la url en el navegador con un formulario POST token_ws para pagar con la tarjeta de prueba.",
+      "item": [
+        {
+          "name": "Tarjetas de prueba",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/webpay/ambiente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos",
+                "webpay",
+                "ambiente"
+              ]
+            }
+          }
+        },
+        {
+          "name": "OT pendientes de pago",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/pendientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos",
+                "pendientes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Estado de pago de una OT",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/ot/{{numeroOT}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos",
+                "ot",
+                "{{numeroOT}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Iniciar Webpay",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/webpay/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagos",
+                "webpay",
+                "iniciar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroOT\": \"{{numeroOT}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 · Peoneta",
+      "description": "Rol PEONETA: manifiestos asignados al usuario del token.",
+      "item": [
+        {
+          "name": "Mis manifiestos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/peoneta/manifiestos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "peoneta",
+                "manifiestos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 · Portal cliente",
+      "description": "Rol CLIENTE. La empresa sale del token (usuario → cliente_usuario → cliente); nunca se envía idCliente.\n- Cliente normal: perfil, órdenes, detalle y tipos de bulto.\n- Cliente con cuenta corriente: además pendientes de pago, pago Webpay y cotizaciones. Un cliente normal recibe 403 en esas rutas.",
+      "item": [
+        {
+          "name": "Perfil (empresa y cuenta corriente)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/perfil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "perfil"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mis órdenes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/ordenes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "ordenes"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "try { const j = pm.response.json(); const v = (j.ordenes[0] || {}).idOrden; if (v !== undefined && v !== null) { pm.environment.set(\"idOrdenCliente\", v); console.log(\"idOrdenCliente =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de una orden",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/ordenes/{{idOrdenCliente}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "ordenes",
+                "{{idOrdenCliente}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tipos de bulto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/tipos-bulto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "tipos-bulto"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pendientes de pago (cuenta corriente)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/pagos/pendientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "pagos",
+                "pendientes"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = (j.pendientes[0] || {}).idOrden; if (v !== undefined && v !== null) { pm.environment.set(\"idOrdenPendiente\", v); console.log(\"idOrdenPendiente =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pagar pendientes con Webpay",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/pagos/webpay/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "pagos",
+                "webpay",
+                "iniciar"
+              ]
+            },
+            "description": "Devuelve url y token de Webpay. Al volver, el backend marca las OT como pagadas y abona la cuenta corriente.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idOrdenes\": [\n    {{idOrdenPendiente}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cotizar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/cotizaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "cotizaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 5,\n  \"bultos\": [\n    {\n      \"idTipoBulto\": 3,\n      \"cantidad\": 1,\n      \"pesoUnitario\": 120,\n      \"largoCm\": 120,\n      \"anchoCm\": 100,\n      \"altoCm\": 150\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mis cotizaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/cotizaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "cotizaciones"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

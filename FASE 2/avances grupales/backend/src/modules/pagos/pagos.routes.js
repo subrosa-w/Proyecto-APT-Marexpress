@@ -6,13 +6,16 @@ import {
     iniciarWebpay,
     listarPendientesPago,
     obtenerAmbienteWebpay,
-    retornoWebpay
+    retornoWebpay,
+    retornoWebpayCliente
 } from "./pagos.controller.js";
 
 const router = Router();
 
 router.get("/webpay/retorno", retornoWebpay);
 router.post("/webpay/retorno", retornoWebpay);
+router.get("/webpay/retorno-cliente", retornoWebpayCliente);
+router.post("/webpay/retorno-cliente", retornoWebpayCliente);
 
 router.use(autenticar, autorizarRoles("ADMINISTRADOR", "OPERADOR"));
 

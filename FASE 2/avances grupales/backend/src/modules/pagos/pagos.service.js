@@ -341,3 +341,240 @@ export const finalizarRetornoWebpay = async ({ tokenWs, tbkToken }) => {
         });
     }
 };
+
+// =========================================================
+// PORTAL CLIENTE: pago de OT de cuenta corriente con Webpay
+// =========================================================
+
+const MAX_OT_POR_PAGO = 50;
+
+// El SDK devuelve la respuesta de Transbank tal cual (snake_case)
+const campoWebpay = (resultado, snake, camel) => resultado?.[snake] ?? resultado?.[camel];
+
+const esAutorizado = (resultado) =>
+    Number(campoWebpay(resultado, "response_code", "responseCode")) === 0 ||
+    String(resultado?.status || "").toUpperCase() === "AUTHORIZED";
+
+const redirigirCliente = (params) =>
+    `${urlFrontend()}/cliente/pagos?${new URLSearchParams(params).toString()}`;
+
+// OT de cuenta corriente con su último pago todavía pendiente
+export const pagoPendienteCuenta = (orden) => {
+    const pago = ultimoPago(orden);
+    const pendiente =
+        pago &&
+        String(pago.tipoPago || "").toUpperCase() === "CUENTA_CORRIENTE" &&
+        String(pago.estadoPago || "").toUpperCase() === "PENDIENTE" &&
+        !["ANULADA", "CANCELADA"].includes(nombreEstado(orden));
+
+    return pendiente ? pago : null;
+};
+
+const validarIdsOrden = (idOrdenes) => {
+    if (!Array.isArray(idOrdenes) || idOrdenes.length === 0) {
+        throw new ErrorPago("Selecciona al menos una OT para pagar");
+    }
+
+    const ids = [...new Set(idOrdenes.map(Number))];
+
+    if (ids.some((id) => !Number.isInteger(id) || id <= 0)) {
+        throw new ErrorPago("Hay OT inválidas en la selección");
+    }
+    if (ids.length > MAX_OT_POR_PAGO) {
+        throw new ErrorPago(`Puedes pagar hasta ${MAX_OT_POR_PAGO} OT a la vez`);
+    }
+
+    return ids;
+};
+
+/*
+ * El cliente paga varias OT de su cuenta corriente en una sola transacción.
+ * Todas las OT deben ser de su empresa y estar pendientes de pago.
+ * El token de Webpay queda en pago.referencia de cada OT.
+ */
+export const iniciarWebpayCliente = async ({ idCliente, idCuenta, idUsuario, idOrdenes }) => {
+    const ids = validarIdsOrden(idOrdenes);
+
+    const ordenes = await prisma.orden_transporte.findMany({
+        where: { idOrden: { in: ids }, idCliente: Number(idCliente) },
+        include: {
+            estado_ot: true,
+            pago: { orderBy: { idPago: "desc" } }
+        }
+    });
+
+    if (ordenes.length !== ids.length) {
+        throw new ErrorPago("Alguna OT no existe o no pertenece a tu empresa", 404);
+    }
+
+    const pagos = ordenes.map((orden) => {
+        const pago = pagoPendienteCuenta(orden);
+        if (!pago) {
+            throw new ErrorPago(`La OT ${orden.numeroOT} no está pendiente de pago`);
+        }
+        return pago;
+    });
+
+    const monto = ordenes.reduce((total, orden) => total + montoCLP(orden.valorTotal), 0);
+    if (monto < 1) {
+        throw new ErrorPago("El monto a pagar debe ser al menos $1");
+    }
+
+    const buyOrder = `MXC${idCuenta}${Date.now()}`.slice(0, 26);
+    // El usuario que paga viaja en el sessionId para registrarlo al confirmar
+    const sessionId = `C${idCliente}-U${idUsuario}`.slice(0, 61);
+    const returnUrl = `${urlApiPublica()}/api/pagos/webpay/retorno-cliente`;
+
+    const creada = await transaccionIntegracion().create(buyOrder, sessionId, monto, returnUrl);
+
+    await prisma.pago.updateMany({
+        where: { idPago: { in: pagos.map((pago) => pago.idPago) } },
+        data: {
+            referencia: String(creada.token).slice(0, 100),
+            observacion: `Webpay ${buyOrder}`.slice(0, 200)
+        }
+    });
+
+    return {
+        url: creada.url,
+        token: creada.token,
+        buyOrder,
+        monto,
+        ordenes: ordenes.map((orden) => orden.numeroOT)
+    };
+};
+
+const usuarioDeSesion = (sessionId) => {
+    const coincidencia = String(sessionId || "").match(/-U(\d+)$/);
+    return coincidencia ? Number(coincidencia[1]) : null;
+};
+
+/*
+ * Pago autorizado: marca las OT como pagadas, registra un ABONO por OT
+ * y descuenta la deuda de la cuenta corriente, todo en una transacción.
+ * La cuenta se bloquea con FOR UPDATE para que un retorno repetido no abone dos veces.
+ */
+const abonarPagosCuenta = async (token, resultado) => {
+    await prisma.$transaction(async (tx) => {
+        const pagos = await tx.pago.findMany({
+            where: { referencia: token, tipoPago: "CUENTA_CORRIENTE" },
+            include: { orden_transporte: { select: { idOrden: true, numeroOT: true, idEstado: true, idCliente: true } } }
+        });
+        if (!pagos.length) {
+            return;
+        }
+
+        const cuenta = await tx.cuenta_corriente.findUnique({
+            where: { idCliente: pagos[0].orden_transporte.idCliente }
+        });
+        if (!cuenta) {
+            throw new Error("La cuenta corriente del cliente no existe");
+        }
+
+        await tx.$queryRaw`
+            SELECT idCuenta FROM cuenta_corriente WHERE idCuenta = ${cuenta.idCuenta} FOR UPDATE
+        `;
+
+        // Se vuelve a leer con la cuenta bloqueada: solo se abonan los que siguen pendientes
+        const pendientes = await tx.pago.findMany({
+            where: { idPago: { in: pagos.map((pago) => pago.idPago) }, estadoPago: { not: "PAGADO" } },
+            include: { orden_transporte: { select: { idOrden: true, numeroOT: true, idEstado: true } } }
+        });
+        if (!pendientes.length) {
+            return;
+        }
+
+        const codigo = campoWebpay(resultado, "authorization_code", "authorizationCode") || "s/n";
+        const ordenCompra = campoWebpay(resultado, "buy_order", "buyOrder") || "";
+        const idUsuarioPago = usuarioDeSesion(campoWebpay(resultado, "session_id", "sessionId"));
+        let totalAbonado = 0;
+
+        for (const pago of pendientes) {
+            const monto = Number(pago.monto) || 0;
+            const idUsuario = idUsuarioPago || pago.idUsuario;
+            totalAbonado += monto;
+
+            await tx.pago.update({
+                where: { idPago: pago.idPago },
+                data: {
+                    estadoPago: "PAGADO",
+                    metodoPago: "TARJETA",
+                    fechaPago: new Date(),
+                    idCuenta: cuenta.idCuenta,
+                    observacion: `Webpay ${codigo} ${ordenCompra}`.slice(0, 200)
+                }
+            });
+
+            await tx.movimiento_cuenta.create({
+                data: {
+                    tipoMovimiento: "ABONO",
+                    monto,
+                    descripcion: `Pago Webpay ${pago.orden_transporte.numeroOT} (código ${codigo})`.slice(0, 200),
+                    idCuenta: cuenta.idCuenta,
+                    idOrden: pago.orden_transporte.idOrden,
+                    idUsuario
+                }
+            });
+
+            await registrarEventoOt({
+                db: tx,
+                idOrden: pago.orden_transporte.idOrden,
+                idEstado: pago.orden_transporte.idEstado,
+                idUsuario,
+                descripcion: `Pago Webpay de cuenta corriente autorizado. Código ${codigo}`
+            });
+        }
+
+        const saldoActual = Number(cuenta.saldoActual) || 0;
+        await tx.cuenta_corriente.update({
+            where: { idCuenta: cuenta.idCuenta },
+            data: { saldoActual: Math.max(0, Number((saldoActual - totalAbonado).toFixed(2))) }
+        });
+    });
+};
+
+export const finalizarRetornoWebpayCliente = async ({ tokenWs, tbkToken }) => {
+    // El cliente anuló el pago en el formulario de Webpay
+    if (tbkToken && !tokenWs) {
+        return redirigirCliente({ estado: "anulado" });
+    }
+    if (!tokenWs) {
+        return redirigirCliente({ estado: "error", detalle: "sin-token" });
+    }
+
+    const token = String(tokenWs).slice(0, 100);
+    const pagos = await prisma.pago.findMany({
+        where: { referencia: token, tipoPago: "CUENTA_CORRIENTE" }
+    });
+
+    if (!pagos.length) {
+        return redirigirCliente({ estado: "error", detalle: "pago-no-encontrado" });
+    }
+    if (pagos.every((pago) => String(pago.estadoPago || "").toUpperCase() === "PAGADO")) {
+        return redirigirCliente({ estado: "ok", cantidad: pagos.length });
+    }
+
+    let resultado;
+    try {
+        resultado = await transaccionIntegracion().commit(token);
+    } catch {
+        try {
+            resultado = await transaccionIntegracion().status(token);
+        } catch {
+            return redirigirCliente({ estado: "error", detalle: "commit" });
+        }
+    }
+
+    if (!esAutorizado(resultado)) {
+        await prisma.pago.updateMany({
+            where: { referencia: token, estadoPago: { not: "PAGADO" } },
+            data: {
+                observacion: `Webpay rechazado ${campoWebpay(resultado, "response_code", "responseCode") ?? resultado.status}`.slice(0, 200)
+            }
+        });
+        return redirigirCliente({ estado: "rechazado" });
+    }
+
+    await abonarPagosCuenta(token, resultado);
+    return redirigirCliente({ estado: "ok", cantidad: pagos.length });
+};
