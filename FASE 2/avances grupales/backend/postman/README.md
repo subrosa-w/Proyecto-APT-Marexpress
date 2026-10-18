@@ -21,6 +21,8 @@ Esta carpeta contiene:
 
 Todas las demás peticiones envían ese token. Para cambiar de rol, cambia `identificador` y repite el login.
 
+Las peticiones de la carpeta 01 revisan las variables antes de enviarse. Si falta `identificador`, `password`, `challengeId` o un `otp` de 6 dígitos, la petición no se envía y Postman muestra un error en el panel de respuesta que dice qué variable completar (en ese caso la pestaña Test Results dice "No tests found", porque la petición no salió). Recuerda escribir los valores en la columna **Current value** del environment. Si prefieres escribir un valor directo en el body, en lugar de `{{variable}}`, también funciona: el aviso solo revisa las variables que el body usa.
+
 > `OTP_EN_CONSOLA` es solo para desarrollo. El backend lo ignora si `NODE_ENV=production`.
 
 ## Qué carpeta usar según el rol

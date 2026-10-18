@@ -102,6 +102,23 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Aviso antes de enviar: solo revisa las variables que el body usa como {{variable}}.",
+                  "// Si escribes el valor directo en el body, la petición se envía igual.",
+                  "const cuerpo = String((pm.request.body && pm.request.body.raw) || \"\");",
+                  "const usa = (nombre) => cuerpo.includes(\"{{\" + nombre + \"}}\");",
+                  "const valor = (nombre) => String(pm.variables.get(nombre) || \"\").trim();",
+                  "const faltan = [\"identificador\",\"password\"].filter((nombre) => usa(nombre) && !valor(nombre));",
+                  "if (faltan.length) {",
+                  "    throw new Error(\"Falta \" + faltan.join(\" y \") + \" en el environment. \" + \"Selecciona el environment \\\"Marexpress local\\\" arriba a la derecha y completa la columna Current value. La contraseña de los usuarios de prueba está en CLAVE_USUARIOS_PRUEBA del backend/.env.\");",
+                  "}"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -147,6 +164,25 @@
             }
           },
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Aviso antes de enviar: solo revisa las variables que el body usa como {{variable}}.",
+                  "// Si escribes el valor directo en el body, la petición se envía igual.",
+                  "const cuerpo = String((pm.request.body && pm.request.body.raw) || \"\");",
+                  "const usa = (nombre) => cuerpo.includes(\"{{\" + nombre + \"}}\");",
+                  "const valor = (nombre) => String(pm.variables.get(nombre) || \"\").trim();",
+                  "if (usa(\"challengeId\") && !valor(\"challengeId\")) {",
+                  "    throw new Error(\"Falta challengeId. Ejecuta primero \\\"1. Login (pide OTP)\\\".\");",
+                  "}",
+                  "if (usa(\"otp\") && !/^\\d{6}$/.test(valor(\"otp\"))) {",
+                  "    throw new Error(\"La variable otp debe tener el código de 6 dígitos que llegó al correo o que aparece en la consola del backend como [OTP DESARROLLO]. Escríbelo en la columna Current value de otp, o directo en el body en lugar de {{otp}}.\");",
+                  "}"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -196,6 +232,23 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Aviso antes de enviar: solo revisa las variables que el body usa como {{variable}}.",
+                  "// Si escribes el valor directo en el body, la petición se envía igual.",
+                  "const cuerpo = String((pm.request.body && pm.request.body.raw) || \"\");",
+                  "const usa = (nombre) => cuerpo.includes(\"{{\" + nombre + \"}}\");",
+                  "const valor = (nombre) => String(pm.variables.get(nombre) || \"\").trim();",
+                  "const faltan = [\"password\"].filter((nombre) => usa(nombre) && !valor(nombre));",
+                  "if (faltan.length) {",
+                  "    throw new Error(\"Falta \" + faltan.join(\" y \") + \" en el environment. \" + \"Selecciona el environment \\\"Marexpress local\\\" arriba a la derecha y completa la columna Current value.\");",
+                  "}"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -239,7 +292,28 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Aviso antes de enviar: solo revisa las variables que el body usa como {{variable}}.",
+                  "// Si escribes el valor directo en el body, la petición se envía igual.",
+                  "const cuerpo = String((pm.request.body && pm.request.body.raw) || \"\");",
+                  "const usa = (nombre) => cuerpo.includes(\"{{\" + nombre + \"}}\");",
+                  "const valor = (nombre) => String(pm.variables.get(nombre) || \"\").trim();",
+                  "if (usa(\"challengeId\") && !valor(\"challengeId\")) {",
+                  "    throw new Error(\"Falta challengeId. Ejecuta primero \\\"Registro de cliente (envía OTP)\\\".\");",
+                  "}",
+                  "if (usa(\"otp\") && !/^\\d{6}$/.test(valor(\"otp\"))) {",
+                  "    throw new Error(\"La variable otp debe tener el código de 6 dígitos del correo de registro. Escríbelo en la columna Current value de otp, o directo en el body en lugar de {{otp}}.\");",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Registro: reenviar OTP",
@@ -276,6 +350,23 @@
             }
           },
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Aviso antes de enviar: solo revisa las variables que el body usa como {{variable}}.",
+                  "// Si escribes el valor directo en el body, la petición se envía igual.",
+                  "const cuerpo = String((pm.request.body && pm.request.body.raw) || \"\");",
+                  "const usa = (nombre) => cuerpo.includes(\"{{\" + nombre + \"}}\");",
+                  "const valor = (nombre) => String(pm.variables.get(nombre) || \"\").trim();",
+                  "const faltan = [\"password\"].filter((nombre) => usa(nombre) && !valor(nombre));",
+                  "if (faltan.length) {",
+                  "    throw new Error(\"Falta \" + faltan.join(\" y \") + \" en el environment. \" + \"Selecciona el environment \\\"Marexpress local\\\" arriba a la derecha y completa la columna Current value.\");",
+                  "}"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
