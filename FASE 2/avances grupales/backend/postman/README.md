@@ -37,14 +37,25 @@ Las peticiones de la carpeta 01 revisan las variables antes de enviarse. Si falt
 
 ## Variables encadenadas
 
-Algunas peticiones guardan IDs que usan las siguientes:
+Algunas peticiones guardan IDs que usan las siguientes. Cada paso usa su propia OT, para que uno no le quite datos al otro:
 
-- "Crear OT" guarda `idOrden` y `numeroOT`.
+- "Crear OT · contado" guarda `idOrden`, `numeroOT` e `idBulto`: es la OT principal que usan Editar OT, Bodega (06) y Manifiestos (07).
+- "Crear OT · por pagar" guarda `numeroOTPorPagar`, que usa Pagos (08).
+- "Crear OT para anular" guarda `idOrdenAnular`, que usa "Anular OT".
+- "Crear OT · cuenta corriente" usa la variable de colección `idClienteCuentaCorriente` (por defecto 1) junto con `idCuenta`.
 - "Crear cliente" guarda `idCliente`.
-- "Crear manifiesto" guarda `idManifiesto`.
-- "Inventario de bodega" guarda `idBulto`.
-- "Mis órdenes" guarda `idOrdenCliente`.
-- "Pendientes de pago" guarda `idOrdenPendiente`.
+- "Crear manifiesto" guarda `idManifiesto`, y "Escanear OT (listar bultos)" guarda `idBultoManifiesto`, que usa "Quitar bulto".
+- "Mis órdenes" guarda `idOrdenCliente`, y "Pendientes de pago" guarda `idOrdenPendiente`.
+
+## Correr carpetas completas (Runner)
+
+Las carpetas 04 a 08 se pueden correr enteras con el **Runner** de Postman, y repetir cuantas veces quieras:
+
+- "Crear cliente", "Crear destinatario" y "Registro de cliente" generan un RUT nuevo en cada ejecución, así que no chocan con datos anteriores.
+- El bulto de la OT principal hace el ciclo completo de bodega: lo recibe la sucursal 1, se traslada a la 2 y la sucursal 2 lo recibe. Después queda disponible para el manifiesto.
+- "Reingresar OT rechazada a bodega" se salta sola si la variable de colección `numeroOTRechazada` está vacía, porque solo funciona con una OT rechazada en destino.
+
+Cada ejecución crea datos de prueba reales en tu base de datos local: clientes, OT, un manifiesto, etc.
 
 Si una petición responde **401**, el token falta o venció (dura 8 horas): repite el login. Si responde **403**, el rol con el que entraste no tiene acceso a esa ruta.
 
@@ -52,11 +63,15 @@ Si una petición responde **401**, el token falta o venció (dura 8 horas): repi
 
 Se crean con `npx tsx scripts/crear-usuarios-prueba.js`, que necesita `CLAVE_USUARIOS_PRUEBA` en el `.env`.
 
-| Usuario | Rol | Detalle |
-|---|---|---|
-| `operador.benjamin` | OPERADOR | |
-| `cliente.cuentacorriente` | CLIENTE | Vinculado a Cliente Prueba SpA, que tiene cuenta corriente |
-| `cliente_prueba` | CLIENTE | Vinculado a una empresa sin cuenta corriente, así que ve el portal del cliente normal |
+| Usuario | Correo | Rol | Detalle |
+|---|---|---|---|
+| `admin.benjamin` | ben.sandovalv+admin@duocuc.cl | ADMINISTRADOR | |
+| `operador.benjamin` | ben.sandovalv+operador@duocuc.cl | OPERADOR | |
+| `peoneta.benjamin` | ben.sandovalv+peoneta@duocuc.cl | PEONETA | Ve los manifiestos en los que lo asignen como peoneta |
+| `cliente.benjamin` | ben.sandovalv+cliente@duocuc.cl | CLIENTE | Cliente normal: vinculado a Cliente Prueba MAREXPRESS SpA, que no tiene cuenta corriente |
+| `cliente.cuentacorriente` | benja.sandoval.05@gmail.com | CLIENTE | Vinculado a Cliente Prueba SpA, que tiene cuenta corriente |
+
+Los usuarios no se borran, porque tienen historial (OT, pagos y movimientos) que el sistema debe conservar. Para cambiar uno, edita el script y vuelve a correrlo: lo actualiza.
 
 ## Webpay (ambiente de integración)
 

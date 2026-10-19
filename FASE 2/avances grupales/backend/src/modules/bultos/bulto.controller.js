@@ -212,11 +212,16 @@ function responderErrorBulto(res, error) {
         });
     }
 
-    // Devuelve únicamente textos fijos de reglas conocidas.
+    // Devuelve únicamente textos fijos de reglas conocidas (vienen de los triggers de la BD).
     const reglasConocidas = [
         "El bulto debe ingresar en la sucursal destino del traslado",
         "El bulto no se encuentra en la sucursal de origen indicada",
-        "La sucursal de origen y destino deben ser diferentes"
+        "La sucursal de origen y destino deben ser diferentes",
+        "Solo se puede trasladar un bulto que se encuentre en bodega",
+        "Solo se puede devolver a bodega un bulto proveniente de una operación activa",
+        "El bulto ya se encuentra registrado en otra sucursal",
+        "El traslado requiere sucursal de origen y destino",
+        "La entrada o devolución de un bulto requiere una sucursal"
     ];
 
     const regla = reglasConocidas.find(texto =>

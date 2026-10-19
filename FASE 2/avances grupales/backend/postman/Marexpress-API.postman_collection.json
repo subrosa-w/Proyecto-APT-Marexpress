@@ -216,13 +216,13 @@
                 "registro"
               ]
             },
-            "description": "Crea un usuario CLIENTE pendiente. Usa un correo y RUT que no existan. Guarda el challengeId.",
+            "description": "Crea un usuario CLIENTE pendiente con RUT, correo y usuario nuevos en cada ejecución. Guarda challengeId y usuarioRegistro.",
             "auth": {
               "type": "noauth"
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Cliente\",\n  \"apellido\": \"Postman\",\n  \"rut\": \"12.345.678-5\",\n  \"correo\": \"correo.nuevo@ejemplo.cl\",\n  \"telefono\": \"+56933333333\",\n  \"nombreUsuario\": \"cliente.postman\",\n  \"password\": \"{{password}}\"\n}",
+              "raw": "{\n  \"nombre\": \"Cliente\",\n  \"apellido\": \"Postman\",\n  \"rut\": \"{{rutNuevo}}\",\n  \"correo\": \"{{correoRegistro}}\",\n  \"telefono\": \"+56933333333\",\n  \"nombreUsuario\": \"{{usuarioRegistro}}\",\n  \"password\": \"{{password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -231,6 +231,15 @@
             }
           },
           "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try { const j = pm.response.json(); const v = j.challengeId; if (v !== undefined && v !== null) { pm.environment.set(\"challengeId\", v); console.log(\"challengeId =\", v); } } catch (e) {}"
+                ]
+              }
+            },
             {
               "listen": "prerequest",
               "script": {
@@ -244,16 +253,20 @@
                   "const faltan = [\"password\"].filter((nombre) => usa(nombre) && !valor(nombre));",
                   "if (faltan.length) {",
                   "    throw new Error(\"Falta \" + faltan.join(\" y \") + \" en el environment. \" + \"Selecciona el environment \\\"Marexpress local\\\" arriba a la derecha y completa la columna Current value.\");",
-                  "}"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "try { const j = pm.response.json(); const v = j.challengeId; if (v !== undefined && v !== null) { pm.environment.set(\"challengeId\", v); console.log(\"challengeId =\", v); } } catch (e) {}"
+                  "}",
+                  "// RUT válido y distinto en cada ejecución, para poder repetir la petición sin chocar con datos anteriores",
+                  "const cuerpoRut = String(10000000 + Math.floor(Math.random() * 15000000));",
+                  "let suma = 0;",
+                  "let factor = 2;",
+                  "for (const digito of cuerpoRut.split(\"\").reverse()) {",
+                  "    suma += Number(digito) * factor;",
+                  "    factor = factor === 7 ? 2 : factor + 1;",
+                  "}",
+                  "const resto = 11 - (suma % 11);",
+                  "pm.variables.set(\"rutNuevo\", cuerpoRut + \"-\" + (resto === 11 ? \"0\" : resto === 10 ? \"K\" : String(resto)));",
+                  "const marca = Date.now();",
+                  "pm.environment.set(\"usuarioRegistro\", \"postman\" + marca);",
+                  "pm.variables.set(\"correoRegistro\", \"postman\" + marca + \"@ejemplo.cl\");"
                 ]
               }
             }
@@ -341,7 +354,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"identificador\": \"cliente.postman\",\n  \"password\": \"{{password}}\"\n}",
+              "raw": "{\n  \"identificador\": \"{{usuarioRegistro}}\",\n  \"password\": \"{{password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -799,7 +812,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"rut\": \"77.888.999-4\",\n  \"razonSocial\": \"Empresa Postman SpA\",\n  \"nombreFantasia\": \"Postman\",\n  \"giro\": \"Comercio\",\n  \"direccion\": \"Calle Prueba 123\",\n  \"telefono\": \"+56944444444\",\n  \"correo\": \"empresa@ejemplo.cl\",\n  \"idComuna\": 2,\n  \"crearCuentaCorriente\": true,\n  \"limiteCredito\": 1000000\n}",
+              "raw": "{\n  \"rut\": \"{{rutNuevo}}\",\n  \"razonSocial\": \"Empresa Postman SpA\",\n  \"nombreFantasia\": \"Postman\",\n  \"giro\": \"Comercio\",\n  \"direccion\": \"Calle Prueba 123\",\n  \"telefono\": \"+56944444444\",\n  \"correo\": \"empresa@ejemplo.cl\",\n  \"idComuna\": 2,\n  \"crearCuentaCorriente\": true,\n  \"limiteCredito\": 1000000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -814,6 +827,24 @@
                 "type": "text/javascript",
                 "exec": [
                   "try { const j = pm.response.json(); const v = (j.cliente || j.data || j).idCliente; if (v !== undefined && v !== null) { pm.environment.set(\"idCliente\", v); console.log(\"idCliente =\", v); } } catch (e) {}"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// RUT válido y distinto en cada ejecución, para poder repetir la petición sin chocar con datos anteriores",
+                  "const cuerpoRut = String(10000000 + Math.floor(Math.random() * 15000000));",
+                  "let suma = 0;",
+                  "let factor = 2;",
+                  "for (const digito of cuerpoRut.split(\"\").reverse()) {",
+                  "    suma += Number(digito) * factor;",
+                  "    factor = factor === 7 ? 2 : factor + 1;",
+                  "}",
+                  "const resto = 11 - (suma % 11);",
+                  "pm.variables.set(\"rutNuevo\", cuerpoRut + \"-\" + (resto === 11 ? \"0\" : resto === 10 ? \"K\" : String(resto)));"
                 ]
               }
             }
@@ -956,14 +987,34 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"rut\": \"15.555.555-6\",\n  \"nombreRazonSocial\": \"Destinatario Postman\",\n  \"direccion\": \"Av. Destino 45\",\n  \"telefono\": \"+56966666666\",\n  \"idComuna\": 2\n}",
+              "raw": "{\n  \"rut\": \"{{rutNuevo}}\",\n  \"nombreRazonSocial\": \"Destinatario Postman\",\n  \"direccion\": \"Av. Destino 45\",\n  \"telefono\": \"+56966666666\",\n  \"idComuna\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// RUT válido y distinto en cada ejecución, para poder repetir la petición sin chocar con datos anteriores",
+                  "const cuerpoRut = String(10000000 + Math.floor(Math.random() * 15000000));",
+                  "let suma = 0;",
+                  "let factor = 2;",
+                  "for (const digito of cuerpoRut.split(\"\").reverse()) {",
+                  "    suma += Number(digito) * factor;",
+                  "    factor = factor === 7 ? 2 : factor + 1;",
+                  "}",
+                  "const resto = 11 - (suma % 11);",
+                  "pm.variables.set(\"rutNuevo\", cuerpoRut + \"-\" + (resto === 11 ? \"0\" : resto === 10 ? \"K\" : String(resto)));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1040,7 +1091,8 @@
                   "language": "json"
                 }
               }
-            }
+            },
+            "description": "OT principal del flujo: la usan Editar OT, Bodega (06) y Manifiestos (07). Guarda idOrden, numeroOT e idBulto."
           },
           "event": [
             {
@@ -1048,8 +1100,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null) { pm.environment.set(\"idOrden\", v); console.log(\"idOrden =\", v); } } catch (e) {}",
-                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).numeroOT; if (v !== undefined && v !== null) { pm.environment.set(\"numeroOT\", v); console.log(\"numeroOT =\", v); } } catch (e) {}"
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null && v !== \"\") { pm.environment.set(\"idOrden\", v); console.log(\"idOrden =\", v); } } catch (e) {}",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).numeroOT; if (v !== undefined && v !== null && v !== \"\") { pm.environment.set(\"numeroOT\", v); console.log(\"numeroOT =\", v); } } catch (e) {}",
+                  "try { const j = pm.response.json(); const v = (() => { const o = j.orden || j.data || j; const lista = (o.detalle_carga || []).flatMap((d) => d.bulto || []); return (lista[0] || (o.bultos || [])[0] || {}).idBulto; })(); if (v !== undefined && v !== null && v !== \"\") { pm.environment.set(\"idBulto\", v); console.log(\"idBulto =\", v); } } catch (e) {}"
                 ]
               }
             }
@@ -1082,7 +1136,8 @@
                   "language": "json"
                 }
               }
-            }
+            },
+            "description": "OT sin pagar para probar Pagos (08). Guarda idOrdenPorPagar y numeroOTPorPagar."
           },
           "event": [
             {
@@ -1090,8 +1145,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null) { pm.environment.set(\"idOrden\", v); console.log(\"idOrden =\", v); } } catch (e) {}",
-                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).numeroOT; if (v !== undefined && v !== null) { pm.environment.set(\"numeroOT\", v); console.log(\"numeroOT =\", v); } } catch (e) {}"
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null && v !== \"\") { pm.environment.set(\"idOrdenPorPagar\", v); console.log(\"idOrdenPorPagar =\", v); } } catch (e) {}",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).numeroOT; if (v !== undefined && v !== null && v !== \"\") { pm.environment.set(\"numeroOTPorPagar\", v); console.log(\"numeroOTPorPagar =\", v); } } catch (e) {}"
                 ]
               }
             }
@@ -1116,10 +1172,10 @@
                 "ordenes-transporte"
               ]
             },
-            "description": "El cliente debe tener cuenta corriente activa con crédito disponible. idCuenta sale de 'Cuenta corriente del cliente'.",
+            "description": "Usa la empresa de idClienteCuentaCorriente y su cuenta idCuenta (por defecto Cliente Prueba SpA, cuenta 1). Guarda idOrdenCuentaCorriente.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idCliente}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 2,\n  \"direccionOrigen\": \"Av. Presidente Ibáñez 1000\",\n  \"contactoOrigen\": \"Bodega remitente\",\n  \"telefonoOrigen\": \"+56911111111\",\n  \"direccionDestino\": \"O'Higgins 500\",\n  \"contactoDestino\": \"Recepción destino\",\n  \"telefonoDestino\": \"+56922222222\",\n  \"referenciaEntrega\": \"Entregar en recepción\",\n  \"tipoZona\": \"URBANA\",\n  \"tipoServicio\": \"NORMAL\",\n  \"tipoDocumento\": \"SIN_DOCUMENTO\",\n  \"requiereRetiro\": false,\n  \"cargas\": [\n    {\n      \"descripcion\": \"Caja con repuestos\",\n      \"cantidad\": 2,\n      \"idTipoBulto\": 1,\n      \"pesoUnitario\": 15,\n      \"largoCm\": 40,\n      \"anchoCm\": 30,\n      \"altoCm\": 30\n    }\n  ],\n  \"pagadoPor\": \"REMITENTE\",\n  \"tipoPago\": \"CUENTA_CORRIENTE\",\n  \"idCuenta\": {{idCuenta}}\n}",
+              "raw": "{\n  \"idCliente\": {{idClienteCuentaCorriente}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 2,\n  \"direccionOrigen\": \"Av. Presidente Ibáñez 1000\",\n  \"contactoOrigen\": \"Bodega remitente\",\n  \"telefonoOrigen\": \"+56911111111\",\n  \"direccionDestino\": \"O'Higgins 500\",\n  \"contactoDestino\": \"Recepción destino\",\n  \"telefonoDestino\": \"+56922222222\",\n  \"referenciaEntrega\": \"Entregar en recepción\",\n  \"tipoZona\": \"URBANA\",\n  \"tipoServicio\": \"NORMAL\",\n  \"tipoDocumento\": \"SIN_DOCUMENTO\",\n  \"requiereRetiro\": false,\n  \"cargas\": [\n    {\n      \"descripcion\": \"Caja con repuestos\",\n      \"cantidad\": 2,\n      \"idTipoBulto\": 1,\n      \"pesoUnitario\": 15,\n      \"largoCm\": 40,\n      \"anchoCm\": 30,\n      \"altoCm\": 30\n    }\n  ],\n  \"pagadoPor\": \"REMITENTE\",\n  \"tipoPago\": \"CUENTA_CORRIENTE\",\n  \"idCuenta\": {{idCuenta}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1133,8 +1189,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null) { pm.environment.set(\"idOrden\", v); console.log(\"idOrden =\", v); } } catch (e) {}",
-                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).numeroOT; if (v !== undefined && v !== null) { pm.environment.set(\"numeroOT\", v); console.log(\"numeroOT =\", v); } } catch (e) {}"
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null && v !== \"\") { pm.environment.set(\"idOrdenCuentaCorriente\", v); console.log(\"idOrdenCuentaCorriente =\", v); } } catch (e) {}"
                 ]
               }
             }
@@ -1234,18 +1290,61 @@
           }
         },
         {
+          "name": "Crear OT para anular",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes-transporte",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordenes-transporte"
+              ]
+            },
+            "description": "OT desechable para probar la anulación sin tocar la OT principal del flujo. Guarda idOrdenAnular.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idCliente}},\n  \"idComunaOrigen\": 113,\n  \"idComunaDestino\": 2,\n  \"direccionOrigen\": \"Av. Presidente Ibáñez 1000\",\n  \"contactoOrigen\": \"Bodega remitente\",\n  \"telefonoOrigen\": \"+56911111111\",\n  \"direccionDestino\": \"O'Higgins 500\",\n  \"contactoDestino\": \"Recepción destino\",\n  \"telefonoDestino\": \"+56922222222\",\n  \"referenciaEntrega\": \"Entregar en recepción\",\n  \"tipoZona\": \"URBANA\",\n  \"tipoServicio\": \"NORMAL\",\n  \"tipoDocumento\": \"SIN_DOCUMENTO\",\n  \"requiereRetiro\": false,\n  \"cargas\": [\n    {\n      \"descripcion\": \"Caja con repuestos\",\n      \"cantidad\": 2,\n      \"idTipoBulto\": 1,\n      \"pesoUnitario\": 15,\n      \"largoCm\": 40,\n      \"anchoCm\": 30,\n      \"altoCm\": 30\n    }\n  ],\n  \"pagadoPor\": \"REMITENTE\",\n  \"tipoPago\": \"CONTADO\",\n  \"metodoPago\": \"EFECTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "try { const j = pm.response.json(); const v = (j.orden || j.data || j).idOrden; if (v !== undefined && v !== null && v !== \"\") { pm.environment.set(\"idOrdenAnular\", v); console.log(\"idOrdenAnular =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Anular OT",
           "request": {
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/ordenes-transporte/{{idOrden}}/anular",
+              "raw": "{{baseUrl}}/ordenes-transporte/{{idOrdenAnular}}/anular",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "ordenes-transporte",
-                "{{idOrden}}",
+                "{{idOrdenAnular}}",
                 "anular"
               ]
             }
@@ -1273,14 +1372,34 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigo\": \"{{numeroOT}}\",\n  \"idSucursal\": 1\n}",
+              "raw": "{\n  \"codigo\": \"{{numeroOTRechazada}}\",\n  \"idSucursal\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "description": "Solo funciona con una OT rechazada en destino o con devolución pedida por el cliente. Escribe su número en la variable de colección numeroOTRechazada; si está vacía, la petición se salta."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Sin una OT rechazada no hay nada que reingresar: se salta en vez de fallar.",
+                  "if (!String(pm.variables.get(\"numeroOTRechazada\") || \"\").trim()) {",
+                  "    console.log(\"Reingreso saltado: completa la variable numeroOTRechazada con una OT rechazada.\");",
+                  "    if (pm.execution && pm.execution.skipRequest) {",
+                  "        pm.execution.skipRequest();",
+                  "    } else {",
+                  "        throw new Error(\"Completa la variable numeroOTRechazada con una OT rechazada para probar el reingreso.\");",
+                  "    }",
+                  "}"
+                ]
+              }
             }
-          }
+          ]
         }
       ]
     },
@@ -1342,7 +1461,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "try { const j = pm.response.json(); const v = ((j.bultos || j.data || j.items || [])[0] || {}).idBulto; if (v !== undefined && v !== null) { pm.environment.set(\"idBulto\", v); console.log(\"idBulto =\", v); } } catch (e) {}"
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -1418,7 +1537,8 @@
                   "language": "json"
                 }
               }
-            }
+            },
+            "description": "Ingresa a la sucursal 1 el primer bulto de la OT principal (idBulto)."
           }
         },
         {
@@ -1445,6 +1565,40 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"idSucursalOrigen\": 1,\n  \"idSucursalDestino\": 2,\n  \"observacion\": \"Traslado Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Envía el bulto de la sucursal 1 a la 2. Solo funciona si está en bodega."
+          }
+        },
+        {
+          "name": "Recibir traslado en destino",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bultos/{{idBulto}}/recibir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bultos",
+                "{{idBulto}}",
+                "recibir"
+              ]
+            },
+            "description": "La sucursal 2 recibe el bulto trasladado: vuelve a quedar en bodega y disponible para un manifiesto.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSucursal\": 2,\n  \"observacion\": \"Llegada del traslado Postman\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1563,7 +1717,19 @@
                 }
               }
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "try { const j = pm.response.json(); const v = ((j.bultos || []).find((b) => !b.enManifiesto) || (j.bultos || [])[0] || {}).idBulto; if (v !== undefined && v !== null && v !== \"\") { pm.environment.set(\"idBultoManifiesto\", v); console.log(\"idBultoManifiesto =\", v); } } catch (e) {}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Escanear OT (cargar todos)",
@@ -1603,7 +1769,7 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/manifiestos/{{idManifiesto}}/bultos/{{idBulto}}",
+              "raw": "{{baseUrl}}/manifiestos/{{idManifiesto}}/bultos/{{idBultoManifiesto}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1611,9 +1777,10 @@
                 "manifiestos",
                 "{{idManifiesto}}",
                 "bultos",
-                "{{idBulto}}"
+                "{{idBultoManifiesto}}"
               ]
-            }
+            },
+            "description": "Quita uno de los bultos cargados (idBultoManifiesto). La OT principal tiene 2 bultos, así que queda uno para salir a ruta."
           }
         },
         {
@@ -1712,14 +1879,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/pagos/ot/{{numeroOT}}",
+              "raw": "{{baseUrl}}/pagos/ot/{{numeroOTPorPagar}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "pagos",
                 "ot",
-                "{{numeroOT}}"
+                "{{numeroOTPorPagar}}"
               ]
             }
           }
@@ -1747,7 +1914,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"numeroOT\": \"{{numeroOT}}\"\n}",
+              "raw": "{\n  \"numeroOT\": \"{{numeroOTPorPagar}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2022,6 +2189,18 @@
           ]
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "idClienteCuentaCorriente",
+      "value": "1",
+      "description": "Empresa con cuenta corriente activa (Cliente Prueba SpA). Debe calzar con idCuenta."
+    },
+    {
+      "key": "numeroOTRechazada",
+      "value": "",
+      "description": "Número de una OT rechazada en destino, para probar el reingreso a bodega."
     }
   ]
 }
