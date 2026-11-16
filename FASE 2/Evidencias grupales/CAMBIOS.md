@@ -1,4 +1,4 @@
-# Cambios de la rama `claude/tareas-capstone`
+# Cambios de la rama
 
 Cinco mejoras chicas al sistema Marexpress. Cada tarea tiene su propio commit.
 No se tocó la colección de Postman, los triggers de la base ni el `.env`.
