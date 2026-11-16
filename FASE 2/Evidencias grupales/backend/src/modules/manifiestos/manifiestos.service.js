@@ -739,7 +739,8 @@ export const recepcionarTraspaso = async (idManifiesto, idUsuario) => {
         }
         return tx.manifiesto.update({
             where: { idManifiesto: manifiesto.idManifiesto },
-            data: { estado: "FINALIZADO" },
+            // RF-45: la fecha de cierre se guarda junto con el cambio de estado.
+            data: { estado: "FINALIZADO", fechaCierre: new Date() },
             include: incluirManifiesto
         });
     });
@@ -805,8 +806,29 @@ export const cuadrarManifiesto = async (idManifiesto, idUsuario, idsOrden, metod
         });
         return tx.manifiesto.update({
             where: { idManifiesto: manifiesto.idManifiesto },
-            data: { estado: restantes === 0 ? "FINALIZADO" : "EN_RUTA" },
+            // RF-45: si era el último pago, el manifiesto se cierra y queda la fecha de cierre.
+            data: restantes === 0
+                ? { estado: "FINALIZADO", fechaCierre: new Date() }
+                : { estado: "EN_RUTA" },
             include: incluirManifiesto
         });
+    });
+};
+
+// RF-45: kilometraje con que volvió el camión. Solo en manifiestos finalizados; se puede corregir.
+export const registrarKilometrajeFinal = async (idManifiesto, kilometrajeFinal) => {
+    const texto = String(kilometrajeFinal ?? "").trim();
+    const kilometraje = Number(texto);
+    if (!/^\d+$/.test(texto) || !Number.isInteger(kilometraje) || kilometraje <= 0 || kilometraje > 2147483647) {
+        throw errorHttp("El kilometraje final debe ser un número entero mayor que 0");
+    }
+    const manifiesto = await obtenerManifiestoPorId(idManifiesto);
+    if (manifiesto.estado !== "FINALIZADO") {
+        throw errorHttp("El kilometraje final se registra cuando el manifiesto está finalizado");
+    }
+    return prisma.manifiesto.update({
+        where: { idManifiesto: manifiesto.idManifiesto },
+        data: { kilometrajeFinal: kilometraje },
+        include: incluirManifiesto
     });
 };

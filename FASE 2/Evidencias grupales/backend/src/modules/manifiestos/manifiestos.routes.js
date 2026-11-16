@@ -10,7 +10,8 @@ import {
     quitarBultoManifiesto,
     salirARuta,
     recepcionarEnDestino,
-    cuadrarPagos
+    cuadrarPagos,
+    guardarKilometraje
 } from "./manifiestos.controller.js";
 
 const router = Router();
@@ -24,6 +25,7 @@ router.post("/:id/escanear", autorizarRoles(...roles), escanearManifiesto);
 router.post("/:id/salir", autorizarRoles(...roles), salirARuta);
 router.post("/:id/recepcionar", autorizarRoles(...roles), recepcionarEnDestino);
 router.post("/:id/cuadrar", autorizarRoles("ADMINISTRADOR"), cuadrarPagos);
+router.patch("/:id/kilometraje", autorizarRoles(...roles), guardarKilometraje);
 router.delete("/:id/bultos/:idBulto", autorizarRoles(...roles), quitarBultoManifiesto);
 router.put("/:id", autorizarRoles(...roles), editarManifiesto);
 router.get("/:id", autorizarRoles(...roles), detalleManifiesto);

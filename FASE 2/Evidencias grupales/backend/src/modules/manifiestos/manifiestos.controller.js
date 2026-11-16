@@ -7,7 +7,8 @@ import {
     quitarBultoDelManifiesto,
     sacarManifiestoARuta,
     recepcionarTraspaso,
-    cuadrarManifiesto
+    cuadrarManifiesto,
+    registrarKilometrajeFinal
 } from "./manifiestos.service.js";
 
 const responder = (res, error) => {
@@ -117,6 +118,19 @@ export const cuadrarPagos = async (req, res) => {
             mensaje: manifiesto.estado === "FINALIZADO"
                 ? `Manifiesto ${manifiesto.numeroManifiesto} cuadrado. No quedan órdenes por dar de baja.`
                 : "La orden quedó pagada con el método elegido. Sigue con la siguiente.",
+            manifiesto
+        });
+    } catch (error) {
+        responder(res, error);
+    }
+};
+
+export const guardarKilometraje = async (req, res) => {
+    try {
+        const manifiesto = await registrarKilometrajeFinal(req.params.id, req.body?.kilometrajeFinal);
+        res.json({
+            ok: true,
+            mensaje: `Kilometraje final de ${manifiesto.numeroManifiesto} guardado.`,
             manifiesto
         });
     } catch (error) {

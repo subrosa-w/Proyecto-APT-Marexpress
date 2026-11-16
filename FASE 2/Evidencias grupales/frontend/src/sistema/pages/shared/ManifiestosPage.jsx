@@ -480,6 +480,24 @@ export default function ManifiestosPage() {
         }
     };
 
+    // Registra o corrige el kilometraje con que volvió el camión (solo manifiestos finalizados).
+    const guardarKilometraje = async (kilometrajeFinal) => {
+        setCargando(true);
+        try {
+            const resultado = await api(`/manifiestos/${activo.idManifiesto}/kilometraje`, {
+                method: "PATCH",
+                body: JSON.stringify({ kilometrajeFinal })
+            });
+            setActivo(resultado.manifiesto);
+            aviso(resultado.mensaje, "success");
+            await cargarListado();
+        } catch (error) {
+            aviso(error.message, "error");
+        } finally {
+            setCargando(false);
+        }
+    };
+
     const darDeBaja = async (idOrden, metodoPago) => {
         setCargando(true);
         try {
@@ -723,6 +741,9 @@ export default function ManifiestosPage() {
                     <p className="mx-note">
                         Sale {formatearFechaHora(activo.fechaSalidaProgramada)} · {etiquetaComuna(activo.comuna) || "Sin ciudad"} · Camión {activo.vehiculo?.patente || "—"} · Conductor {activo.conductor ? `${activo.conductor.nombre} ${activo.conductor.apellido}` : "—"} · Peonetas {(activo.manifiesto_usuario || []).map((item) => nombreCompleto(item.usuario)).join(", ") || "—"}
                     </p>
+                    {activo.estado === "FINALIZADO" ? (
+                        <CierreManifiesto key={activo.idManifiesto} manifiesto={activo} cargando={cargando} onGuardar={guardarKilometraje} />
+                    ) : null}
                     {esAdmin && activo.estado === "EN_RUTA" && activo.tipo !== "TRASPASO" ? (
                         <RecepcionManifiesto manifiesto={activo} cargando={cargando} onBaja={darDeBaja} />
                     ) : (
@@ -1057,6 +1078,50 @@ export default function ManifiestosPage() {
                 </div>
             </section>
             ) : null}
+        </>
+    );
+}
+
+// Cierre del manifiesto finalizado: fecha de cierre y kilometraje final del camión.
+function CierreManifiesto({ manifiesto, cargando, onGuardar }) {
+    const [kilometraje, setKilometraje] = useState(manifiesto.kilometrajeFinal ? String(manifiesto.kilometrajeFinal) : "");
+    const valor = Number(kilometraje);
+    const valido = /^\d+$/.test(kilometraje.trim()) && valor > 0;
+
+    const guardar = (event) => {
+        event.preventDefault();
+        if (valido) {
+            onGuardar(valor);
+        }
+    };
+
+    return (
+        <>
+            <div className="mx-ciudad-info">
+                <p><span>Fecha de cierre</span><strong>{formatearFechaHora(manifiesto.fechaCierre)}</strong></p>
+                <p><span>Kilometraje final</span><strong>{manifiesto.kilometrajeFinal ? `${Number(manifiesto.kilometrajeFinal).toLocaleString("es-CL")} km` : "Sin registrar"}</strong></p>
+            </div>
+            <form className="ot-grid" onSubmit={guardar}>
+                <div className="field">
+                    <label htmlFor="km-final">Kilometraje final del camión</label>
+                    <input
+                        id="km-final"
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputMode="numeric"
+                        placeholder="Ej. 125400"
+                        title="Kilómetros que marca el camión al volver, número entero"
+                        value={kilometraje}
+                        onChange={(event) => setKilometraje(event.target.value)}
+                    />
+                </div>
+                <div className="mx-form-actions">
+                    <button type="submit" className="button-primary" disabled={cargando || !valido}>
+                        {manifiesto.kilometrajeFinal ? "Corregir kilometraje" : "Guardar kilometraje"}
+                    </button>
+                </div>
+            </form>
         </>
     );
 }

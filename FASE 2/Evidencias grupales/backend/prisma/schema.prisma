@@ -184,6 +184,8 @@ model manifiesto {
   fechaCreacion           DateTime             @default(now()) @db.DateTime(0)
   fechaSalida             DateTime?            @db.DateTime(0)
   fechaSalidaProgramada   DateTime?            @db.DateTime(0)
+  fechaCierre             DateTime?            @db.DateTime(0)
+  kilometrajeFinal        Int?
   observacion             String?              @db.VarChar(250)
   estado                  String               @default("PREPARACION") @db.VarChar(50)
   tipo                    String               @default("REPARTO") @db.VarChar(20)
