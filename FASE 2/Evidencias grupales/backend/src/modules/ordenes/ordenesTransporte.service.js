@@ -10,10 +10,10 @@ import {
     zonaTarifaria
 } from "../tarifas/tarifaOficial.js";
 
-const telefonoOrden = (valor) => {
+const telefonoOrden = (valor, campo) => {
     const normal = normalizarTelefono(valor);
     if (String(valor || "").trim() && normal === "") {
-        throw errorHttp("El teléfono debe incluir un código conocido, por ejemplo +569", 400);
+        throw errorHttp(`El teléfono de ${campo} debe incluir un código conocido, por ejemplo +569`, 400);
     }
     return normal;
 };
@@ -1337,7 +1337,7 @@ export const crearOrdenTransporte = async (datos, idUsuario) => {
                         null,
 
 
-                    telefonoOrigen: telefonoOrden(datos.telefonoOrigen),
+                    telefonoOrigen: telefonoOrden(datos.telefonoOrigen, "origen"),
 
 
 
@@ -1354,7 +1354,7 @@ export const crearOrdenTransporte = async (datos, idUsuario) => {
                         null,
 
 
-                    telefonoDestino: telefonoOrden(datos.telefonoDestino),
+                    telefonoDestino: telefonoOrden(datos.telefonoDestino, "destino"),
 
 
                     referenciaEntrega:
@@ -2187,10 +2187,10 @@ export const actualizarOrdenTransporte = async (idOrden, datos, idUsuario) => {
         data: {
             direccionOrigen: datos.direccionOrigen.trim(),
             contactoOrigen: datos.contactoOrigen?.trim() || null,
-            telefonoOrigen: telefonoOrden(datos.telefonoOrigen),
+            telefonoOrigen: telefonoOrden(datos.telefonoOrigen, "origen"),
             direccionDestino: datos.direccionDestino.trim(),
             contactoDestino: datos.contactoDestino?.trim() || null,
-            telefonoDestino: telefonoOrden(datos.telefonoDestino),
+            telefonoDestino: telefonoOrden(datos.telefonoDestino, "destino"),
             referenciaEntrega: datos.referenciaEntrega?.trim() || null,
             idComunaOrigen: Number(datos.idComunaOrigen),
             idComunaDestino: Number(datos.idComunaDestino),

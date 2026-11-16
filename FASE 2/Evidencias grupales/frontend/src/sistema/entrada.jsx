@@ -31,7 +31,13 @@ export const correoValido = (valor) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(valor || "").trim());
 
 const partirTelefono = (valor) => {
-    const compacto = String(valor || "").replace(/[\s()-]/g, "");
+    let compacto = String(valor || "").replace(/[\s()-]/g, "");
+    // Números chilenos guardados sin código: 912345678 o 56912345678.
+    if (/^\d{9}$/.test(compacto)) {
+        compacto = `+56${compacto}`;
+    } else if (/^56\d{9}$/.test(compacto)) {
+        compacto = `+${compacto}`;
+    }
     const prefijo = prefijosTelefono.find((item) => compacto.startsWith(item.valor))?.valor || "+569";
     const numero = compacto.startsWith(prefijo)
         ? compacto.slice(prefijo.length).replace(/\D/g, "")
