@@ -3,10 +3,13 @@
   diaChile y rango     convierten el período (día, semana, mes, año) en fechas
   serieDelPeriodo      arma la serie de los gráficos
   obtenerInforme       devuelve ingresos, órdenes, entregas y camiones
+  seccionesDePagos     pagos por método y cuadraturas del período
+  seccionMorosidad     deuda por cliente al día de hoy (no depende del período)
   Un manifiesto entra al informe de camiones solo si tiene órdenes y cada
   una quedó Entregada o Rechazada. La fecha que cuenta es la de salida.
 */
 import prisma from "../../config/prisma.js";
+import { calcularMorosidad } from "../pagos/morosidad.service.js";
 
 const diaChile = (fecha = new Date()) =>
     new Intl.DateTimeFormat("en-CA", {
@@ -71,6 +74,145 @@ const serieDelPeriodo = (modo, desde, hasta, porClave) => {
         cursor.setDate(cursor.getDate() + 1);
     }
     return puntos;
+};
+
+// Valores de pago.metodoPago (ver pagos.service.js y manifiestos.service.js).
+// Webpay guarda TARJETA y deja "Webpay ..." en la observación: así se separa de la tarjeta presencial.
+const NOMBRES_METODO = {
+    EFECTIVO: "Efectivo",
+    TRANSFERENCIA: "Transferencia",
+    TARJETA: "Tarjeta presencial (caja o reparto)",
+    WEBPAY: "Tarjeta por Webpay",
+    CHEQUE: "Cheque",
+    SIN_METODO: "Sin método registrado"
+};
+
+const claveMetodo = (pago) => {
+    const metodo = String(pago.metodoPago || "").trim().toUpperCase();
+    const porWebpay = String(pago.observacion || "").trim().toUpperCase().startsWith("WEBPAY");
+    if (metodo === "TRANSBANK" || (metodo === "TARJETA" && porWebpay)) {
+        return "WEBPAY";
+    }
+    return metodo || "SIN_METODO";
+};
+
+const nombreMetodo = (clave) => NOMBRES_METODO[clave] || clave;
+
+// Pagos PAGADOS cuya fechaPago cae en el período: resumen por método y lista de cuadraturas.
+const seccionesDePagos = async (desde, hasta) => {
+    const pagos = await prisma.pago.findMany({
+        where: {
+            estadoPago: "PAGADO",
+            fechaPago: { gte: desde, lt: hasta }
+        },
+        orderBy: { fechaPago: "desc" },
+        select: {
+            idPago: true,
+            fechaPago: true,
+            monto: true,
+            metodoPago: true,
+            observacion: true,
+            orden_transporte: {
+                select: {
+                    numeroOT: true,
+                    cliente: { select: { razonSocial: true } }
+                }
+            }
+        }
+    });
+
+    const porMetodo = new Map();
+    for (const pago of pagos) {
+        const clave = claveMetodo(pago);
+        const actual = porMetodo.get(clave) || { metodo: clave, nombre: nombreMetodo(clave), cantidad: 0, monto: 0 };
+        actual.cantidad += 1;
+        actual.monto += dinero(pago.monto);
+        porMetodo.set(clave, actual);
+    }
+
+    // cuadrarManifiesto deja la observación "Cuadrado en MAN-000001: efectivo".
+    const cuadrados = pagos
+        .map((pago) => ({ pago, coincide: /^Cuadrado en (\S+?):/i.exec(String(pago.observacion || "")) }))
+        .filter((item) => item.coincide)
+        .map(({ pago, coincide }) => ({
+            idPago: pago.idPago,
+            fecha: pago.fechaPago,
+            manifiesto: coincide[1],
+            numeroOT: pago.orden_transporte?.numeroOT || "—",
+            cliente: pago.orden_transporte?.cliente?.razonSocial || "—",
+            metodo: nombreMetodo(claveMetodo(pago)),
+            monto: dinero(pago.monto)
+        }));
+
+    return {
+        pagos: {
+            porMetodo: [...porMetodo.values()].sort((a, b) => b.monto - a.monto),
+            cantidad: pagos.length,
+            monto: pagos.reduce((suma, pago) => suma + dinero(pago.monto), 0)
+        },
+        cuadraturas: {
+            detalle: cuadrados,
+            cantidad: cuadrados.length,
+            total: cuadrados.reduce((suma, item) => suma + item.monto, 0)
+        }
+    };
+};
+
+// Deuda por cliente al día de hoy, con el mismo cálculo que usan las alertas de morosidad.
+const seccionMorosidad = async () => {
+    const { diasGracia, otImpagas, cuentasSobreLimite } = await calcularMorosidad();
+    const porCliente = new Map();
+    const filaDe = (item) => {
+        if (!porCliente.has(item.idCliente)) {
+            porCliente.set(item.idCliente, {
+                idCliente: item.idCliente,
+                cliente: item.cliente,
+                rut: item.rut,
+                otImpagas: [],
+                montoOtImpagas: 0,
+                sobreLimite: false,
+                saldoCuenta: 0,
+                limiteCuenta: 0,
+                excesoCuenta: 0,
+                deudaTotal: 0
+            });
+        }
+        return porCliente.get(item.idCliente);
+    };
+    for (const orden of otImpagas) {
+        const fila = filaDe(orden);
+        fila.otImpagas.push({
+            numeroOT: orden.numeroOT,
+            monto: orden.monto,
+            fechaEntrega: orden.fechaEntrega,
+            diasDesdeEntrega: orden.diasDesdeEntrega
+        });
+        fila.montoOtImpagas += orden.monto;
+    }
+    for (const cuenta of cuentasSobreLimite) {
+        const fila = filaDe(cuenta);
+        fila.sobreLimite = true;
+        fila.saldoCuenta = cuenta.saldo;
+        fila.limiteCuenta = cuenta.limite;
+        fila.excesoCuenta = cuenta.exceso;
+    }
+    const clientes = [...porCliente.values()]
+        .map((fila) => ({ ...fila, deudaTotal: fila.montoOtImpagas + fila.saldoCuenta }))
+        .sort((a, b) => b.deudaTotal - a.deudaTotal);
+
+    return {
+        fecha: new Date(),
+        diasGracia,
+        clientes,
+        totales: {
+            clientes: clientes.length,
+            otImpagas: otImpagas.length,
+            montoOtImpagas: otImpagas.reduce((suma, orden) => suma + orden.monto, 0),
+            cuentasSobreLimite: cuentasSobreLimite.length,
+            saldoCuentasSobreLimite: cuentasSobreLimite.reduce((suma, cuenta) => suma + cuenta.saldo, 0),
+            deudaTotal: clientes.reduce((suma, fila) => suma + fila.deudaTotal, 0)
+        }
+    };
 };
 
 export const obtenerInforme = async ({ periodo = "mes", fecha } = {}) => {
@@ -222,11 +364,26 @@ export const obtenerInforme = async ({ periodo = "mes", fecha } = {}) => {
         porDia.set(dia, actual);
     }
 
+    // Secciones nuevas. Si una falla, el resto del informe se entrega igual y esa sección va en null.
+    const [seccionPagos, morosidad] = await Promise.all([
+        seccionesDePagos(desde, hasta).catch((error) => {
+            console.error("Error en la sección de pagos del informe:", error);
+            return { pagos: null, cuadraturas: null };
+        }),
+        seccionMorosidad().catch((error) => {
+            console.error("Error en la sección de morosidad del informe:", error);
+            return null;
+        })
+    ]);
+
     return {
         periodo: modo,
         etiqueta,
         desde,
         hasta,
+        pagos: seccionPagos.pagos,
+        cuadraturas: seccionPagos.cuadraturas,
+        morosidad,
         totales: {
             ingresos: activas.reduce((suma, orden) => suma + dinero(orden.valorTotal), 0),
             ordenes: activas.length,

@@ -6,6 +6,8 @@
   FUNCIONES: elige día, semana, mes o año; arma el Excel de entregas
   y el Excel de camiones (todos o una patente). Solo entran manifiestos
   cerrados: cada OT entregada o rechazada.
+  También muestra pagos por método, cuadraturas del período y la
+  morosidad al día de hoy, cada una con su Excel y su PDF.
 */
 import { useEffect, useState } from "react";
 import { jsPDF } from "jspdf";
@@ -278,6 +280,60 @@ export default function ReportesPage() {
             }
         }
     }[periodo];
+    // Pagos PAGADOS del período agrupados por método, con una fila final de total para Excel/PDF.
+    const columnasPagos = [
+        { clave: "nombre", titulo: "Método" },
+        { clave: "cantidad", titulo: "Pagos" },
+        { clave: "montoTexto", titulo: "Monto" }
+    ];
+    const pagosMetodo = (informe?.pagos?.porMetodo || []).map((item) => ({
+        ...item,
+        montoTexto: formatearCLP(item.monto)
+    }));
+    const pagosMetodoExport = pagosMetodo.length
+        ? [...pagosMetodo, { nombre: "Total", cantidad: informe?.pagos?.cantidad || 0, montoTexto: formatearCLP(informe?.pagos?.monto || 0) }]
+        : [];
+
+    // Pagos que el administrador cuadró en un manifiesto durante el período.
+    const columnasCuadraturas = [
+        { clave: "fechaTexto", titulo: "Fecha" },
+        { clave: "manifiesto", titulo: "Manifiesto" },
+        { clave: "numeroOT", titulo: "OT" },
+        { clave: "metodo", titulo: "Método" },
+        { clave: "montoTexto", titulo: "Monto" }
+    ];
+    const cuadraturas = (informe?.cuadraturas?.detalle || []).map((item) => ({
+        ...item,
+        fechaTexto: formatearFechaHora(item.fecha),
+        montoTexto: formatearCLP(item.monto)
+    }));
+    const cuadraturasExport = cuadraturas.length
+        ? [...cuadraturas, { fechaTexto: "Total", manifiesto: "", numeroOT: "", metodo: "", montoTexto: formatearCLP(informe?.cuadraturas?.total || 0) }]
+        : [];
+
+    // Morosidad: estado de hoy, una fila por cliente. No cambia con el período elegido.
+    const columnasMorosidad = [
+        { clave: "cliente", titulo: "Cliente" },
+        { clave: "rut", titulo: "RUT" },
+        { clave: "otTexto", titulo: "OT impagas" },
+        { clave: "montoOtTexto", titulo: "Monto OT impagas" },
+        { clave: "cuentaTexto", titulo: "Cuenta corriente" },
+        { clave: "deudaTexto", titulo: "Deuda total" }
+    ];
+    const morosos = (informe?.morosidad?.clientes || []).map((item) => ({
+        ...item,
+        otTexto: (item.otImpagas || []).map((orden) => `${orden.numeroOT} (${orden.diasDesdeEntrega} días)`).join(", ") || "—",
+        montoOtTexto: formatearCLP(item.montoOtImpagas),
+        cuentaTexto: item.sobreLimite
+            ? `Sobre el límite: debe ${formatearCLP(item.saldoCuenta)} de ${formatearCLP(item.limiteCuenta)}`
+            : "—",
+        deudaTexto: formatearCLP(item.deudaTotal)
+    }));
+    const morososExport = morosos.length
+        ? [...morosos, { cliente: "Total", rut: "", otTexto: "", montoOtTexto: formatearCLP(informe?.morosidad?.totales?.montoOtImpagas || 0), cuentaTexto: "", deudaTexto: formatearCLP(informe?.morosidad?.totales?.deudaTotal || 0) }]
+        : [];
+    const diasGracia = informe?.morosidad?.diasGracia || 7;
+
     const camionesPeriodo = informe?.vueltas || [];
     const camionElegido = camionesPeriodo.find((item) => item.patente === camionInforme) || null;
     const manifiestosCamion = (informe?.detalleVueltas || []).filter((item) => !camionInforme || item.patente === camionInforme);
@@ -564,6 +620,186 @@ export default function ReportesPage() {
                                     <td>{item.resultado}</td>
                                     <td>{item.receptor}</td>
                                     <td>{item.valorTexto}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* Pagos PAGADOS del período, agrupados por método de pago. */}
+            <section className="admin-card">
+                <header className="admin-card-header">
+                    <div>
+                        <span>PAGOS</span>
+                        <h2>Pagos del período por método</h2>
+                    </div>
+                    <div className="mx-acciones">
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => descargarExcel(`pagos-por-metodo-${informe?.etiqueta || fecha}`, columnasPagos, pagosMetodoExport)}
+                        >
+                            Excel
+                        </button>
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => descargarPdf(`Pagos por método ${tituloPeriodo}`, columnasPagos, pagosMetodoExport)}
+                        >
+                            PDF
+                        </button>
+                    </div>
+                </header>
+                <p className="mx-note">
+                    Pagos ya pagados cuya fecha de pago cae en el período. Webpay se muestra aparte de la tarjeta presencial.
+                </p>
+                {informe && !informe.pagos ? <p className="mx-note">No fue posible calcular los pagos del período.</p> : null}
+                <div className="mx-ciudad-info">
+                    <p><span>Pagos</span><strong>{informe?.pagos?.cantidad || 0}</strong></p>
+                    <p><span>Monto pagado</span><strong>{formatearCLP(informe?.pagos?.monto || 0)}</strong></p>
+                </div>
+                <div className="mx-table-wrap">
+                    <table className="mx-table">
+                        <thead>
+                            <tr>
+                                <th>Método</th>
+                                <th>Pagos</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {pagosMetodo.length === 0 ? (
+                                <tr><td colSpan={3} className="mx-empty">No hay pagos pagados en este período.</td></tr>
+                            ) : pagosMetodo.map((item) => (
+                                <tr key={item.metodo}>
+                                    <td>{item.nombre}</td>
+                                    <td>{item.cantidad}</td>
+                                    <td>{item.montoTexto}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* Pagos dados de baja (cuadrados) en un manifiesto durante el período. */}
+            <section className="admin-card">
+                <header className="admin-card-header">
+                    <div>
+                        <span>CUADRATURAS</span>
+                        <h2>Cuadraturas del período</h2>
+                    </div>
+                    <div className="mx-acciones">
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => descargarExcel(`cuadraturas-${informe?.etiqueta || fecha}`, columnasCuadraturas, cuadraturasExport)}
+                        >
+                            Excel
+                        </button>
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => descargarPdf(`Cuadraturas ${tituloPeriodo}`, columnasCuadraturas, cuadraturasExport)}
+                        >
+                            PDF
+                        </button>
+                    </div>
+                </header>
+                <p className="mx-note">
+                    Pagos que el administrador cuadró al recepcionar un manifiesto de reparto.
+                </p>
+                {informe && !informe.cuadraturas ? <p className="mx-note">No fue posible calcular las cuadraturas del período.</p> : null}
+                <div className="mx-ciudad-info">
+                    <p><span>Pagos cuadrados</span><strong>{informe?.cuadraturas?.cantidad || 0}</strong></p>
+                    <p><span>Total cuadrado</span><strong>{formatearCLP(informe?.cuadraturas?.total || 0)}</strong></p>
+                </div>
+                <div className="mx-table-wrap">
+                    <table className="mx-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Manifiesto</th>
+                                <th>OT</th>
+                                <th>Método</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {cuadraturas.length === 0 ? (
+                                <tr><td colSpan={5} className="mx-empty">No hay cuadraturas en este período.</td></tr>
+                            ) : cuadraturas.map((item) => (
+                                <tr key={item.idPago}>
+                                    <td>{item.fechaTexto}</td>
+                                    <td>{item.manifiesto}</td>
+                                    <td>{item.numeroOT}</td>
+                                    <td>{item.metodo}</td>
+                                    <td>{item.montoTexto}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* Morosidad: deuda por cliente al día de hoy. No depende del período elegido arriba. */}
+            <section className="admin-card">
+                <header className="admin-card-header">
+                    <div>
+                        <span>MOROSIDAD</span>
+                        <h2>Morosidad al día de hoy (no depende del período)</h2>
+                    </div>
+                    <div className="mx-acciones">
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => descargarExcel(`morosidad-${hoyChile()}`, columnasMorosidad, morososExport)}
+                        >
+                            Excel
+                        </button>
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => descargarPdf(`Morosidad al ${textoDia(hoyChile())}`, columnasMorosidad, morososExport)}
+                        >
+                            PDF
+                        </button>
+                    </div>
+                </header>
+                <p className="mx-note">
+                    OT entregadas hace más de {diasGracia} días que siguen sin pagar (no incluye cuenta corriente) y cuentas corrientes con deuda sobre su límite de crédito.
+                </p>
+                {informe && !informe.morosidad ? <p className="mx-note">No fue posible calcular la morosidad.</p> : null}
+                <div className="mx-ciudad-info">
+                    <p><span>Clientes morosos</span><strong>{informe?.morosidad?.totales?.clientes || 0}</strong></p>
+                    <p><span>OT impagas</span><strong>{informe?.morosidad?.totales?.otImpagas || 0}</strong></p>
+                    <p><span>Cuentas sobre el límite</span><strong>{informe?.morosidad?.totales?.cuentasSobreLimite || 0}</strong></p>
+                    <p><span>Deuda total</span><strong>{formatearCLP(informe?.morosidad?.totales?.deudaTotal || 0)}</strong></p>
+                </div>
+                <div className="mx-table-wrap">
+                    <table className="mx-table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>RUT</th>
+                                <th>OT impagas</th>
+                                <th>Monto OT impagas</th>
+                                <th>Cuenta corriente</th>
+                                <th>Deuda total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {morosos.length === 0 ? (
+                                <tr><td colSpan={6} className="mx-empty">No hay clientes morosos hoy.</td></tr>
+                            ) : morosos.map((item) => (
+                                <tr key={item.idCliente}>
+                                    <td>{item.cliente}</td>
+                                    <td>{item.rut}</td>
+                                    <td>{item.otTexto}</td>
+                                    <td>{item.montoOtTexto}</td>
+                                    <td>{item.cuentaTexto}</td>
+                                    <td>{item.deudaTexto}</td>
                                 </tr>
                             ))}
                         </tbody>
