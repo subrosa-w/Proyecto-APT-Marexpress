@@ -39,6 +39,7 @@ export const obtenerUsuarios = async () => {
             estado: true,
             registroPendiente: true,
             correoVerificadoEn: true,
+            ultimoAcceso: true,
             rol: {
                 select: {
                     idRol: true,

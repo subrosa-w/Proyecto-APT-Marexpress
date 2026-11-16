@@ -526,6 +526,7 @@ model usuario {
   nombreUsuario       String?               @unique(map: "uq_usuario_nombreUsuario") @db.VarChar(50)
   correoVerificadoEn  DateTime?             @db.DateTime(0)
   registroPendiente   Boolean               @default(false)
+  ultimoAcceso        DateTime?             @db.DateTime(0)
   cliente_usuario     cliente_usuario[]
   cotizacion          cotizacion[]
   entrega_ot          entrega_ot[]

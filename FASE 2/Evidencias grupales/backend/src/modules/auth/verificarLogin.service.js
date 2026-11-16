@@ -12,6 +12,7 @@ import { generarTokenAcceso } from "../../common/token.service.js";
  * - Valida el OTP con propósito LOGIN.
  * - Obtiene internamente al usuario.
  * - Comprueba que siga activo.
+ * - Guarda la fecha del último acceso (RF-04).
  * - Genera JWT solo después del OTP correcto.
  *
  * © 2026 MAREXPRESS. Todos los derechos reservados.
@@ -74,6 +75,12 @@ export const verificarLogin = async ({
             "Solicitud de verificación inválida"
         );
     }
+
+    // RF-04: el login terminó bien (OTP correcto y usuario activo); se registra el último acceso.
+    await prisma.usuario.update({
+        where: { idUsuario: usuario.idUsuario },
+        data: { ultimoAcceso: new Date() }
+    });
 
     const token = generarTokenAcceso({
         idUsuario: usuario.idUsuario,

@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api.js";
 import Message from "../../components/Message.jsx";
+import { formatearFechaHora } from "../../utils.js";
 
 export default function UsuariosPage() {
     const [usuarios, setUsuarios] = useState([]);
@@ -77,6 +78,7 @@ export default function UsuariosPage() {
                             <th>Correo</th>
                             <th>Rol</th>
                             <th>Estado</th>
+                            <th>Último acceso</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,6 +103,7 @@ export default function UsuariosPage() {
                                     </select>
                                 </td>
                                 <td>{usuario.estado ? "Activo" : "Inactivo"}</td>
+                                <td>{usuario.ultimoAcceso ? formatearFechaHora(usuario.ultimoAcceso) : "Nunca"}</td>
                             </tr>
                         ))}
                     </tbody>
