@@ -226,6 +226,7 @@ model manifiesto_ot {
   idOrden          Int
   fechaAsignacion  DateTime           @default(now()) @db.DateTime(0)
   observacion      String?            @db.VarChar(200)
+  ordenCarga       Int?
   entrega_ot       entrega_ot?
   manifiesto_carga manifiesto_carga[]
   manifiesto       manifiesto         @relation(fields: [idManifiesto], references: [idManifiesto], onDelete: NoAction, onUpdate: NoAction, map: "fk_manifiesto_ot_manifiesto")

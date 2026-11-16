@@ -335,10 +335,17 @@ const agregarBultoAlManifiesto = async (tx, manifiesto, bulto, idUsuario) => {
         }
     });
     if (!manifiestoOt) {
+        // RF-41: la OT toma el siguiente número de carga del manifiesto (el mayor + 1).
+        // Si otra OT sale del manifiesto, las demás conservan su número.
+        const ultimaCarga = await tx.manifiesto_ot.aggregate({
+            where: { idManifiesto: manifiesto.idManifiesto },
+            _max: { ordenCarga: true }
+        });
         manifiestoOt = await tx.manifiesto_ot.create({
             data: {
                 idManifiesto: manifiesto.idManifiesto,
-                idOrden: orden.idOrden
+                idOrden: orden.idOrden,
+                ordenCarga: (ultimaCarga._max.ordenCarga || 0) + 1
             }
         });
     }

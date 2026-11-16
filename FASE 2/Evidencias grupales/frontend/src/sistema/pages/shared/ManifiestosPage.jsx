@@ -69,6 +69,7 @@ const aplanarBultos = (manifiesto) =>
                     volumen: volumenPiezaM3({ ...bulto, ...medidas })
                         || (aNumero(detalle?.volumenM3) / cantidadLinea),
                     numeroOT: ot.orden_transporte?.numeroOT,
+                    ordenCarga: ot.ordenCarga,
                     idOrden: ot.orden_transporte?.idOrden,
                     cliente: ot.orden_transporte?.cliente?.razonSocial,
                     destino: ot.orden_transporte?.destinatario?.nombreRazonSocial
@@ -204,6 +205,7 @@ export default function ManifiestosPage() {
                 indice.set(clave, grupos.length);
                 grupos.push({
                     numeroOT: bulto.numeroOT,
+                    ordenCarga: bulto.ordenCarga,
                     cliente: bulto.cliente,
                     destino: bulto.destino,
                     bultos: []
@@ -946,6 +948,7 @@ export default function ManifiestosPage() {
                                         }}
                                     >
                                         <td colSpan={6}>
+                                            {grupo.ordenCarga ? `Carga N° ${grupo.ordenCarga} · ` : ""}
                                             <strong>{grupo.numeroOT}</strong>
                                             {otAbierta === grupo.numeroOT ? " · clic para ocultar" : " · clic para ver bultos"}
                                             {" · "}
@@ -1176,6 +1179,7 @@ function RecepcionManifiesto({ manifiesto, cargando, onBaja }) {
         const bultos = bultosDe(item);
         return {
             idOrden: item.idOrden,
+            ordenCarga: item.ordenCarga,
             numeroOT: orden.numeroOT || "—",
             cliente: orden.cliente?.razonSocial || "—",
             destino: orden.destinatario?.nombreRazonSocial || orden.contactoDestino || "—",
@@ -1220,6 +1224,7 @@ function RecepcionManifiesto({ manifiesto, cargando, onBaja }) {
                 <table className="mx-table">
                     <thead>
                         <tr>
+                            <th>Carga N°</th>
                             <th>OT</th>
                             <th>Destino</th>
                             <th>Bultos</th>
@@ -1232,9 +1237,10 @@ function RecepcionManifiesto({ manifiesto, cargando, onBaja }) {
                     </thead>
                     <tbody>
                         {filas.length === 0 ? (
-                            <tr><td colSpan={8} className="mx-empty">Este manifiesto no tiene órdenes.</td></tr>
+                            <tr><td colSpan={9} className="mx-empty">Este manifiesto no tiene órdenes.</td></tr>
                         ) : filas.map((fila) => (
                             <tr key={fila.idOrden}>
+                                <td>{fila.ordenCarga ?? "—"}</td>
                                 <td>{fila.numeroOT}</td>
                                 <td>
                                     {fila.destino}

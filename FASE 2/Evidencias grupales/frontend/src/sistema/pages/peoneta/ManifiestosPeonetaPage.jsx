@@ -352,7 +352,7 @@ export default function ManifiestosPeonetaPage() {
                                     onClick={() => setOtAbierta(abierta ? null : entrega.numeroOT)}
                                 >
                                     <div>
-                                        <span>{textoFase[fase]}</span>
+                                        <span>{textoFase[fase]}{entrega.ordenCarga ? ` · Orden de carga ${entrega.ordenCarga}` : ""}</span>
                                         <h2>{entrega.numeroOT}</h2>
                                     </div>
                                     <span>{abierta ? "Ocultar" : "Ver detalle"}</span>

@@ -34,6 +34,7 @@ const mapearEntrega = (manifiestoOt) => {
     const entrega = manifiestoOt.entrega_ot;
     return {
         idManifiestoOT: manifiestoOt.idManifiestoOT,
+        ordenCarga: manifiestoOt.ordenCarga ?? null,
         numeroOT: orden.numeroOT,
         estado: orden.estado_ot?.nombreEstado || "SIN_ESTADO",
         valor: orden.valorTotal ?? null,
@@ -118,6 +119,7 @@ export const obtenerManifiestosPeoneta = async (idUsuario) => {
                     manifiesto_ot: {
                         select: {
                             idManifiestoOT: true,
+                            ordenCarga: true,
                             entrega_ot: {
                                 select: {
                                     idEntrega: true,
