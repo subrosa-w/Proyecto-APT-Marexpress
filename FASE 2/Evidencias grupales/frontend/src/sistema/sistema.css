@@ -247,6 +247,10 @@
   .mx-badge-anulada {
     @apply inline-flex rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700;
   }
+  /* Cuenta corriente con deuda sobre su límite de crédito */
+  .mx-badge-limite {
+    @apply ml-2 inline-flex rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700;
+  }
 
   /* ---------- Bloques de datos ---------- */
   /* Ficha con pares etiqueta/valor (ciudad, camión, estado...) */

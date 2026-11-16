@@ -1,4 +1,8 @@
 import prisma from "../../config/prisma.js";
+import { calcularMorosidad } from "../pagos/morosidad.service.js";
+
+// Una misma cuenta sobre el límite no vuelve a generar alerta antes de estos días.
+const DIAS_ENTRE_ALERTAS_CUENTA = 30;
 
 const ESTADOS_CERRADOS = ["ENTREGADA", "ENTREGADO", "ANULADA", "CANCELADA"];
 
@@ -162,8 +166,112 @@ export const sincronizarCargaAtrasada = async () => {
     }
 };
 
+const pesos = (valor) =>
+    new Intl.NumberFormat("es-CL", {
+        style: "currency",
+        currency: "CLP",
+        maximumFractionDigits: 0
+    }).format(Number(valor) || 0);
+
+// Día de una fecha con hora (la entrega), en hora de Chile.
+const textoDiaChile = (fecha) =>
+    new Intl.DateTimeFormat("es-CL", {
+        timeZone: "America/Santiago",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    }).format(new Date(fecha));
+
+// Las alertas de cuenta no tienen OT: se reconocen por este título.
+const tituloCuentaSobreLimite = (cuenta) => `Cuenta corriente N° ${cuenta.idCuenta} sobre el límite`;
+
+/*
+ * Alertas de morosidad (tipo MOROSIDAD):
+ * - Una por OT impaga (con idOrden) y una por cuenta sobre el límite (sin idOrden, por título).
+ * - Cuando la deuda se paga, la alerta abierta se marca como leída.
+ * - Si el administrador la marcó como leída, no se vuelve a crear:
+ *   una sola vez por OT y, para una misma cuenta, no antes de 30 días.
+ */
+export const sincronizarMorosidad = async () => {
+    await asegurarTablaAlerta();
+    const { otImpagas, cuentasSobreLimite, diasGracia } = await calcularMorosidad();
+
+    // --- OT impagas ---
+    const idsImpagas = otImpagas.map((orden) => orden.idOrden);
+    await prisma.alerta.updateMany({
+        where: {
+            tipo: "MOROSIDAD",
+            leida: false,
+            idOrden: idsImpagas.length ? { not: null, notIn: idsImpagas } : { not: null }
+        },
+        data: { leida: true }
+    });
+
+    if (idsImpagas.length) {
+        const previas = await prisma.alerta.findMany({
+            where: { tipo: "MOROSIDAD", idOrden: { in: idsImpagas } },
+            select: { idOrden: true }
+        });
+        const yaAvisadas = new Set(previas.map((item) => item.idOrden));
+        for (const orden of otImpagas) {
+            if (yaAvisadas.has(orden.idOrden)) {
+                continue;
+            }
+            await crearAlerta({
+                tipo: "MOROSIDAD",
+                titulo: `OT impaga ${orden.numeroOT}`,
+                mensaje: `${orden.cliente} debe ${pesos(orden.monto)}. Se entregó el ${textoDiaChile(orden.fechaEntrega)}, hace ${orden.diasDesdeEntrega} días (el plazo es de ${diasGracia}).`,
+                idOrden: orden.idOrden
+            });
+        }
+    }
+
+    // --- Cuentas sobre el límite ---
+    const titulosVigentes = cuentasSobreLimite.map(tituloCuentaSobreLimite);
+    await prisma.alerta.updateMany({
+        where: {
+            tipo: "MOROSIDAD",
+            leida: false,
+            idOrden: null,
+            ...(titulosVigentes.length ? { titulo: { notIn: titulosVigentes } } : {})
+        },
+        data: { leida: true }
+    });
+
+    const desde = new Date(Date.now() - DIAS_ENTRE_ALERTAS_CUENTA * 24 * 60 * 60 * 1000);
+    for (const cuenta of cuentasSobreLimite) {
+        const titulo = tituloCuentaSobreLimite(cuenta);
+        const reciente = await prisma.alerta.findFirst({
+            where: {
+                tipo: "MOROSIDAD",
+                idOrden: null,
+                titulo,
+                OR: [
+                    { leida: false },
+                    { fechaCreacion: { gte: desde } }
+                ]
+            },
+            select: { idAlerta: true }
+        });
+        if (reciente) {
+            continue;
+        }
+        await crearAlerta({
+            tipo: "MOROSIDAD",
+            titulo,
+            mensaje: `${cuenta.cliente} (${cuenta.rut}) debe ${pesos(cuenta.saldo)} y su límite de crédito es ${pesos(cuenta.limite)}. Excede en ${pesos(cuenta.exceso)}.`
+        });
+    }
+};
+
 export const listarAlertas = async () => {
     await sincronizarCargaAtrasada();
+    // Si la morosidad falla, las demás alertas se siguen mostrando igual que antes.
+    try {
+        await sincronizarMorosidad();
+    } catch (error) {
+        console.error("Error al sincronizar alertas de morosidad:", error);
+    }
     return prisma.alerta.findMany({
         where: { leida: false },
         orderBy: { fechaCreacion: "desc" },

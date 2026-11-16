@@ -11,8 +11,12 @@ import { formatearCLP, formatearFechaHora } from "../../utils.js";
 import { descargarPlanillaExcel } from "../../utils/planillaExcel.js";
 import Message from "../../components/Message.jsx";
 
+// Misma regla que la alerta de morosidad: cuenta activa, con límite, y saldo mayor que el límite.
+const sobreElLimite = (item) => item.activa && Number(item.limite) > 0 && Number(item.saldo) > Number(item.limite);
+
 // Tabla reutilizada por los cuatro grupos. El motivo solo aparece en posibles bajas.
-const TablaCuentas = ({ titulo, nota, filas, conMotivo = false }) => (
+// marcarLimite agrega la etiqueta "Sobre el límite" (se usa en la lista de deuda).
+const TablaCuentas = ({ titulo, nota, filas, conMotivo = false, marcarLimite = false }) => (
     <div>
         <h3 className="mt-4">{titulo} ({filas.length})</h3>
         <p className="mx-note">{nota}</p>
@@ -36,7 +40,10 @@ const TablaCuentas = ({ titulo, nota, filas, conMotivo = false }) => (
                         </tr>
                     ) : filas.map((item) => (
                         <tr key={`${titulo}-${item.idCliente}`}>
-                            <td>{item.cliente}</td>
+                            <td>
+                                {item.cliente}
+                                {marcarLimite && sobreElLimite(item) ? <span className="mx-badge-limite">Sobre el límite</span> : null}
+                            </td>
                             <td>{item.rut}</td>
                             <td>{formatearCLP(item.saldo)}</td>
                             <td>{formatearCLP(item.limite)}</td>
@@ -166,6 +173,7 @@ export default function CuentasCorrientesPage() {
                 titulo="Con deuda"
                 nota="Saldo pendiente por cobrar."
                 filas={resumen?.deuda || []}
+                marcarLimite
             />
             <TablaCuentas
                 titulo="Al día"
