@@ -1,3 +1,3 @@
-# Evidencias Individuales
+# Fase 2 · Evidencias Individuales
 
-Carpeta destinada a las evidencias individuales del proyecto Marexpress.
+Diario de reflexión de la Fase 2 (2.1) de cada integrante.
