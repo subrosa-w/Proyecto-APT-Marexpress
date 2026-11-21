@@ -3343,7 +3343,7 @@ CREATE TABLE `orden_transporte` (
   CONSTRAINT `fk_orden_transporte_destinatario` FOREIGN KEY (`idDestinatario`) REFERENCES `destinatario` (`idDestinatario`),
   CONSTRAINT `chk_orden_numero_documento` CHECK ((((`tipoDocumento` in (_utf8mb4'FACTURA',_utf8mb4'BOLETA',_utf8mb4'OT_MANUAL')) and (`numeroDocumento` is not null) and (trim(`numeroDocumento`) <> _utf8mb4'')) or ((`tipoDocumento` = _utf8mb4'SIN_DOCUMENTO') and ((`numeroDocumento` is null) or (trim(`numeroDocumento`) = _utf8mb4''))))),
   CONSTRAINT `chk_orden_tipo_documento` CHECK ((`tipoDocumento` in (_utf8mb4'FACTURA',_utf8mb4'BOLETA',_utf8mb4'OT_MANUAL',_utf8mb4'SIN_DOCUMENTO'))),
-  CONSTRAINT `chk_orden_tipo_servicio` CHECK (((`tipoServicio` in (_utf8mb4'NORMAL',_utf8mb4'URGENTE',_utf8mb4'PRIORITARIO')) or (`tipoServicio` is null)))
+  CONSTRAINT `chk_orden_tipo_servicio` CHECK (((`tipoServicio` in (_utf8mb4'NORMAL',_utf8mb4'EXPRESS',_utf8mb4'URGENTE',_utf8mb4'PRIORITARIO')) or (`tipoServicio` is null)))
 ) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
